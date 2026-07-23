@@ -1,0 +1,1 @@
+export type PreviewPoint = { lat: number; lon: number };

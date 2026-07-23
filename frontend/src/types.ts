@@ -1,0 +1,18 @@
+export type {
+  ActivityDeleteInfo,
+  ActivityDetail,
+  ActivityMatchedSegment,
+  ActivitySummary,
+  GeoPoint,
+  Profile,
+  ProfileViewScope,
+  Segment,
+  SegmentCompare,
+  SegmentPass,
+  SegmentStretchPreviewOptions,
+  Stretch,
+  StretchKind,
+  StretchState,
+  StretchThresholds,
+  TrackPoint,
+} from "@fit-analysis/shared";

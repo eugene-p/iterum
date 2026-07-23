@@ -1,0 +1,45 @@
+{
+  "name": "fit-analysis-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "npm run build -w @fit-analysis/shared && tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrate": "tsx src/db/migrate-runner.ts",
+    "db:baseline": "tsx src/db/migrate-runner.ts --fake",
+    "db:migrate:down": "tsx src/db/migrate-runner.ts down",
+    "backfill:metadata": "tsx src/scripts/backfillMetadata.ts",
+    "backfill:stretches": "tsx src/scripts/backfillStretches.ts",
+    "backfill:track-metrics": "tsx src/scripts/backfillTrackMetrics.ts",
+    "backfill:previews": "tsx src/scripts/backfillPreviews.ts"
+  },
+  "dependencies": {
+    "@fit-analysis/shared": "*",
+    "@qkitt/queue": "^0.6.2",
+    "@qkitt/queue-config": "^0.4.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "fast-xml-parser": "^5.9.3",
+    "multer": "^2.2.0",
+    "node-pg-migrate": "^8.0.4",
+    "pg": "^8.22.0",
+    "sharp": "^0.35.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^22.20.0",
+    "@types/pg": "^8.20.0",
+    "@vitest/coverage-v8": "^4.1.10",
+    "tsx": "^4.22.5",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}

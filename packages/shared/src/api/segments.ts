@@ -1,0 +1,78 @@
+import { z } from "zod";
+import { parseStretchThresholds, stretchThresholdsSchema } from "../stretch.js";
+
+const coordinateSchema = z.coerce.number().finite();
+
+export const createSegmentBodySchema = z.object({
+  name: z.string().trim().min(1),
+  description: z.string().nullable().optional(),
+  source_activity_id: z.coerce.number().int().positive(),
+  start_index: z.coerce.number().int().nonnegative(),
+  end_index: z.coerce.number().int().nonnegative(),
+  start_lat: coordinateSchema,
+  start_lon: coordinateSchema,
+  end_lat: coordinateSchema,
+  end_lon: coordinateSchema,
+  radius_m: z.coerce.number().positive().optional(),
+  match_threshold: z.coerce.number().min(0).max(1).optional(),
+});
+export type CreateSegmentBody = z.infer<typeof createSegmentBodySchema>;
+
+export const updateSegmentBodySchema = z
+  .object({
+    name: z.string().trim().min(1).optional(),
+    description: z.string().nullable().optional(),
+    start_lat: coordinateSchema.optional(),
+    start_lon: coordinateSchema.optional(),
+    end_lat: coordinateSchema.optional(),
+    end_lon: coordinateSchema.optional(),
+    radius_m: z.coerce.number().positive().optional(),
+    match_threshold: z.coerce.number().min(0).max(1).optional(),
+  })
+  .refine((body) => Object.values(body).some((value) => value !== undefined), {
+    message: "At least one field is required",
+  });
+export type UpdateSegmentBody = z.infer<typeof updateSegmentBodySchema>;
+
+export const reverseSegmentBodySchema = z.object({
+  name: z.string().optional(),
+});
+export type ReverseSegmentBody = z.infer<typeof reverseSegmentBodySchema>;
+
+export const segmentCompareQuerySchema = z
+  .object({
+    stretch_source_activity_id: z.coerce.number().int().positive().optional(),
+    climb_grade_pct: z.coerce.number().optional(),
+    descent_grade_pct: z.coerce.number().optional(),
+    grade_hysteresis_pct: z.coerce.number().optional(),
+    min_stretch_pct: z.coerce.number().optional(),
+    min_stretch_m: z.coerce.number().optional(),
+    max_stretch_pct: z.coerce.number().optional(),
+    max_stretch_m: z.coerce.number().optional(),
+    resample_spacing_m: z.coerce.number().optional(),
+    grade_window_m: z.coerce.number().optional(),
+  })
+  .transform((query) => {
+    const {
+      stretch_source_activity_id: stretchSourceActivityId,
+      ...thresholdFields
+    } = query;
+    const hasThresholdOverride = Object.values(thresholdFields).some(
+      (value) => value !== undefined,
+    );
+    return {
+      stretchSourceActivityId,
+      thresholds: hasThresholdOverride
+        ? parseStretchThresholds(thresholdFields)
+        : undefined,
+    };
+  });
+export type SegmentCompareQuery = z.infer<typeof segmentCompareQuerySchema>;
+
+export const saveSegmentStretchesBodySchema = z.object({
+  thresholds: stretchThresholdsSchema.partial().default({}),
+  stretch_source_activity_id: z
+    .union([z.null(), z.coerce.number().int().positive()])
+    .optional(),
+});
+export type SaveSegmentStretchesBody = z.infer<typeof saveSegmentStretchesBodySchema>;

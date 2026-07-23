@@ -1,0 +1,23 @@
+export const entityEditDrawerStyles = {
+  form: "flex min-h-0 flex-col gap-3",
+  mapDrawerBody: "flex min-h-0 flex-1 flex-col overflow-hidden",
+  mapDrawerForm: "flex min-h-0 flex-1 flex-col gap-3",
+  scrollForm: "flex flex-col gap-3",
+  field: "flex flex-col gap-1.5",
+  label: "text-sm text-muted",
+  select:
+    "rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-fg",
+  footerActions: "flex items-center justify-end gap-2",
+  mapWrap: "relative z-0 min-h-[240px] flex-1 overflow-hidden rounded-md border border-border bg-map",
+  segmentAdjustSection: "relative z-10 flex flex-col gap-1.5 overflow-visible",
+  segmentAdjustRow: "flex flex-wrap items-end gap-2",
+  segmentAdjustHint: "flex h-9 shrink-0 items-center",
+  segmentAdjustHintPopover: "left-auto right-0 translate-x-0",
+  segmentAdjustLabelRow: "flex items-center gap-1",
+  segmentAdjustButton: "inline-flex h-9 shrink-0 items-center px-[0.6rem] text-sm",
+  segmentAdjustField: "flex min-w-[7.5rem] flex-col gap-0.5",
+  segmentAdjustInput: "h-9 w-full min-w-0 text-sm",
+  pickNotice: "text-xs text-muted",
+  dangerZone: "rounded-md border border-danger/30 bg-danger/5 p-3",
+  dangerText: "text-sm text-muted",
+} as const;

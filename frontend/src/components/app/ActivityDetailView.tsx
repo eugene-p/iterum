@@ -1,0 +1,87 @@
+import { appStyles } from "../../App.styles";
+import type { ActivitySummary, Profile, TrackPoint } from "../../types";
+import { ActivityDateTime } from "../activities/ActivityDateTime";
+import { ActivityStatsPanel } from "../activities/ActivityStatsPanel";
+import { ActivityMap } from "../maps/ActivityMap";
+import { Badge, EmptySurface, MutedSpan } from "../ui";
+import { ActivityActionsBar } from "./ActivityActionsBar";
+
+type MapRoute = { id: number; points: TrackPoint[]; selected: boolean };
+
+type ActivityDetailViewProps = {
+  activity: ActivitySummary;
+  trackPoints?: TrackPoint[];
+  mapRoutes: MapRoute[];
+  actionLoading: boolean;
+  editError: string | null;
+  onSaveEdit: (activityId: number, name: string, profileId: number) => Promise<boolean>;
+  onSegmentCreated: (segmentId: number) => void;
+  onSelectSegment: (segmentId: number) => void;
+  onViewRoute: () => void;
+  onDelete: () => void;
+  profiles: Profile[];
+};
+
+export const ActivityDetailView = ({
+  activity,
+  trackPoints,
+  mapRoutes,
+  actionLoading,
+  editError,
+  onSaveEdit,
+  onSegmentCreated,
+  onSelectSegment,
+  onViewRoute,
+  onDelete,
+  profiles,
+}: ActivityDetailViewProps) => (
+  <div className={appStyles.detailScreen}>
+    <div className={appStyles.segmentMode}>
+      <div className={appStyles.segmentModeInfo}>
+        <Badge>Activity</Badge>
+        <MutedSpan>{activity.name}</MutedSpan>
+        <span className={appStyles.segmentModeActivity}>
+          <ActivityDateTime
+            started_at={activity.started_at}
+            created_at={activity.created_at}
+            name={activity.name}
+            source_filename={activity.source_filename}
+          />
+        </span>
+      </div>
+      <ActivityActionsBar
+        activity={activity}
+        profiles={profiles}
+        loading={actionLoading}
+        editError={editError}
+        onSaveEdit={onSaveEdit}
+        onSegmentCreated={onSegmentCreated}
+        onViewRoute={onViewRoute}
+        onDelete={onDelete}
+      />
+    </div>
+    <div className={appStyles.activityContent}>
+      <div className={appStyles.mapWrapGrow}>
+        {mapRoutes.length ? (
+          <ActivityMap
+            routes={mapRoutes}
+            segment={null}
+            segmentDraft={undefined}
+            segmentHighlight={[]}
+            draftHighlight={[]}
+            segmentMode="none"
+          />
+        ) : (
+          <EmptySurface style={{ height: "100%" }}>Loading activity route…</EmptySurface>
+        )}
+      </div>
+      <div className={appStyles.activityStatsAside}>
+        <ActivityStatsPanel
+          activity={activity}
+          trackPoints={trackPoints}
+          onSelectSegment={onSelectSegment}
+        />
+      </div>
+    </div>
+  </div>
+);

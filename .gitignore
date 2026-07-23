@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment (keep .env.example tracked)
+**/.env
+**/.env.local
+**/.env.*.local
+!.env.example
+
+# Testing
+coverage/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite (source is vite.config.ts)
+frontend/vite.config.js
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor / IDE (personal)
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# Local compose overrides
+compose.override.yaml
+compose.override.yml
+
+# Grok-generated design artifacts
+docs/.grok-design-*
+.grok/**
+terminals/**
+mcps/

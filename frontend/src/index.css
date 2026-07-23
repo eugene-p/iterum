@@ -1,0 +1,51 @@
+@import "./styles/theme.css";
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  html,
+  body,
+  #root {
+    @apply h-full w-full overflow-hidden overscroll-none;
+  }
+
+  body {
+    @apply m-0 bg-bg font-sans leading-normal font-normal text-fg antialiased;
+  }
+
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply m-0 mb-3;
+  }
+
+  h1 {
+    @apply text-xl;
+  }
+
+  h2 {
+    @apply text-base text-subtle;
+  }
+
+  .leaflet-container {
+    width: 100%;
+    height: 100%;
+    background: var(--color-map);
+  }
+}
