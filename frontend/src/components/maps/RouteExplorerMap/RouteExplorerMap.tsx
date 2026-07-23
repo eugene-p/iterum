@@ -28,6 +28,10 @@ type RouteExplorerMapProps = {
   markers: ExplorerMarker[];
   onPositionClick?: (index: number) => void;
   clickableRoute?: TrackPoint[];
+  /** When set (and ≥2 points), map fits these instead of the full route. */
+  fitPoints?: TrackPoint[];
+  fitAnimate?: boolean;
+  fitKey?: string;
 };
 
 export const RouteExplorerMap = ({
@@ -37,6 +41,9 @@ export const RouteExplorerMap = ({
   markers,
   onPositionClick,
   clickableRoute,
+  fitPoints,
+  fitAnimate = false,
+  fitKey = "",
 }: RouteExplorerMapProps) => {
   const clickRoute = clickableRoute ?? (highlightPoints.length > 1 ? highlightPoints : routePoints);
 
@@ -47,6 +54,11 @@ export const RouteExplorerMap = ({
     }
     return positions;
   }, [routePoints]);
+
+  const fitPositions = useMemo(() => {
+    const source = fitPoints && fitPoints.length > 1 ? fitPoints : routePoints;
+    return source.map((point) => [point.lat, point.lon] as LatLngExpression);
+  }, [fitPoints, routePoints]);
 
   const routeLine = useMemo(
     () => routePoints.map((p) => [p.lat, p.lon] as LatLngExpression),
@@ -71,7 +83,12 @@ export const RouteExplorerMap = ({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <FitBounds positions={allPositions} />
+      <FitBounds
+        positions={fitPositions}
+        padding={[36, 36]}
+        animate={fitAnimate}
+        fitKey={fitKey}
+      />
       <MapResizeHandler />
       <IndexClickHandler route={clickRoute} enabled={!!onPositionClick} onClick={onPositionClick} />
       {routeLine.length > 1 && (

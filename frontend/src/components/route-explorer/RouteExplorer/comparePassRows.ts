@@ -1,6 +1,5 @@
 import {
   indexAtElapsedSec,
-  indexAtRelativePosition,
   metricsAtIndex,
   type ExplorerPassSlice,
 } from "../../../routeExplorerUtils";
@@ -13,29 +12,9 @@ import type { SegmentPass, Stretch, TrackPoint } from "../../../types";
 import type { ExplorerMarker } from "../../maps/RouteExplorerMap/RouteExplorerMap";
 import type { PositionPassRow } from "../components/positionCompareTypes";
 import { passIdentityColorForPass } from "../passIdentityColors";
+import { indexAtStretchElapsedSec } from "./stretchCompareUtils";
 
-export const buildPositionPassRows = (
-  passSlices: ExplorerPassSlice[],
-  positionFraction: number,
-  currentStretch: Stretch | null,
-  matchedPasses: SegmentPass[],
-): PositionPassRow[] =>
-  passSlices.map((slice) => {
-    const index = indexAtRelativePosition(slice.points, positionFraction);
-    return {
-      slice,
-      index,
-      color: passIdentityColorForPass(slice.pass.id, matchedPasses),
-      stretchContext: stretchPointContextAtIndex(
-        slice.points,
-        currentStretch,
-        index,
-        slice.durationSec,
-      ),
-    };
-  });
-
-export const buildTimePassRows = (
+export const buildSegmentTimePassRows = (
   passSlices: ExplorerPassSlice[],
   timeElapsedSec: number,
   stretches: Stretch[],
@@ -55,6 +34,35 @@ export const buildTimePassRows = (
       stretchContext: stretchPointContextAtIndex(
         slice.points,
         passStretch,
+        index,
+        slice.durationSec,
+      ),
+    };
+  });
+
+/** Alias kept for older imports. */
+export const buildTimePassRows = buildSegmentTimePassRows;
+
+export const buildStretchTimePassRows = (
+  passSlices: ExplorerPassSlice[],
+  stretch: Stretch,
+  localElapsedSec: number,
+  matchedPasses: SegmentPass[],
+): PositionPassRow[] =>
+  passSlices.map((slice) => {
+    const index = indexAtStretchElapsedSec(
+      slice.points,
+      stretch,
+      localElapsedSec,
+      slice.durationSec,
+    );
+    return {
+      slice,
+      index,
+      color: passIdentityColorForPass(slice.pass.id, matchedPasses),
+      stretchContext: stretchPointContextAtIndex(
+        slice.points,
+        stretch,
         index,
         slice.durationSec,
       ),

@@ -48,6 +48,7 @@ const row = (
   name: string,
   index: number,
   points: TrackPoint[],
+  stretchElapsedSec: number | null = null,
 ): PositionPassRow => ({
   slice: {
     pass: pass(id, activityId, name),
@@ -56,11 +57,15 @@ const row = (
   },
   index,
   color: "#fff",
-  stretchContext: { stretch: null, stretchElapsedSec: null, stretchDistanceM: null },
+  stretchContext: {
+    stretch: stretches[0],
+    stretchElapsedSec,
+    stretchDistanceM: null,
+  },
 });
 
 describe("assignStretchProgressColors", () => {
-  it("colors furthest stretch ahead green and earlier stretch yellow in time mode", () => {
+  it("colors furthest along segment green in segment mode", () => {
     const points = [
       point(0, 0, "2024-01-01T10:00:00.000Z"),
       point(0, 0.001, "2024-01-01T10:01:00.000Z"),
@@ -73,33 +78,25 @@ describe("assignStretchProgressColors", () => {
         row(2, 20, "Behind", 1, points),
       ],
       stretches,
-      "time",
+      "segment",
     );
 
     expect(rows[0].positionColor).toBe("#7dffb0");
     expect(rows[1].positionColor).toBe("#f5c542");
   });
 
-  it("colors fastest arrival green in position mode", () => {
-    const fastPoints = [
-      point(0, 0, "2024-01-01T10:00:00.000Z"),
-      point(0, 0.001, "2024-01-01T10:00:30.000Z"),
-      point(0, 0.002, "2024-01-01T10:01:00.000Z"),
-      point(0, 0.003, "2024-01-01T10:01:30.000Z"),
-    ];
-    const slowPoints = [
+  it("colors highest stretch-local elapsed green in stretch mode", () => {
+    const points = [
       point(0, 0, "2024-01-01T10:00:00.000Z"),
       point(0, 0.001, "2024-01-01T10:01:00.000Z"),
-      point(0, 0.002, "2024-01-01T10:02:00.000Z"),
-      point(0, 0.003, "2024-01-01T10:03:00.000Z"),
     ];
     const rows = assignStretchProgressColors(
       [
-        row(1, 10, "Fast", 3, fastPoints),
-        row(2, 20, "Slow", 3, slowPoints),
+        row(1, 10, "Leader", 1, points, 45),
+        row(2, 20, "Behind", 0, points, 10),
       ],
       stretches,
-      "position",
+      "stretch",
     );
 
     expect(rows[0].positionColor).toBe("#7dffb0");

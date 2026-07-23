@@ -8,9 +8,18 @@ const LEGEND_ITEMS = [
   { color: STRETCH_PROGRESS_COLORS[3], label: "3+ behind" },
 ] as const;
 
-export const StretchProgressLegend = () => (
-  <div className={routeExplorerStyles.positionLegend} aria-label="Stretch position colors">
-    <span className={routeExplorerStyles.positionLegendItem}>Position:</span>
+type StretchProgressLegendProps = {
+  mode?: "segment" | "stretch";
+};
+
+export const StretchProgressLegend = ({ mode = "segment" }: StretchProgressLegendProps) => (
+  <div
+    className={routeExplorerStyles.positionLegend}
+    aria-label={mode === "stretch" ? "Ahead in this stretch" : "Ahead on segment"}
+  >
+    <span className={routeExplorerStyles.positionLegendItem}>
+      {mode === "stretch" ? "In this stretch:" : "Ahead:"}
+    </span>
     {LEGEND_ITEMS.map((item) => (
       <span key={item.label} className={routeExplorerStyles.positionLegendItem}>
         <span

@@ -7,24 +7,31 @@ type FitBoundsProps = {
   positions: LatLngExpression[];
   padding?: [number, number];
   animate?: boolean;
+  /** Extra key so distinct targets re-fit even if endpoints match. */
+  fitKey?: string;
 };
 
 const fittedBoundsByMap = new WeakMap<Map, string>();
 
-const boundsKeyFromPositions = (positions: LatLngExpression[]): string => {
-  if (positions.length === 0) return "0";
+const boundsKeyFromPositions = (positions: LatLngExpression[], fitKey = ""): string => {
+  if (positions.length === 0) return `0:${fitKey}`;
   const first = positions[0];
   const last = positions[positions.length - 1];
-  return `${positions.length}:${JSON.stringify(first)}:${JSON.stringify(last)}`;
+  const mid = positions[Math.floor(positions.length / 2)];
+  return `${fitKey}:${positions.length}:${JSON.stringify(first)}:${JSON.stringify(mid)}:${JSON.stringify(last)}`;
 };
 
 export const FitBounds = ({
   positions,
   padding = [24, 24],
   animate = false,
+  fitKey = "",
 }: FitBoundsProps) => {
   const map = useMap();
-  const boundsKey = useMemo(() => boundsKeyFromPositions(positions), [positions]);
+  const boundsKey = useMemo(
+    () => boundsKeyFromPositions(positions, fitKey),
+    [positions, fitKey],
+  );
 
   useEffect(() => {
     if (fittedBoundsByMap.get(map) === boundsKey) return;

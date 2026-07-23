@@ -75,3 +75,38 @@ export type TimeComparePanelProps = {
   map: TimeCompareMapConfig;
   metrics: TimeCompareMetrics;
 };
+
+export type StretchTimeSliderState = {
+  virtualSec: number;
+  virtualMaxSec: number;
+  step: number;
+  localElapsedSec: number;
+  localMaxSec: number;
+  stretchIndex: number;
+  stretchesCount: number;
+  currentStretch: Stretch | null;
+  canPrev: boolean;
+  canNext: boolean;
+  onVirtualChange: (value: number) => void;
+  onPrev: () => void;
+  onNext: () => void;
+  onLocalFractionChange: (fraction: number) => void;
+};
+
+export type StretchTimeMapConfig = {
+  routePoints: TrackPoint[];
+  stretchElevationPoints?: TrackPoint[];
+  /** Points used to zoom the map to the current stretch. */
+  fitPoints?: TrackPoint[];
+  fitKey?: string;
+  stretchOverlays?: StretchOverlay[];
+  markers: ExplorerMarker[];
+};
+
+export type StretchTimePanelProps = {
+  zoneMaxHr?: number | null;
+  matchedPasses?: ReadonlyArray<SegmentPass>;
+  slider: StretchTimeSliderState;
+  map: StretchTimeMapConfig;
+  metrics: TimeCompareMetrics;
+};

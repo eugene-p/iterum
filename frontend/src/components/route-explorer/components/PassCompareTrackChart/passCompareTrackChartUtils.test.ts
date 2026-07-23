@@ -2,13 +2,16 @@ import { describe, expect, it } from "vitest";
 import type { TrackPoint } from "../../../../types";
 import { computeHrZoneBands } from "../../../../lib/hrZones";
 import { hrToChartY } from "../../../activities/ActivityTrackChart/activityTrackChartUtils";
+import type { SegmentPass, Stretch } from "../../../../types";
 import {
   buildPassCompareTrackChartData,
   formatPassChartLabel,
+  passChartItemsFromStretchRows,
   passCompareHrScale,
   passesHaveHeartRate,
   samplePassesAtFraction,
 } from "./passCompareTrackChartUtils";
+import type { PositionPassRow } from "../positionCompareTypes";
 
 const point = (hr: number | null, elev: number | null = null): TrackPoint => ({
   lat: 0,
@@ -188,5 +191,64 @@ describe("samplePassesAtFraction", () => {
       { label: "A", color: "#f97316", hr: 140 },
       { label: "B", color: "#22d3ee", hr: 150 },
     ]);
+  });
+});
+
+describe("passChartItemsFromStretchRows", () => {
+  const track: TrackPoint[] = [
+    { lat: 0, lon: 0, heart_rate: 110, elevation_m: 100, timestamp: "2025-01-01T00:00:00.000Z" },
+    { lat: 0, lon: 0.001, heart_rate: 120, elevation_m: 105, timestamp: "2025-01-01T00:00:10.000Z" },
+    { lat: 0, lon: 0.002, heart_rate: 130, elevation_m: 110, timestamp: "2025-01-01T00:00:20.000Z" },
+    { lat: 0, lon: 0.003, heart_rate: 140, elevation_m: 115, timestamp: "2025-01-01T00:00:30.000Z" },
+    { lat: 0, lon: 0.004, heart_rate: 150, elevation_m: 120, timestamp: "2025-01-01T00:00:40.000Z" },
+  ];
+
+  const pass: SegmentPass = {
+    id: 7,
+    activity_id: 1,
+    activity_name: "Climb day",
+    pass_number: 1,
+    match_score: 1,
+    matched: true,
+    duration_sec: 40,
+  };
+
+  const stretch: Stretch = {
+    index: 1,
+    kind: "climb",
+    start: { lat: 0, lon: 0.002, elevation_m: 100 },
+    end: { lat: 0, lon: 0.004, elevation_m: 120 },
+    length_m: 200,
+    elevation_delta_m: 20,
+    avg_grade_pct: 5,
+  };
+
+  const row: PositionPassRow = {
+    slice: { pass, points: track, durationSec: 40 },
+    index: 3,
+    color: "#f97316",
+    stretchContext: { stretch, stretchElapsedSec: 10, stretchDistanceM: 50 },
+  };
+
+  it("clips pass points to the stretch window and sets stretch duration", () => {
+    const items = passChartItemsFromStretchRows([row], stretch, 20, [pass]);
+    expect(items).toHaveLength(1);
+    expect(items[0].points).toHaveLength(3);
+    expect(items[0].points[0].lon).toBe(0.002);
+    expect(items[0].points[2].lon).toBe(0.004);
+    expect(items[0].durationSec).toBe(20);
+    expect(items[0].color).toBe("#f97316");
+  });
+
+  it("builds chart data from stretch-clipped series in time mode", () => {
+    const items = passChartItemsFromStretchRows([row], stretch, 20, [pass]);
+    const data = buildPassCompareTrackChartData(items, {
+      mode: "time",
+      maxTimeSec: 20,
+      elevationPoints: items[0].points,
+    });
+    expect(data).not.toBeNull();
+    expect(data?.lines).toHaveLength(1);
+    expect(data?.hasElevation).toBe(true);
   });
 });

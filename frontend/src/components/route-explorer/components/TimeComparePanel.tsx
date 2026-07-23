@@ -15,6 +15,7 @@ import { CompareReferenceCard } from "./CompareReferenceCard";
 import { routeExplorerStyles } from "../RouteExplorer/RouteExplorer.styles";
 import type { TimeComparePanelProps } from "./positionCompareTypes";
 
+/** Segment time: align all passes at segment start; scrub full-effort elapsed. */
 export const TimeComparePanel = ({
   zoneMaxHr = null,
   matchedPasses = [],
@@ -31,8 +32,8 @@ export const TimeComparePanel = ({
       <section className={`${routeExplorerStyles.section} ${routeExplorerStyles.sectionControls}`}>
         <div className={routeExplorerStyles.sectionHead}>
           <div className={routeExplorerStyles.sectionHeadLead}>
-            <h3 className={routeExplorerStyles.sectionTitle}>Time from segment start</h3>
-            <SectionHint text="Scrub elapsed time to see where each selected activity was on the segment." />
+            <h3 className={routeExplorerStyles.sectionTitle}>Segment time</h3>
+            <SectionHint text="All matched passes start together at the segment start. Scrub time to see where each was after that many minutes." />
           </div>
           <MutedSpan>
             {[
@@ -77,10 +78,10 @@ export const TimeComparePanel = ({
         routePoints={map.routePoints}
         stretchOverlays={map.stretchOverlays}
         markers={map.markers}
-        legendLabel="Metrics at elapsed time"
+        legendLabel="Metrics at this segment time"
       >
-        <h3 className={routeExplorerStyles.legendTitle}>At this time</h3>
-        {metrics.showPositionLegend && <StretchProgressLegend />}
+        <h3 className={routeExplorerStyles.legendTitle}>At this segment time</h3>
+        {metrics.showPositionLegend && <StretchProgressLegend mode="segment" />}
         {metrics.reference ? (
           <CompareReferenceCard
             metrics={metrics.reference}
@@ -95,7 +96,7 @@ export const TimeComparePanel = ({
         ) : (
           metrics.passRows.map((row) => (
             <PassMetricsRow
-              key={`time-${row.slice.pass.id}`}
+              key={`segment-${row.slice.pass.id}`}
               slice={row.slice}
               index={row.index}
               color={row.color}

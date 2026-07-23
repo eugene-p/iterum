@@ -26,7 +26,7 @@ export const CompareReferenceCard = ({
           <span
             className={routeExplorerStyles.positionSwatch}
             style={{ background: positionColor }}
-            title="Stretch position"
+            title="Ahead ranking"
           />
         ) : null}
       </div>

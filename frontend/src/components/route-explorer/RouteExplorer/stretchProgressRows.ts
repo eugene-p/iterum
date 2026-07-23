@@ -1,4 +1,3 @@
-import { metricsAtIndex } from "../../../routeExplorerUtils";
 import {
   segmentFractionAtIndex,
   stretchProgressRankColor,
@@ -7,47 +6,44 @@ import {
 import type { Stretch } from "../../../types";
 import type { PositionPassRow } from "../components/positionCompareTypes";
 
-export type StretchProgressMode = "position" | "time";
+/** segment = further along whole segment; stretch = further into current stretch piece. */
+export type StretchProgressMode = "segment" | "stretch";
 
 export function assignStretchProgressColors(
   rows: PositionPassRow[],
   stretches: Stretch[],
   mode: StretchProgressMode,
 ): PositionPassRow[] {
-  if (!stretches.length || rows.length === 0) return rows;
+  if (rows.length === 0) return rows;
 
-  if (mode === "time") {
-    const scores = rows.map((row) =>
-      stretchProgressScore(
-        stretches,
-        row.slice.points,
-        segmentFractionAtIndex(row.slice.points, row.index),
-      ),
-    );
+  if (mode === "stretch") {
+    const scores = rows.map((row) => row.stretchContext.stretchElapsedSec ?? -1);
     return rows.map((row, index) => ({
       ...row,
       positionColor: stretchProgressRankColor(scores, scores[index], true),
     }));
   }
 
-  const elapsedTimes = rows.map(
-    (row) => metricsAtIndex(row.slice.points, row.index, row.slice.durationSec)?.elapsedSec ?? -1,
+  if (!stretches.length) return rows;
+
+  const scores = rows.map((row) =>
+    stretchProgressScore(
+      stretches,
+      row.slice.points,
+      segmentFractionAtIndex(row.slice.points, row.index),
+    ),
   );
   return rows.map((row, index) => ({
     ...row,
-    positionColor: stretchProgressRankColor(elapsedTimes, elapsedTimes[index], false),
+    positionColor: stretchProgressRankColor(scores, scores[index], true),
   }));
 }
 
 export function stretchProgressColorForValue(
   value: number,
   peerValues: number[],
-  mode: StretchProgressMode,
+  _mode: StretchProgressMode,
 ): string | null {
   if (!peerValues.length) return null;
-  return stretchProgressRankColor(
-    [...peerValues, value],
-    value,
-    mode === "time",
-  );
+  return stretchProgressRankColor([...peerValues, value], value, true);
 }

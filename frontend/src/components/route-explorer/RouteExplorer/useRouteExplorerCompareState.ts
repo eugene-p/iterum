@@ -27,11 +27,19 @@ import {
   stretchProgressColorForValue,
 } from "./stretchProgressRows";
 import {
-  buildPositionPassRows,
-  buildTimePassRows,
+  buildSegmentTimePassRows,
+  buildStretchTimePassRows,
   markersFromPassRows,
   soloActivityMarker,
 } from "./comparePassRows";
+import {
+  indexAtStretchElapsedSec,
+  slicePointsForStretch,
+  stretchDurationsSec,
+  virtualAtStretchStart,
+  virtualMaxSec,
+  virtualToStretchPosition,
+} from "./stretchCompareUtils";
 
 type UseRouteExplorerCompareStateOptions = {
   target: RouteExplorerTarget;
@@ -59,8 +67,9 @@ export const useRouteExplorerCompareState = ({
   onCompareModeChange,
 }: UseRouteExplorerCompareStateOptions) => {
   const [positionIndex, setPositionIndex] = useState(0);
-  const [timeElapsedSec, setTimeElapsedSec] = useState(0);
-  const [localCompareMode, setLocalCompareMode] = useState<CompareMode>(APP_COMPARE_MODE.POSITION);
+  const [segmentElapsedSec, setSegmentElapsedSec] = useState(0);
+  const [stretchVirtualSec, setStretchVirtualSec] = useState(0);
+  const [localCompareMode, setLocalCompareMode] = useState<CompareMode>(APP_COMPARE_MODE.SEGMENT);
   const [passesExpanded, setPassesExpanded] = useState(false);
   const isCompareModeControlled = onCompareModeChange != null;
   const targetKey = routeExplorerTargetKey(target);
@@ -78,13 +87,16 @@ export const useRouteExplorerCompareState = ({
     return sourcePass?.duration_sec ?? null;
   }, [comparison]);
 
+  const stretches = useMemo(() => comparison?.stretches ?? [], [comparison?.stretches]);
+
   useEffect(() => {
     setPassesExpanded(false);
     setPositionIndex(0);
-    setTimeElapsedSec(0);
+    setSegmentElapsedSec(0);
+    setStretchVirtualSec(0);
   }, [targetKey]);
 
-  const maxTimeSec = useMemo(() => {
+  const maxSegmentTimeSec = useMemo(() => {
     if (isActivity) {
       const duration = metricsAtIndex(
         activityPoints,
@@ -96,12 +108,23 @@ export const useRouteExplorerCompareState = ({
     return maxDurationAmongSlices(passSlices);
   }, [isActivity, activityPoints, activityDurationSec, passSlices]);
 
-  const timeTabAvailable = !isActivity && maxTimeSec > 0;
+  const stretchDurationList = useMemo(
+    () => stretchDurationsSec(passSlices, stretches),
+    [passSlices, stretches],
+  );
+
+  const stretchVirtualMax = useMemo(
+    () => virtualMaxSec(stretchDurationList),
+    [stretchDurationList],
+  );
+
+  const segmentTimeAvailable = !isActivity && maxSegmentTimeSec > 0;
+  const stretchTimeAvailable = !isActivity && stretches.length > 0 && stretchVirtualMax > 0;
 
   const activeTab = isCompareModeControlled
     ? resolveCompareMode(
         { view: APP_VIEW.COMPARE, compareMode, comparePasses: selectedPassIds },
-        timeTabAvailable,
+        { segmentTimeAvailable, stretchTimeAvailable },
       )
     : localCompareMode;
 
@@ -111,217 +134,264 @@ export const useRouteExplorerCompareState = ({
   };
 
   useEffect(() => {
-    if (timeElapsedSec > maxTimeSec) setTimeElapsedSec(maxTimeSec);
-  }, [maxTimeSec, timeElapsedSec]);
-
-  // Position→time sync lives only in onPositionSlider (and target reset).
-  // Do not re-sync when pass selection or maxTime changes — that clobbers Time-tab scrub.
+    if (segmentElapsedSec > maxSegmentTimeSec) setSegmentElapsedSec(maxSegmentTimeSec);
+  }, [maxSegmentTimeSec, segmentElapsedSec]);
 
   useEffect(() => {
-    if (!timeTabAvailable && activeTab === APP_COMPARE_MODE.TIME) {
-      if (onCompareModeChange) onCompareModeChange(APP_COMPARE_MODE.POSITION);
-      else setLocalCompareMode(APP_COMPARE_MODE.POSITION);
-    }
-  }, [timeTabAvailable, activeTab, onCompareModeChange]);
+    if (stretchVirtualSec > stretchVirtualMax) setStretchVirtualSec(stretchVirtualMax);
+  }, [stretchVirtualMax, stretchVirtualSec]);
 
-  const showPositionTab =
-    isActivity || !timeTabAvailable || activeTab === APP_COMPARE_MODE.POSITION;
-  const showTimeTab = !isActivity && timeTabAvailable && activeTab === APP_COMPARE_MODE.TIME;
+  useEffect(() => {
+    if (activeTab === APP_COMPARE_MODE.STRETCH && !stretchTimeAvailable) {
+      if (onCompareModeChange) onCompareModeChange(APP_COMPARE_MODE.SEGMENT);
+      else setLocalCompareMode(APP_COMPARE_MODE.SEGMENT);
+    }
+  }, [stretchTimeAvailable, activeTab, onCompareModeChange]);
+
+  const showActivityScrub = isActivity;
+  const showSegmentTime =
+    !isActivity && segmentTimeAvailable && activeTab === APP_COMPARE_MODE.SEGMENT;
+  const showStretchTime =
+    !isActivity && stretchTimeAvailable && activeTab === APP_COMPARE_MODE.STRETCH;
+
+  const stretchPos = useMemo(
+    () => virtualToStretchPosition(stretchVirtualSec, stretchDurationList),
+    [stretchVirtualSec, stretchDurationList],
+  );
+
+  const currentStretch: Stretch | null = useMemo(() => {
+    if (!showStretchTime || !stretches.length) return null;
+    return stretches[stretchPos.stretchIndex] ?? null;
+  }, [showStretchTime, stretches, stretchPos.stretchIndex]);
+
+  const localStretchElapsed = stretchPos.localElapsedSec;
+  const localStretchMax = stretchDurationList[stretchPos.stretchIndex] ?? 0;
 
   const positionFraction = useMemo(() => {
-    const total = isActivity ? activityPoints.length : referencePoints.length;
-    if (total <= 1) return 0;
-    return positionIndex / (total - 1);
-  }, [isActivity, activityPoints.length, referencePoints.length, positionIndex]);
+    if (activityPoints.length <= 1) return 0;
+    return positionIndex / (activityPoints.length - 1);
+  }, [activityPoints.length, positionIndex]);
 
-  const stretches = useMemo(() => comparison?.stretches ?? [], [comparison?.stretches]);
+  const referenceIndexAtSegmentTime = useMemo(() => {
+    if (!showSegmentTime || !referencePoints.length) return 0;
+    return indexAtElapsedSec(referencePoints, segmentElapsedSec, referenceDurationSec);
+  }, [showSegmentTime, referencePoints, segmentElapsedSec, referenceDurationSec]);
 
-  const referenceIndexAtTime = useMemo(() => {
-    if (!showTimeTab || !referencePoints.length) return 0;
-    return indexAtElapsedSec(referencePoints, timeElapsedSec, referenceDurationSec);
-  }, [showTimeTab, referencePoints, timeElapsedSec, referenceDurationSec]);
-
-  const referenceFractionAtTime = useMemo(() => {
-    if (referencePoints.length <= 1) return 0;
-    return referenceIndexAtTime / (referencePoints.length - 1);
-  }, [referencePoints.length, referenceIndexAtTime]);
-
-  const currentStretch = useMemo((): Stretch | null => {
-    if (!showPositionTab || isActivity || !stretches.length || !referencePoints.length) return null;
-    return stretchAtFraction(stretches, referencePoints, positionFraction);
-  }, [showPositionTab, isActivity, stretches, referencePoints, positionFraction]);
-
-  const timeCurrentStretch = useMemo((): Stretch | null => {
-    if (!showTimeTab || !stretches.length || !referencePoints.length) return null;
-    return stretchAtFraction(stretches, referencePoints, referenceFractionAtTime);
-  }, [showTimeTab, stretches, referencePoints, referenceFractionAtTime]);
-
-  const referenceStretchContext = useMemo(() => {
-    if (!showPositionTab || isActivity || !referencePoints.length) return null;
-    return stretchPointContextAtIndex(
+  const referenceIndexAtStretchTime = useMemo(() => {
+    if (!showStretchTime || !referencePoints.length || !currentStretch) return 0;
+    return indexAtStretchElapsedSec(
       referencePoints,
       currentStretch,
-      positionIndex,
+      localStretchElapsed,
       referenceDurationSec,
     );
   }, [
-    showPositionTab,
-    isActivity,
+    showStretchTime,
     referencePoints,
     currentStretch,
-    positionIndex,
+    localStretchElapsed,
     referenceDurationSec,
   ]);
 
-  const timeReferenceStretchContext = useMemo(() => {
-    if (!showTimeTab || !referencePoints.length) return null;
-    return stretchPointContextAtIndex(
-      referencePoints,
-      timeCurrentStretch,
-      referenceIndexAtTime,
-      referenceDurationSec,
-    );
-  }, [
-    showTimeTab,
-    referencePoints,
-    timeCurrentStretch,
-    referenceIndexAtTime,
-    referenceDurationSec,
-  ]);
-
-  const stretchOverlays = useMemo(
-    () =>
-      showPositionTab
-        ? buildStretchOverlays(null, comparison, referencePoints, currentStretch?.index ?? null)
-        : [],
-    [showPositionTab, comparison, referencePoints, currentStretch],
-  );
-
-  const timeStretchOverlays = useMemo(
-    () =>
-      showTimeTab
-        ? buildStretchOverlays(
-            null,
-            comparison,
-            referencePoints,
-            timeCurrentStretch?.index ?? null,
-          )
-        : [],
-    [showTimeTab, comparison, referencePoints, timeCurrentStretch],
-  );
+  const segmentCurrentStretch = useMemo((): Stretch | null => {
+    if (!showSegmentTime || !stretches.length || !referencePoints.length) return null;
+    const fraction =
+      referencePoints.length <= 1
+        ? 0
+        : referenceIndexAtSegmentTime / (referencePoints.length - 1);
+    return stretchAtFraction(stretches, referencePoints, fraction);
+  }, [showSegmentTime, stretches, referencePoints, referenceIndexAtSegmentTime]);
 
   const activityMetrics = useMemo(
     () =>
-      showPositionTab && isActivity
+      showActivityScrub
         ? metricsAtIndex(activityPoints, positionIndex, activityDurationSec)
         : null,
-    [showPositionTab, isActivity, activityPoints, positionIndex, activityDurationSec],
+    [showActivityScrub, activityPoints, positionIndex, activityDurationSec],
   );
 
-  const referenceMetrics = useMemo(() => {
-    if (!showPositionTab || isActivity || !referencePoints.length) return null;
-    return metricsAtIndex(referencePoints, positionIndex, referenceDurationSec);
-  }, [showPositionTab, isActivity, referencePoints, positionIndex, referenceDurationSec]);
+  const segmentPassRowsBase = useMemo(() => {
+    if (!showSegmentTime) return [];
+    return buildSegmentTimePassRows(passSlices, segmentElapsedSec, stretches, matchedPasses);
+  }, [showSegmentTime, passSlices, segmentElapsedSec, stretches, matchedPasses]);
 
-  const timeReferenceMetrics = useMemo(() => {
-    if (!showTimeTab || !referencePoints.length) return null;
-    return metricsAtIndex(referencePoints, referenceIndexAtTime, referenceDurationSec);
-  }, [showTimeTab, referencePoints, referenceIndexAtTime, referenceDurationSec]);
-
-  const positionPassRowsBase = useMemo(() => {
-    if (!showPositionTab || isActivity) return [];
-    return buildPositionPassRows(passSlices, positionFraction, currentStretch, matchedPasses);
-  }, [showPositionTab, isActivity, passSlices, positionFraction, currentStretch, matchedPasses]);
-
-  const positionPassRows = useMemo(
-    () => assignStretchProgressColors(positionPassRowsBase, stretches, "position"),
-    [positionPassRowsBase, stretches],
+  const segmentPassRows = useMemo(
+    () => assignStretchProgressColors(segmentPassRowsBase, stretches, "segment"),
+    [segmentPassRowsBase, stretches],
   );
 
-  const timePassRowsBase = useMemo(() => {
-    if (!showTimeTab) return [];
-    return buildTimePassRows(passSlices, timeElapsedSec, stretches, matchedPasses);
-  }, [showTimeTab, passSlices, timeElapsedSec, stretches, matchedPasses]);
-
-  const timePassRows = useMemo(
-    () => assignStretchProgressColors(timePassRowsBase, stretches, "time"),
-    [timePassRowsBase, stretches],
-  );
-
-  const referencePositionColor = useMemo(() => {
-    if (isActivity || !stretches.length) return null;
-    if (showTimeTab) {
-      const referenceScore = stretchProgressScore(
-        stretches,
-        referencePoints,
-        referenceFractionAtTime,
-      );
-      const peerScores = timePassRowsBase.map((row) =>
-        stretchProgressScore(
-          stretches,
-          row.slice.points,
-          segmentFractionAtIndex(row.slice.points, row.index),
-        ),
-      );
-      return stretchProgressColorForValue(referenceScore, peerScores, "time");
-    }
-    if (!showPositionTab) return null;
-    const peerElapsed = positionPassRowsBase.map(
-      (row) =>
-        metricsAtIndex(row.slice.points, row.index, row.slice.durationSec)?.elapsedSec ?? -1,
+  const stretchPassRowsBase = useMemo(() => {
+    if (!showStretchTime || !currentStretch) return [];
+    return buildStretchTimePassRows(
+      passSlices,
+      currentStretch,
+      localStretchElapsed,
+      matchedPasses,
     );
-    const referenceElapsed = referenceMetrics?.elapsedSec ?? -1;
-    return stretchProgressColorForValue(referenceElapsed, peerElapsed, "position");
+  }, [showStretchTime, currentStretch, passSlices, localStretchElapsed, matchedPasses]);
+
+  const stretchPassRows = useMemo(
+    () => assignStretchProgressColors(stretchPassRowsBase, stretches, "stretch"),
+    [stretchPassRowsBase, stretches],
+  );
+
+  const segmentReferenceMetrics = useMemo(() => {
+    if (!showSegmentTime || !referencePoints.length) return null;
+    return metricsAtIndex(referencePoints, referenceIndexAtSegmentTime, referenceDurationSec);
+  }, [showSegmentTime, referencePoints, referenceIndexAtSegmentTime, referenceDurationSec]);
+
+  const stretchReferenceMetrics = useMemo(() => {
+    if (!showStretchTime || !referencePoints.length) return null;
+    return metricsAtIndex(referencePoints, referenceIndexAtStretchTime, referenceDurationSec);
+  }, [showStretchTime, referencePoints, referenceIndexAtStretchTime, referenceDurationSec]);
+
+  const segmentReferenceStretchContext = useMemo(() => {
+    if (!showSegmentTime || !referencePoints.length) return null;
+    return stretchPointContextAtIndex(
+      referencePoints,
+      segmentCurrentStretch,
+      referenceIndexAtSegmentTime,
+      referenceDurationSec,
+    );
   }, [
-    isActivity,
+    showSegmentTime,
+    referencePoints,
+    segmentCurrentStretch,
+    referenceIndexAtSegmentTime,
+    referenceDurationSec,
+  ]);
+
+  const stretchReferenceStretchContext = useMemo(() => {
+    if (!showStretchTime || !referencePoints.length || !currentStretch) return null;
+    return stretchPointContextAtIndex(
+      referencePoints,
+      currentStretch,
+      referenceIndexAtStretchTime,
+      referenceDurationSec,
+    );
+  }, [
+    showStretchTime,
+    referencePoints,
+    currentStretch,
+    referenceIndexAtStretchTime,
+    referenceDurationSec,
+  ]);
+
+  const segmentReferencePositionColor = useMemo(() => {
+    if (!showSegmentTime || !stretches.length) return null;
+    const fraction =
+      referencePoints.length <= 1
+        ? 0
+        : referenceIndexAtSegmentTime / (referencePoints.length - 1);
+    const referenceScore = stretchProgressScore(stretches, referencePoints, fraction);
+    const peerScores = segmentPassRowsBase.map((row) =>
+      stretchProgressScore(
+        stretches,
+        row.slice.points,
+        segmentFractionAtIndex(row.slice.points, row.index),
+      ),
+    );
+    return stretchProgressColorForValue(referenceScore, peerScores, "segment");
+  }, [
+    showSegmentTime,
     stretches,
     referencePoints,
-    showTimeTab,
-    showPositionTab,
-    referenceFractionAtTime,
-    timePassRowsBase,
-    positionPassRowsBase,
-    referenceMetrics,
+    referenceIndexAtSegmentTime,
+    segmentPassRowsBase,
   ]);
 
-  const mapMarkers = useMemo(() => {
-    if (!showPositionTab) return [];
-    if (isActivity) {
-      return soloActivityMarker(
-        activityPoints,
-        positionIndex,
-        activityDurationSec,
-        SOLO_ACTIVITY_COLOR,
+  const stretchReferencePositionColor = useMemo(() => {
+    if (!showStretchTime) return null;
+    const referenceLocal =
+      stretchReferenceStretchContext?.stretchElapsedSec ?? localStretchElapsed;
+    const peerLocals = stretchPassRowsBase.map(
+      (row) => row.stretchContext.stretchElapsedSec ?? -1,
+    );
+    return stretchProgressColorForValue(referenceLocal, peerLocals, "stretch");
+  }, [
+    showStretchTime,
+    stretchReferenceStretchContext,
+    localStretchElapsed,
+    stretchPassRowsBase,
+  ]);
+
+  const stretchOverlays = useMemo(() => {
+    if (showSegmentTime) {
+      return buildStretchOverlays(
+        null,
+        comparison,
+        referencePoints,
+        segmentCurrentStretch?.index ?? null,
       );
     }
-    return markersFromPassRows(positionPassRows, "pos");
+    if (showStretchTime) {
+      return buildStretchOverlays(
+        null,
+        comparison,
+        referencePoints,
+        currentStretch?.index ?? null,
+      );
+    }
+    return [];
   }, [
-    showPositionTab,
-    isActivity,
-    activityPoints,
-    positionIndex,
-    activityDurationSec,
-    positionPassRows,
+    showSegmentTime,
+    showStretchTime,
+    comparison,
+    referencePoints,
+    segmentCurrentStretch,
+    currentStretch,
   ]);
 
-  const timeMapMarkers = useMemo(
-    () => (showTimeTab ? markersFromPassRows(timePassRows, "time") : []),
-    [showTimeTab, timePassRows],
+  const activityMapMarkers = useMemo(() => {
+    if (!showActivityScrub) return [];
+    return soloActivityMarker(
+      activityPoints,
+      positionIndex,
+      activityDurationSec,
+      SOLO_ACTIVITY_COLOR,
+    );
+  }, [showActivityScrub, activityPoints, positionIndex, activityDurationSec]);
+
+  const segmentMapMarkers = useMemo(
+    () => (showSegmentTime ? markersFromPassRows(segmentPassRows, "segment") : []),
+    [showSegmentTime, segmentPassRows],
   );
 
-  const onPositionSlider = (value: number) => {
-    setPositionIndex(value);
-    if (!isActivity && referencePoints.length) {
-      const elapsed = metricsAtIndex(referencePoints, value, referenceDurationSec)?.elapsedSec;
-      if (elapsed != null) setTimeElapsedSec(Math.min(elapsed, maxTimeSec));
-    }
+  const stretchMapMarkers = useMemo(
+    () => (showStretchTime ? markersFromPassRows(stretchPassRows, "stretch") : []),
+    [showStretchTime, stretchPassRows],
+  );
+
+  const stretchChartElevationPoints = useMemo(() => {
+    if (!showStretchTime || !currentStretch || !referencePoints.length) return [];
+    return slicePointsForStretch(referencePoints, currentStretch);
+  }, [showStretchTime, currentStretch, referencePoints]);
+
+  const goToStretchStart = (stretchIndex: number) => {
+    setStretchVirtualSec(virtualAtStretchStart(stretchIndex, stretchDurationList));
   };
 
-  const positionMax = Math.max(
-    0,
-    (isActivity ? activityPoints.length : referencePoints.length) - 1,
-  );
-  const timeStep = timeSliderStep(maxTimeSec);
+  const onPrevStretch = () => {
+    if (stretchPos.stretchIndex <= 0) return;
+    goToStretchStart(stretchPos.stretchIndex - 1);
+  };
+
+  const onNextStretch = () => {
+    if (stretchPos.stretchIndex >= stretches.length - 1) return;
+    goToStretchStart(stretchPos.stretchIndex + 1);
+  };
+
+  const onStretchLocalFractionChange = (fraction: number) => {
+    const local = Math.round(Math.max(0, Math.min(1, fraction)) * localStretchMax);
+    const base = virtualAtStretchStart(stretchPos.stretchIndex, stretchDurationList);
+    setStretchVirtualSec(base + local);
+  };
+
+  const positionMax = Math.max(0, activityPoints.length - 1);
+  const segmentTimeStep = timeSliderStep(maxSegmentTimeSec);
+  const stretchTimeStep = timeSliderStep(stretchVirtualMax);
+
+  const compareTabsAvailable = segmentTimeAvailable || stretchTimeAvailable;
 
   return {
     referencePoints,
@@ -329,29 +399,52 @@ export const useRouteExplorerCompareState = ({
     setPassesExpanded,
     activeTab,
     setActiveTab,
-    timeTabAvailable,
+    compareTabsAvailable,
+    segmentTimeAvailable,
+    stretchTimeAvailable,
+    // Activity solo
+    showActivityScrub,
     positionIndex,
     positionMax,
     positionFraction,
-    currentStretch,
-    timeCurrentStretch,
-    referenceStretchContext,
-    timeReferenceStretchContext,
-    referencePositionColor,
-    showPositionLegend: stretches.length > 0 && passSlices.length > 0,
-    stretchOverlays,
-    timeStretchOverlays,
-    timeElapsedSec,
-    setTimeElapsedSec,
-    maxTimeSec,
-    timeStep,
+    onPositionSlider: setPositionIndex,
     activityMetrics,
-    referenceMetrics,
-    timeReferenceMetrics,
-    positionPassRows,
-    timePassRows,
-    mapMarkers,
-    timeMapMarkers,
-    onPositionSlider,
+    activityMapMarkers,
+    // Segment time
+    showSegmentTime,
+    segmentElapsedSec,
+    setSegmentElapsedSec,
+    maxSegmentTimeSec,
+    segmentTimeStep,
+    segmentCurrentStretch,
+    segmentPassRows,
+    segmentReferenceMetrics,
+    segmentReferenceStretchContext,
+    segmentReferencePositionColor,
+    segmentMapMarkers,
+    // Stretch time
+    showStretchTime,
+    stretchVirtualSec,
+    setStretchVirtualSec,
+    stretchVirtualMax,
+    stretchTimeStep,
+    stretchPos,
+    currentStretch,
+    localStretchElapsed,
+    localStretchMax,
+    stretchPassRows,
+    stretchReferenceMetrics,
+    stretchReferenceStretchContext,
+    stretchReferencePositionColor,
+    stretchMapMarkers,
+    stretchChartElevationPoints,
+    onPrevStretch,
+    onNextStretch,
+    onStretchLocalFractionChange,
+    canPrevStretch: stretchPos.stretchIndex > 0,
+    canNextStretch: stretchPos.stretchIndex < stretches.length - 1,
+    stretchOverlays,
+    showAheadLegend: stretches.length > 0 && passSlices.length > 0,
+    stretchesCount: stretches.length,
   };
 };

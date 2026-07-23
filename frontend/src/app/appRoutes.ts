@@ -22,9 +22,10 @@ export const APP_VIEW = {
   COMPARE: "compare",
 } as const;
 
+/** Segment multi-pass compare modes (activity solo has no mode tabs). */
 export const APP_COMPARE_MODE = {
-  POSITION: "position",
-  TIME: "time",
+  SEGMENT: "segment",
+  STRETCH: "stretch",
 } as const;
 
 export type AppView = (typeof APP_VIEW)[keyof typeof APP_VIEW];
@@ -52,8 +53,16 @@ const parseAppView = (value: string | null): AppView | null => {
   return null;
 };
 
+/** Normalize URL mode; legacy time/position map to segment. */
 const parseCompareMode = (value: string | null): CompareMode | null => {
-  if (value === APP_COMPARE_MODE.POSITION || value === APP_COMPARE_MODE.TIME) return value;
+  if (value === APP_COMPARE_MODE.STRETCH) return APP_COMPARE_MODE.STRETCH;
+  if (
+    value === APP_COMPARE_MODE.SEGMENT ||
+    value === "time" ||
+    value === "position"
+  ) {
+    return APP_COMPARE_MODE.SEGMENT;
+  }
   return null;
 };
 
@@ -143,9 +152,9 @@ export const excludeComparePass = (
   return toggleComparePassSelection(selected, passId);
 };
 
-/** Omit default position mode from the URL. */
+/** Omit default segment mode from the URL; only stretch is explicit. */
 export const compareModeToSearchParam = (mode: CompareMode | null): CompareMode | null =>
-  mode === APP_COMPARE_MODE.TIME ? APP_COMPARE_MODE.TIME : null;
+  mode === APP_COMPARE_MODE.STRETCH ? APP_COMPARE_MODE.STRETCH : null;
 
 export const buildAppSearch = (params: AppSearchParams): string => {
   const search = new URLSearchParams();
@@ -189,18 +198,37 @@ export const mergeAppSearchParams = (
   comparePasses: patch.comparePasses !== undefined ? patch.comparePasses : current.comparePasses,
 });
 
+export type ResolveCompareModeOptions = {
+  segmentTimeAvailable?: boolean;
+  stretchTimeAvailable?: boolean;
+};
+
+/**
+ * Resolve active compare mode for segment multi-pass.
+ * Default is Segment time. Stretch only when requested and available.
+ */
 export const resolveCompareMode = (
   params: AppSearchParams,
-  timeTabAvailable = true,
+  options: ResolveCompareModeOptions | boolean = true,
 ): CompareMode => {
-  if (
-    params.view === APP_VIEW.COMPARE &&
-    params.compareMode === APP_COMPARE_MODE.TIME &&
-    timeTabAvailable
-  ) {
-    return APP_COMPARE_MODE.TIME;
+  const opts: ResolveCompareModeOptions =
+    typeof options === "boolean"
+      ? { segmentTimeAvailable: options, stretchTimeAvailable: options }
+      : options;
+  const segmentOk = opts.segmentTimeAvailable !== false;
+  const stretchOk = opts.stretchTimeAvailable === true;
+
+  if (params.view !== APP_VIEW.COMPARE) {
+    return APP_COMPARE_MODE.SEGMENT;
   }
-  return APP_COMPARE_MODE.POSITION;
+
+  if (params.compareMode === APP_COMPARE_MODE.STRETCH && stretchOk) {
+    return APP_COMPARE_MODE.STRETCH;
+  }
+
+  if (segmentOk) return APP_COMPARE_MODE.SEGMENT;
+  if (stretchOk) return APP_COMPARE_MODE.STRETCH;
+  return APP_COMPARE_MODE.SEGMENT;
 };
 
 export const cleanSearchForLocation = (

@@ -14,6 +14,10 @@ type CompareMapStageProps = {
   markers: ExplorerMarker[];
   clickableRoute?: TrackPoint[];
   onPositionClick?: (index: number) => void;
+  /** Zoom/pan target; defaults to full route when omitted. */
+  fitPoints?: TrackPoint[];
+  fitAnimate?: boolean;
+  fitKey?: string;
   legendLabel: string;
   children: ReactNode;
 };
@@ -25,6 +29,9 @@ export const CompareMapStage = ({
   markers,
   clickableRoute,
   onPositionClick,
+  fitPoints,
+  fitAnimate = false,
+  fitKey = "",
   legendLabel,
   children,
 }: CompareMapStageProps) => (
@@ -37,6 +44,9 @@ export const CompareMapStage = ({
         markers={markers}
         onPositionClick={onPositionClick}
         clickableRoute={clickableRoute}
+        fitPoints={fitPoints}
+        fitAnimate={fitAnimate}
+        fitKey={fitKey}
       />
     </div>
     <aside className={routeExplorerStyles.legend} aria-label={legendLabel}>

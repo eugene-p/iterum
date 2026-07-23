@@ -14,8 +14,9 @@ import { buildPassSlices } from "../../../routeExplorerUtils";
 import { ActivityDateTime } from "../../activities/ActivityDateTime";
 import { PassSelector } from "../components/PassSelector";
 import { PositionComparePanel } from "../components/PositionComparePanel";
+import { StretchTimePanel } from "../components/StretchTimePanel";
 import { TimeComparePanel } from "../components/TimeComparePanel";
-import type { CompareMode } from "../../../app/appRoutes";
+import { APP_COMPARE_MODE, type CompareMode } from "../../../app/appRoutes";
 import { routeExplorerStyles } from "./RouteExplorer.styles";
 import type { RouteExplorerTarget } from "./RouteExplorerTarget";
 import { useRouteExplorerData } from "./useRouteExplorerData";
@@ -88,17 +89,15 @@ export const RouteExplorer = ({
   const title =
     target.kind === "activity" ? target.activityName : (comparison?.segment.name ?? "Segment");
 
+  const showCompareTabs = !loading && !error && !isActivity && compare.compareTabsAvailable;
+
   return (
     <Modal open onClose={onClose} panelClassName={routeExplorerStyles.panel}>
       <ModalHeader
         title="Route Explorer"
         onClose={onClose}
         closeLabel="Close Route Explorer"
-        className={
-          !loading && !error && !isActivity && compare.timeTabAvailable
-            ? routeExplorerStyles.headerWithTabs
-            : undefined
-        }
+        className={showCompareTabs ? routeExplorerStyles.headerWithTabs : undefined}
         subtitle={
           <>
             <span className={routeExplorerStyles.toolbarSep} aria-hidden="true">
@@ -127,10 +126,14 @@ export const RouteExplorer = ({
         onValueChange={compare.setActiveTab}
         aria-label="Route explorer comparison mode"
       >
-        {!loading && !error && !isActivity && compare.timeTabAvailable && (
+        {showCompareTabs && (
           <Tabs.List className={routeExplorerStyles.tabBar}>
-            <Tabs.Trigger value="position">Position</Tabs.Trigger>
-            <Tabs.Trigger value="time">Time</Tabs.Trigger>
+            {compare.segmentTimeAvailable && (
+              <Tabs.Trigger value={APP_COMPARE_MODE.SEGMENT}>Segment time</Tabs.Trigger>
+            )}
+            {compare.stretchTimeAvailable && (
+              <Tabs.Trigger value={APP_COMPARE_MODE.STRETCH}>Stretch time</Tabs.Trigger>
+            )}
           </Tabs.List>
         )}
 
@@ -154,9 +157,9 @@ export const RouteExplorer = ({
               />
             )}
 
-            {isActivity || !compare.timeTabAvailable || compare.activeTab === "position" ? (
+            {compare.showActivityScrub ? (
               <PositionComparePanel
-                isActivity={isActivity}
+                isActivity
                 zoneMaxHr={zoneMaxHr}
                 activityDurationSec={activityDurationSec}
                 matchedPasses={matchedPasses}
@@ -164,23 +167,62 @@ export const RouteExplorer = ({
                   index: compare.positionIndex,
                   max: compare.positionMax,
                   fraction: compare.positionFraction,
-                  currentStretch: compare.currentStretch,
+                  currentStretch: null,
                   onChange: compare.onPositionSlider,
                 }}
                 map={{
-                  routePoints: isActivity ? activityPoints : compare.referencePoints,
+                  routePoints: activityPoints,
                   highlightPoints: [],
-                  stretchOverlays: compare.stretchOverlays,
-                  clickableRoute: isActivity ? activityPoints : compare.referencePoints,
-                  markers: compare.mapMarkers,
+                  stretchOverlays: [],
+                  clickableRoute: activityPoints,
+                  markers: compare.activityMapMarkers,
                 }}
                 metrics={{
                   activity: compare.activityMetrics,
-                  reference: compare.referenceMetrics,
-                  referenceStretchContext: compare.referenceStretchContext,
-                  referencePositionColor: compare.referencePositionColor,
-                  showPositionLegend: compare.showPositionLegend,
-                  passRows: compare.positionPassRows,
+                  reference: null,
+                  referenceStretchContext: null,
+                  referencePositionColor: null,
+                  showPositionLegend: false,
+                  passRows: [],
+                }}
+              />
+            ) : compare.showStretchTime ? (
+              <StretchTimePanel
+                zoneMaxHr={zoneMaxHr}
+                matchedPasses={matchedPasses}
+                slider={{
+                  virtualSec: compare.stretchVirtualSec,
+                  virtualMaxSec: compare.stretchVirtualMax,
+                  step: compare.stretchTimeStep,
+                  localElapsedSec: compare.localStretchElapsed,
+                  localMaxSec: compare.localStretchMax,
+                  stretchIndex: compare.stretchPos.stretchIndex,
+                  stretchesCount: compare.stretchesCount,
+                  currentStretch: compare.currentStretch,
+                  canPrev: compare.canPrevStretch,
+                  canNext: compare.canNextStretch,
+                  onVirtualChange: compare.setStretchVirtualSec,
+                  onPrev: compare.onPrevStretch,
+                  onNext: compare.onNextStretch,
+                  onLocalFractionChange: compare.onStretchLocalFractionChange,
+                }}
+                map={{
+                  routePoints: compare.referencePoints,
+                  stretchElevationPoints: compare.stretchChartElevationPoints,
+                  fitPoints: compare.stretchChartElevationPoints,
+                  fitKey:
+                    compare.currentStretch != null
+                      ? `stretch-${compare.currentStretch.index}`
+                      : "stretch",
+                  stretchOverlays: compare.stretchOverlays,
+                  markers: compare.stretchMapMarkers,
+                }}
+                metrics={{
+                  reference: compare.stretchReferenceMetrics,
+                  referenceStretchContext: compare.stretchReferenceStretchContext,
+                  referencePositionColor: compare.stretchReferencePositionColor,
+                  showPositionLegend: compare.showAheadLegend,
+                  passRows: compare.stretchPassRows,
                 }}
               />
             ) : (
@@ -188,23 +230,23 @@ export const RouteExplorer = ({
                 zoneMaxHr={zoneMaxHr}
                 matchedPasses={matchedPasses}
                 slider={{
-                  elapsedSec: compare.timeElapsedSec,
-                  maxSec: compare.maxTimeSec,
-                  step: compare.timeStep,
-                  currentStretch: compare.timeCurrentStretch,
-                  onChange: compare.setTimeElapsedSec,
+                  elapsedSec: compare.segmentElapsedSec,
+                  maxSec: compare.maxSegmentTimeSec,
+                  step: compare.segmentTimeStep,
+                  currentStretch: compare.segmentCurrentStretch,
+                  onChange: compare.setSegmentElapsedSec,
                 }}
                 map={{
                   routePoints: compare.referencePoints,
-                  stretchOverlays: compare.timeStretchOverlays,
-                  markers: compare.timeMapMarkers,
+                  stretchOverlays: compare.stretchOverlays,
+                  markers: compare.segmentMapMarkers,
                 }}
                 metrics={{
-                  reference: compare.timeReferenceMetrics,
-                  referenceStretchContext: compare.timeReferenceStretchContext,
-                  referencePositionColor: compare.referencePositionColor,
-                  showPositionLegend: compare.showPositionLegend,
-                  passRows: compare.timePassRows,
+                  reference: compare.segmentReferenceMetrics,
+                  referenceStretchContext: compare.segmentReferenceStretchContext,
+                  referencePositionColor: compare.segmentReferencePositionColor,
+                  showPositionLegend: compare.showAheadLegend,
+                  passRows: compare.segmentPassRows,
                 }}
               />
             )}

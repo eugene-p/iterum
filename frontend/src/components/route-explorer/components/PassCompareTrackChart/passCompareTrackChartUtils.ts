@@ -4,7 +4,8 @@ import {
   resolveActivityDateTime,
 } from "../../../../activityDisplay";
 import { elapsedSecAtIndex, indexAtElapsedSec, indexAtRelativePosition } from "../../../../routeExplorerUtils";
-import type { SegmentPass, TrackPoint } from "../../../../types";
+import { stretchIndicesOnPass } from "../../../../stretchUtils";
+import type { SegmentPass, Stretch, TrackPoint } from "../../../../types";
 import {
   CHART_BOTTOM,
   CHART_TOP,
@@ -119,6 +120,29 @@ export const passChartItemsFromRows = (
       dasharray: passChartLineDash(paletteIndex),
       points: row.slice.points,
       durationSec: row.slice.durationSec,
+      maxHr: row.slice.pass.max_hr,
+    };
+  });
+
+/** Clip each pass to the current stretch window for Stretch time chart. */
+export const passChartItemsFromStretchRows = (
+  rows: PositionPassRow[],
+  stretch: Stretch,
+  stretchDurationSec: number,
+  matchedPasses: ReadonlyArray<{ id: number }> = [],
+): PassCompareTrackPass[] =>
+  rows.map((row, index) => {
+    const passIndex = matchedPasses.findIndex((pass) => pass.id === row.slice.pass.id);
+    const paletteIndex = passIndex >= 0 ? passIndex : index;
+    const { startIdx, endIdx } = stretchIndicesOnPass(row.slice.points, stretch);
+    const points = row.slice.points.slice(startIdx, Math.max(startIdx, endIdx) + 1);
+    return {
+      label: formatPassChartLabel(row.slice.pass),
+      color: row.color,
+      seriesIndex: index,
+      dasharray: passChartLineDash(paletteIndex),
+      points,
+      durationSec: stretchDurationSec,
       maxHr: row.slice.pass.max_hr,
     };
   });

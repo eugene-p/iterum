@@ -81,7 +81,22 @@ describe("appRoutes", () => {
     expect(parseAppSearchParams("?view=invalid")).toEqual(emptyParams);
     expect(parseAppSearchParams("?view=compare&mode=time")).toEqual({
       view: "compare",
-      compareMode: "time",
+      compareMode: "segment",
+      comparePasses: null,
+    });
+    expect(parseAppSearchParams("?view=compare&mode=position")).toEqual({
+      view: "compare",
+      compareMode: "segment",
+      comparePasses: null,
+    });
+    expect(parseAppSearchParams("?view=compare&mode=segment")).toEqual({
+      view: "compare",
+      compareMode: "segment",
+      comparePasses: null,
+    });
+    expect(parseAppSearchParams("?view=compare&mode=stretch")).toEqual({
+      view: "compare",
+      compareMode: "stretch",
       comparePasses: null,
     });
     expect(parseAppSearchParams("?view=compare&passes=3,1,9")).toEqual({
@@ -99,28 +114,31 @@ describe("appRoutes", () => {
     expect(buildAppSearch({ view: "compare", compareMode: null, comparePasses: null })).toBe(
       "?view=compare",
     );
-    expect(buildAppSearch({ view: "compare", compareMode: "time", comparePasses: null })).toBe(
-      "?view=compare&mode=time",
+    expect(buildAppSearch({ view: "compare", compareMode: "segment", comparePasses: null })).toBe(
+      "?view=compare",
+    );
+    expect(buildAppSearch({ view: "compare", compareMode: "stretch", comparePasses: null })).toBe(
+      "?view=compare&mode=stretch",
     );
     expect(
       buildAppSearch({ view: "compare", compareMode: null, comparePasses: [3, 1] }),
     ).toBe("?view=compare&passes=3%2C1");
-    expect(buildAppSearch({ view: "route", compareMode: "time", comparePasses: [1] })).toBe(
+    expect(buildAppSearch({ view: "route", compareMode: "stretch", comparePasses: [1] })).toBe(
       "?view=route&passes=1",
     );
     expect(buildAppSearch({ view: null, compareMode: null, comparePasses: [2, 3] })).toBe(
       "?passes=2%2C3",
     );
 
-    expect(compareModeToSearchParam("position")).toBeNull();
-    expect(compareModeToSearchParam("time")).toBe("time");
+    expect(compareModeToSearchParam("segment")).toBeNull();
+    expect(compareModeToSearchParam("stretch")).toBe("stretch");
 
     expect(
       mergeAppSearchParams(
         { view: "compare", compareMode: null, comparePasses: [1, 2] },
-        { compareMode: "time" },
+        { compareMode: "stretch" },
       ),
-    ).toEqual({ view: "compare", compareMode: "time", comparePasses: [1, 2] });
+    ).toEqual({ view: "compare", compareMode: "stretch", comparePasses: [1, 2] });
   });
 
   it("resolves and toggles compare pass selection", () => {
@@ -152,17 +170,35 @@ describe("appRoutes", () => {
     const compareParams = { view: "compare" as const, comparePasses: null };
 
     expect(
-      resolveCompareMode({ ...compareParams, compareMode: "time" }, true),
-    ).toBe(APP_COMPARE_MODE.TIME);
+      resolveCompareMode(
+        { ...compareParams, compareMode: "segment" },
+        { segmentTimeAvailable: true, stretchTimeAvailable: true },
+      ),
+    ).toBe(APP_COMPARE_MODE.SEGMENT);
     expect(
-      resolveCompareMode({ ...compareParams, compareMode: "time" }, false),
-    ).toBe(APP_COMPARE_MODE.POSITION);
+      resolveCompareMode(
+        { ...compareParams, compareMode: "stretch" },
+        { segmentTimeAvailable: true, stretchTimeAvailable: true },
+      ),
+    ).toBe(APP_COMPARE_MODE.STRETCH);
     expect(
-      resolveCompareMode({ ...compareParams, compareMode: null }, true),
-    ).toBe(APP_COMPARE_MODE.POSITION);
+      resolveCompareMode(
+        { ...compareParams, compareMode: "stretch" },
+        { segmentTimeAvailable: true, stretchTimeAvailable: false },
+      ),
+    ).toBe(APP_COMPARE_MODE.SEGMENT);
     expect(
-      resolveCompareMode({ view: "route", compareMode: "time", comparePasses: null }, true),
-    ).toBe(APP_COMPARE_MODE.POSITION);
+      resolveCompareMode(
+        { ...compareParams, compareMode: null },
+        { segmentTimeAvailable: true, stretchTimeAvailable: true },
+      ),
+    ).toBe(APP_COMPARE_MODE.SEGMENT);
+    expect(
+      resolveCompareMode(
+        { view: "route", compareMode: "stretch", comparePasses: null },
+        { segmentTimeAvailable: true, stretchTimeAvailable: true },
+      ),
+    ).toBe(APP_COMPARE_MODE.SEGMENT);
   });
 
   it("validates modal view against the current route", () => {

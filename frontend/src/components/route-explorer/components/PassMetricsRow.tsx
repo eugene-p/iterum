@@ -44,7 +44,7 @@ export const PassMetricsRow = ({
             <span
               className={routeExplorerStyles.positionSwatch}
               style={{ background: positionColor }}
-              title="Stretch position"
+              title="Ahead ranking"
             />
           )}
         </div>
