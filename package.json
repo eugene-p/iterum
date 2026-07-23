@@ -21,7 +21,7 @@
     "test": "npm run test -w frontend && npm run test -w server",
     "lint": "npm run lint -w frontend",
     "validate": "npm run validate -w frontend",
-    "validate:target": "node .grok/skills/tdd/scripts/validate-target.mjs",
+    "validate:target": "node scripts/validate-target.mjs",
     "start": "npm run start -w server"
   },
   "devDependencies": {
