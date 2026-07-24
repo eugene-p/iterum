@@ -19,18 +19,12 @@ export const PassSelector = ({
   onSetPassIncluded,
 }: PassSelectorProps) => (
   <CollapsibleSection
-    className={routeExplorerStyles.section}
-    bodyClassName={routeExplorerStyles.passSelectorBody}
+    variant="card"
     title="Matched passes"
     headingLevel="h3"
-    titleClassName={routeExplorerStyles.sectionTitle}
     expanded={expanded}
     onToggle={onToggleExpanded}
-    meta={
-      <MutedSpan className={routeExplorerStyles.sectionToggleMeta}>
-        {selectedPassIdSet.size} of {matchedPasses.length} selected
-      </MutedSpan>
-    }
+    meta={`${selectedPassIdSet.size} of ${matchedPasses.length} selected`}
   >
     <MutedText className={routeExplorerStyles.sectionHint}>
       Choose which activities to compare at each position and time.

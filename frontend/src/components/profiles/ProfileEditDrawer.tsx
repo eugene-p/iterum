@@ -8,7 +8,6 @@ import { STRETCH_THRESHOLDS_SECTION_HINT } from "../segments/StretchPanel/stretc
 import { StretchThresholdSettings } from "../segments/StretchPanel/StretchThresholdSettings";
 import { Button, CollapsibleSection, Drawer, ErrorText, HintButton, Input } from "../ui";
 import { entityEditDrawerStyles } from "../app/entityEditDrawerStyles";
-import { profileEditDrawerStyles } from "./profileEditDrawer.styles";
 
 const PROFILE_EDIT_FORM_ID = "profile-edit-form";
 
@@ -152,8 +151,7 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
         </label>
 
         <CollapsibleSection
-          className={profileEditDrawerStyles.thresholdsSection}
-          bodyClassName={profileEditDrawerStyles.thresholdsBody}
+          variant="card"
           headingLevel="h3"
           title="Default stretch thresholds"
           meta={<HintButton text={STRETCH_THRESHOLDS_SECTION_HINT} placement="top" />}

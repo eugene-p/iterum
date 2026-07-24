@@ -115,17 +115,12 @@ export const SegmentDetailView = ({
         loading={stretch.loading}
       />
       <CollapsibleSection
-        className={stretchPanelStyles.panel}
-        bodyClassName={stretchPanelStyles.body}
+        variant="panel"
         title="Matched passes"
         headingLevel="h2"
         expanded={matchedPassesExpanded}
         onToggle={() => setMatchedPassesExpanded((open) => !open)}
-        meta={
-          <MutedSpan className={stretchPanelStyles.toggleMeta}>
-            {includedPassIdSet.size} of {matchedPassCount} included
-          </MutedSpan>
-        }
+        meta={`${includedPassIdSet.size} of ${matchedPassCount} included`}
       >
         <MutedText className={stretchPanelStyles.hint}>
           Uncheck passes to exclude them from comparisons and stretch stats. The highlighted row is

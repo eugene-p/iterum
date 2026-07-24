@@ -14,14 +14,11 @@ export const routeExplorerStyles = {
   section: "rounded-[10px] border border-border bg-card p-[0.85rem]",
   sectionHead: "flex flex-wrap items-center justify-between gap-2",
   sectionHeadLead: "flex items-center gap-1.5",
-  sectionTitle: "m-0 text-[0.9rem] font-semibold text-subtle",
+  sectionTitle: "m-0 text-[0.9rem] font-semibold leading-none text-subtle",
   sectionControls: "flex flex-col gap-1.5 px-[0.85rem] py-[0.5rem]",
-  sectionToggleMeta: "text-[0.78rem]",
   sectionHint: "m-0 text-[0.78rem]",
-  passSelectorBody: "flex flex-col gap-2 px-0 pb-0 pt-1",
 
   slider: "w-full accent-primary",
-  hrChartSectionBody: "flex flex-col gap-1.5 pt-0",
 
   mapStage:
     "grid min-h-[min(62vh,580px)] gap-3 [grid-template-columns:1fr_min(300px,32%)] max-[860px]:min-h-auto max-[860px]:[grid-template-columns:1fr]",

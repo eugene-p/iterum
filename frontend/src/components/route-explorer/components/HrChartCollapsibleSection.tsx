@@ -1,6 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { CollapsibleSection, MutedSpan } from "../../ui";
-import { routeExplorerStyles } from "../RouteExplorer/RouteExplorer.styles";
+import { CollapsibleSection } from "../../ui";
 
 type HrChartCollapsibleSectionProps = {
   children: ReactNode;
@@ -15,18 +14,15 @@ export const HrChartCollapsibleSection = ({
 
   return (
     <CollapsibleSection
-      className={routeExplorerStyles.section}
-      bodyClassName={routeExplorerStyles.hrChartSectionBody}
+      variant="card"
       title="Heart rate & elevation"
       headingLevel="h3"
       expanded={expanded}
       onToggle={() => setExpanded((open) => !open)}
       meta={
-        passCount != null && passCount > 0 ? (
-          <MutedSpan className={routeExplorerStyles.sectionToggleMeta}>
-            {passCount} {passCount === 1 ? "pass" : "passes"}
-          </MutedSpan>
-        ) : undefined
+        passCount != null && passCount > 0
+          ? `${passCount} ${passCount === 1 ? "pass" : "passes"}`
+          : undefined
       }
     >
       {children}

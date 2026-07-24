@@ -2,12 +2,15 @@ import type { ReactNode } from "react";
 import { cn } from "../../../lib/cn";
 import { collapsibleSectionStyles } from "./CollapsibleSection.styles";
 
+export type CollapsibleSectionVariant = keyof typeof collapsibleSectionStyles.variant;
+
 type CollapsibleSectionProps = {
   title: ReactNode;
   meta?: ReactNode;
   expanded: boolean;
   onToggle: () => void;
   children: ReactNode;
+  variant?: CollapsibleSectionVariant;
   className?: string;
   headerClassName?: string;
   titleClassName?: string;
@@ -40,13 +43,14 @@ export const CollapsibleSection = ({
   expanded,
   onToggle,
   children,
+  variant = "bare",
   className,
   headerClassName,
   titleClassName,
   bodyClassName,
   headingLevel: Heading = "h2",
 }: CollapsibleSectionProps) => (
-  <section className={className}>
+  <section className={cn(collapsibleSectionStyles.variant[variant], className)}>
     <div className={cn(collapsibleSectionStyles.header, headerClassName)}>
       <button
         type="button"

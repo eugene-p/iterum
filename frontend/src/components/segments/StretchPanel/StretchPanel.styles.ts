@@ -1,14 +1,10 @@
 import { cn } from "../../../lib/cn";
 import { inputStyles } from "../../ui/Input/Input.styles";
-import { panelStyles } from "../../ui/Panel/Panel.styles";
 import { stackStyles } from "../../ui/Stack/Stack.styles";
 import { textStyles } from "../../ui/Text/Text.styles";
 
 export const stretchPanelStyles = {
-  panel: cn(panelStyles.root, stackStyles.stack, "gap-0 p-0 overflow-hidden"),
-  body: cn(stackStyles.stack, "gap-2 px-[0.85rem] pb-[0.85rem]"),
   hint: "m-0 text-[0.75rem]",
-  toggleMeta: "text-[0.78rem]",
   splitLayout: "grid min-h-0 gap-3 lg:grid-cols-[minmax(11rem,14rem)_minmax(0,1fr)] lg:items-start",
   stretchListPane: "min-w-0",
   comparisonPane: cn(stackStyles.stack, "min-w-0 gap-1.5"),

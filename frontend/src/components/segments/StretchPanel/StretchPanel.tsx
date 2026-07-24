@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, CollapsibleSection, MutedSpan, MutedText } from "../../ui";
+import { Button, CollapsibleSection, MutedText } from "../../ui";
 import {
   comparisonBaselineFromStretches,
   comparisonBaselineFromStretch,
@@ -85,14 +85,13 @@ export const StretchPanel = ({
 
   return (
     <CollapsibleSection
-      className={stretchPanelStyles.panel}
-      bodyClassName={stretchPanelStyles.body}
+      variant="panel"
       title="Stretches"
       headingLevel="h2"
       expanded={expanded}
       onToggle={() => setExpanded((open) => !open)}
       meta={
-        <MutedSpan className={stretchPanelStyles.toggleMeta}>
+        <>
           {stretches.length
             ? `${stretches.length} stretch${stretches.length === 1 ? "" : "es"}`
             : "No stretches"}
@@ -100,7 +99,7 @@ export const StretchPanel = ({
           {stretchSelected && selectedStretch
             ? ` · ${stretchKindLabel(selectedStretch.kind)} #${selectedStretch.index}`
             : " · full segment"}
-        </MutedSpan>
+        </>
       }
     >
       <div className={stretchPanelStyles.actions}>
