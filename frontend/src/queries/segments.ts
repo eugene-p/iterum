@@ -10,13 +10,17 @@ import {
   saveSegmentStretches,
   updateSegment,
 } from "../api";
-import type { SegmentStretchPreviewOptions, StretchThresholds } from "../types";
+import type {
+  ProfileViewScope,
+  SegmentStretchPreviewOptions,
+  StretchThresholds,
+} from "../types";
 import { queryKeys } from "./queryKeys";
 
-export const useSegmentsQuery = () =>
+export const useSegmentsQuery = (profileScope?: ProfileViewScope) =>
   useQuery({
-    queryKey: queryKeys.segments,
-    queryFn: listSegments,
+    queryKey: queryKeys.segments(profileScope),
+    queryFn: () => listSegments(profileScope),
   });
 
 export const useSegmentReferenceQuery = (segmentId: number) =>
@@ -60,7 +64,7 @@ export const useSaveSegmentStretchesMutation = () => {
 
 export const useInvalidateSegments = () => {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: ["segments"] });
+  return () => queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
 };
 
 export const useInvalidateSegmentCompare = () => {
@@ -77,9 +81,9 @@ export const useCreateSegmentMutation = () => {
   return useMutation({
     mutationFn: (payload: CreateSegmentPayload) => createSegment(payload),
     onSuccess: (segment) => {
-      queryClient.invalidateQueries({ queryKey: ["segments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentCompareRoot(segment.id) });
-      queryClient.invalidateQueries({ queryKey: ["activity-matched-segments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activityMatchedSegmentsRoot });
     },
   });
 };
@@ -89,7 +93,7 @@ export const useUpdateSegmentMutation = () => {
   return useMutation({
     mutationFn: ({ id, payload }: UpdateSegmentPayload) => updateSegment(id, payload),
     onSuccess: (segment) => {
-      queryClient.invalidateQueries({ queryKey: ["segments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentCompareRoot(segment.id) });
     },
   });
@@ -100,8 +104,8 @@ export const useDeleteSegmentMutation = () => {
   return useMutation({
     mutationFn: (id: number) => deleteSegment(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["segments"] });
-      queryClient.invalidateQueries({ queryKey: ["activity-matched-segments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activityMatchedSegmentsRoot });
     },
   });
 };
@@ -112,7 +116,8 @@ export const useRescanSegmentMutation = () => {
     mutationFn: (id: number) => rescanSegment(id),
     onSuccess: (_result, segmentId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentCompareRoot(segmentId) });
-      queryClient.invalidateQueries({ queryKey: ["activity-matched-segments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activityMatchedSegmentsRoot });
     },
   });
 };
@@ -122,9 +127,9 @@ export const useCreateReversedSegmentMutation = () => {
   return useMutation({
     mutationFn: ({ id, name }: { id: number; name: string }) => createReversedSegment(id, name),
     onSuccess: (segment) => {
-      queryClient.invalidateQueries({ queryKey: ["segments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentCompareRoot(segment.id) });
-      queryClient.invalidateQueries({ queryKey: ["activity-matched-segments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activityMatchedSegmentsRoot });
     },
   });
 };

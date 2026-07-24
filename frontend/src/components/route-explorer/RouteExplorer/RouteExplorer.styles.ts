@@ -1,7 +1,6 @@
 import { cn } from "../../../lib/cn";
 import { sidebarListStyles } from "../../AppSidebar/sidebarList.styles";
 import { modalStyles } from "../../ui/Modal/Modal.styles";
-import { stackStyles } from "../../ui/Stack/Stack.styles";
 
 export const routeExplorerStyles = {
   panel: cn(modalStyles.panel, "max-w-[1280px]"),
@@ -13,18 +12,13 @@ export const routeExplorerStyles = {
   body: "flex-1",
 
   section: "rounded-[10px] border border-border bg-card p-[0.85rem]",
-  sectionCollapsible: cn(stackStyles.stack, "gap-2 px-3 py-[0.55rem]"),
   sectionHead: "flex flex-wrap items-center justify-between gap-2",
   sectionHeadLead: "flex items-center gap-1.5",
-  sectionTitle: "m-0 text-[0.9rem] text-subtle",
+  sectionTitle: "m-0 text-[0.9rem] font-semibold text-subtle",
   sectionControls: "flex flex-col gap-1.5 px-[0.85rem] py-[0.5rem]",
-
-  sectionToggle:
-    "flex w-full items-center justify-between gap-2 border-none bg-transparent px-0 py-[0.15rem] text-left text-inherit hover:text-fg",
-  sectionToggleMain: "flex min-w-0 flex-wrap items-baseline gap-2",
   sectionToggleMeta: "text-[0.78rem]",
-  sectionChevron: "shrink-0 text-[0.85rem] text-muted",
   sectionHint: "m-0 text-[0.78rem]",
+  passSelectorBody: "flex flex-col gap-2 px-0 pb-0 pt-1",
 
   slider: "w-full accent-primary",
   hrChartSectionBody: "flex flex-col gap-1.5 pt-0",

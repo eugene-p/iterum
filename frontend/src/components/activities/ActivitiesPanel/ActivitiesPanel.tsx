@@ -1,21 +1,13 @@
 import { useMemo, useRef, useState } from "react";
 import { useProfileContext } from "../../../app/ProfileContext";
-import {
-  Dropzone,
-  DropzoneLabel,
-  ErrorText,
-  FilePicker,
-  Spinner,
-  Stack,
-  UploadStatus,
-} from "../../ui";
-import { useActivityUpload } from "../../../hooks/useActivityUpload";
+import { Stack } from "../../ui";
 import type { ActivitySummary } from "../../../types";
 import { SidebarListToolbar } from "../../AppSidebar/SidebarListToolbar";
 import { sidebarListStyles } from "../../AppSidebar/sidebarList.styles";
 import { ProfileScopeHint } from "../../profiles/ProfileScopeHint";
 import { ActivityPreviewPopover } from "../../previews/ActivityPreviewPopover";
 import { ActivityDateTime } from "../ActivityDateTime";
+import { ActivityUploadControl } from "../ActivityUploadControl";
 import { activitiesPanelStyles } from "./ActivitiesPanel.styles";
 import {
   activityMetaLine,
@@ -37,7 +29,6 @@ export const ActivitiesPanel = ({
 }: ActivitiesPanelProps) => {
   const { activeProfileId, viewScope } = useProfileContext();
   const viewingAll = viewScope === "all";
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [preview, setPreview] = useState<{
     id: number;
@@ -45,12 +36,6 @@ export const ActivitiesPanel = ({
     rect: DOMRect;
   } | null>(null);
   const hoverTimerRef = useRef<number | null>(null);
-
-  const upload = useActivityUpload({
-    profileId: activeProfileId ?? 0,
-    onRefresh,
-    onError: setError,
-  });
 
   const visibleActivities = useMemo(
     () => filterAndSortActivitiesBySearch(activities, searchQuery),
@@ -78,8 +63,6 @@ export const ActivitiesPanel = ({
       <div className={activitiesPanelStyles.root}>
         <div className={activitiesPanelStyles.body}>
           <Stack>
-            {error && <ErrorText>{error}</ErrorText>}
-
             <SidebarListToolbar
               value={searchQuery}
               onChange={setSearchQuery}
@@ -132,38 +115,15 @@ export const ActivitiesPanel = ({
           </Stack>
         </div>
 
-        <div className={activitiesPanelStyles.footer}>
-          <Dropzone
-            footer
-            disabled={upload.uploading}
-            state={upload.dropzoneState}
-            onDragActiveChange={upload.setDragOver}
-            onFiles={(files) => void upload.handleUpload(files)}
-          >
-            {upload.uploading ? (
-              <UploadStatus footer>
-                <Spinner />
-                <span className="truncate">{upload.statusText}</span>
-              </UploadStatus>
-            ) : upload.uploadPhase === "done" ? (
-              <UploadStatus footer ok>
-                <span className="truncate">{upload.statusText}</span>
-              </UploadStatus>
-            ) : (
-              <>
-                <DropzoneLabel footer>Drop GPX, TCX, KML, fitlog, or CSV</DropzoneLabel>
-                <FilePicker
-                  footer
-                  inputRef={upload.fileInputRef}
-                  accept=".gpx,.tcx,.kml,.kmz,.fitlog,.csv"
-                  multiple
-                  label="Choose file"
-                  onFiles={(files) => void upload.handleUpload(files)}
-                />
-              </>
-            )}
-          </Dropzone>
-        </div>
+        {activeProfileId != null && (
+          <div className={activitiesPanelStyles.footer}>
+            <ActivityUploadControl
+              variant="footer"
+              profileId={activeProfileId}
+              onRefresh={onRefresh}
+            />
+          </div>
+        )}
       </div>
 
       {preview && (

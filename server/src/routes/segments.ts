@@ -6,6 +6,8 @@ import {
   type CreateSegmentBody,
   type IdParams,
   idParamSchema,
+  listSegmentsQuerySchema,
+  type ListSegmentsQuery,
   parseStretchThresholds,
   reverseSegmentBodySchema,
   type ReverseSegmentBody,
@@ -39,8 +41,10 @@ export const segmentsRouter = Router();
 
 segmentsRouter.get(
   "/",
-  asyncHandler(async (_req, res) => {
-    const segments = await listSegments();
+  validate(listSegmentsQuerySchema, "query"),
+  asyncHandler(async (req, res) => {
+    const { profile_id: profileId } = validated<ListSegmentsQuery>(req, "query");
+    const segments = await listSegments(profileId);
     res.json(segments);
   }),
 );

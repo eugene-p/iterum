@@ -28,6 +28,9 @@ export type SegmentRow = {
   match_threshold: number;
   location: string | null;
   tags: string[] | null;
+  match_activity_count?: number;
+  matched_last_30d?: number;
+  last_matched_at?: string | null;
 };
 
 export type ActivitySegmentContext = {
@@ -95,11 +98,51 @@ export const loadSegment = async (segmentId: number): Promise<SegmentRow | null>
   return row ? (mapSegmentRow(row) as SegmentRow) : null;
 };
 
-export const listAllSegments = async (): Promise<SegmentRow[]> => {
+export const listAllSegments = async (
+  profileId?: number | "all" | null,
+): Promise<SegmentRow[]> => {
+  const scopeProfileId =
+    profileId != null && profileId !== "all" ? profileId : null;
+
   const result = await query<Record<string, unknown>>(
-    `SELECT * FROM segments ORDER BY created_at DESC`,
+    `SELECT s.*,
+            COALESCE(stats.match_activity_count, 0) AS match_activity_count,
+            COALESCE(stats.matched_last_30d, 0) AS matched_last_30d,
+            stats.last_matched_at
+     FROM segments s
+     LEFT JOIN LATERAL (
+       SELECT
+         COUNT(DISTINCT m.activity_id)::int AS match_activity_count,
+         COUNT(DISTINCT m.activity_id) FILTER (
+           WHERE COALESCE(a.started_at, a.created_at) >= NOW() - INTERVAL '30 days'
+         )::int AS matched_last_30d,
+         MAX(COALESCE(a.started_at, a.created_at)) AS last_matched_at
+       FROM activity_segment_matches m
+       JOIN activities a ON a.id = m.activity_id
+       WHERE m.segment_id = s.id
+         AND ($1::int IS NULL OR a.profile_id = $1)
+     ) stats ON true
+     ORDER BY s.created_at DESC`,
+    [scopeProfileId],
   );
-  return result.rows.map((row) => mapSegmentRow(row) as SegmentRow);
+
+  return result.rows.map((row) => {
+    const mapped = mapSegmentRow(row) as SegmentRow & {
+      match_activity_count?: unknown;
+      matched_last_30d?: unknown;
+      last_matched_at?: unknown;
+    };
+    const lastMatched = mapped.last_matched_at;
+    return {
+      ...mapped,
+      match_activity_count: Number(mapped.match_activity_count ?? 0),
+      matched_last_30d: Number(mapped.matched_last_30d ?? 0),
+      last_matched_at:
+        lastMatched == null || lastMatched === ""
+          ? null
+          : new Date(String(lastMatched)).toISOString(),
+    };
+  });
 };
 
 /** Activities that may enter segment start then end gates (necessary condition for matching). */

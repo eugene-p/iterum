@@ -62,7 +62,7 @@ export const useDeleteActivityMutation = () => {
     mutationFn: (id: number) => deleteActivity(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["activities"] });
-      queryClient.invalidateQueries({ queryKey: ["segments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
     },
   });
 };
@@ -75,7 +75,8 @@ export const useUploadActivityMutation = () => {
     onSuccess: (activity) => {
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       queryClient.invalidateQueries({ queryKey: queryKeys.activity(activity.id) });
-      queryClient.invalidateQueries({ queryKey: ["activity-matched-segments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.activityMatchedSegmentsRoot });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
     },
   });
 };

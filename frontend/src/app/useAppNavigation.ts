@@ -2,6 +2,10 @@ import { useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { SidebarTab } from "../components/AppSidebar";
 import {
+  writeLastOpenedActivity,
+  writeLastOpenedSegment,
+} from "../lib/lastOpenedStorage";
+import {
   APP_VIEW,
   appRoutes,
   buildAppSearch,
@@ -74,11 +78,17 @@ export const useAppNavigation = () => {
     goHome,
     setSidebarTab,
     goActivity: useCallback(
-      (activityId: number) => navigate(appRoutes.activity(activityId)),
+      (activityId: number) => {
+        writeLastOpenedActivity(activityId);
+        navigate(appRoutes.activity(activityId));
+      },
       [navigate],
     ),
     goSegment: useCallback(
-      (segmentId: number) => navigate(appRoutes.segment(segmentId)),
+      (segmentId: number) => {
+        writeLastOpenedSegment(segmentId);
+        navigate(appRoutes.segment(segmentId));
+      },
       [navigate],
     ),
 

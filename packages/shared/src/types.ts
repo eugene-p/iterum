@@ -60,6 +60,12 @@ export interface Segment {
   location?: string | null;
   tags?: string[];
   created_at: string;
+  /** Distinct activities with ≥1 match (list payload; scope may filter by profile). */
+  match_activity_count?: number;
+  /** Distinct matched activities in the last 30 days. */
+  matched_last_30d?: number;
+  /** Latest activity started_at/created_at among matches. */
+  last_matched_at?: string | null;
 }
 
 export interface SegmentPass {

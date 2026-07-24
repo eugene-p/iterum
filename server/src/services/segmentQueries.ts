@@ -61,7 +61,8 @@ const buildStretchPayload = async (
   };
 };
 
-export const listSegments = async () => listAllSegments();
+export const listSegments = async (profileId?: number | "all" | null) =>
+  listAllSegments(profileId);
 
 export const getSegmentById = async (segmentId: number) => loadSegment(segmentId);
 

@@ -36,7 +36,7 @@ export const useAppShell = () => {
   const { viewScope } = useProfileContext();
 
   const activitiesQuery = useActivitiesQuery(viewScope ?? undefined);
-  const segmentsQuery = useSegmentsQuery();
+  const segmentsQuery = useSegmentsQuery(viewScope ?? undefined);
   const invalidateActivities = useInvalidateActivities();
   const invalidateSegments = useInvalidateSegments();
 

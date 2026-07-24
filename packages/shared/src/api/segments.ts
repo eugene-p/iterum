@@ -3,6 +3,13 @@ import { parseStretchThresholds, stretchThresholdsSchema } from "../stretch.js";
 
 const coordinateSchema = z.coerce.number().finite();
 
+export const listSegmentsQuerySchema = z.object({
+  profile_id: z
+    .union([z.literal("all"), z.coerce.number().int().positive()])
+    .optional(),
+});
+export type ListSegmentsQuery = z.infer<typeof listSegmentsQuerySchema>;
+
 export const createSegmentBodySchema = z.object({
   name: z.string().trim().min(1),
   description: z.string().nullable().optional(),

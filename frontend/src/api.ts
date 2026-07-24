@@ -127,8 +127,8 @@ export function sampleActivityRoute(id: number) {
   );
 }
 
-export function listSegments() {
-  return request<Segment[]>("/api/segments");
+export function listSegments(scope?: ProfileViewScope) {
+  return request<Segment[]>(`/api/segments${profileQueryParam(scope)}`);
 }
 
 export function createSegment(payload: {

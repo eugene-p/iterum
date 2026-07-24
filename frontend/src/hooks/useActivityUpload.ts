@@ -3,14 +3,21 @@ import type { DropzoneState } from "../components/ui/Dropzone/Dropzone";
 import type { UploadPhase } from "../lib/uploadStatus";
 import { uploadStatusText } from "../lib/uploadStatus";
 import { useUploadActivityMutation } from "../queries/activities";
+import type { ActivitySummary } from "../types";
 
 type UseActivityUploadOptions = {
   profileId: number;
   onRefresh: () => Promise<void>;
   onError?: (message: string) => void;
+  onComplete?: (uploaded: ActivitySummary[]) => void;
 };
 
-export const useActivityUpload = ({ profileId, onRefresh, onError }: UseActivityUploadOptions) => {
+export const useActivityUpload = ({
+  profileId,
+  onRefresh,
+  onError,
+  onComplete,
+}: UseActivityUploadOptions) => {
   const uploadMutation = useUploadActivityMutation();
   const [uploadPhase, setUploadPhase] = useState<UploadPhase>("idle");
   const [uploadFileName, setUploadFileName] = useState<string | null>(null);
@@ -43,17 +50,20 @@ export const useActivityUpload = ({ profileId, onRefresh, onError }: UseActivity
     setUploadIndex(0);
     setUploadFileName(null);
     setUploadPhase("uploading");
+    const uploaded: ActivitySummary[] = [];
     try {
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
         setUploadIndex(i + 1);
         setUploadFileName(file.name);
-        await uploadMutation.mutateAsync({ file, profileId });
+        const activity = await uploadMutation.mutateAsync({ file, profileId });
+        uploaded.push(activity);
         setUploadDoneCount(i + 1);
       }
       setUploadPhase("refreshing");
       await onRefresh();
       setUploadPhase("done");
+      onComplete?.(uploaded);
     } catch (err) {
       setUploadPhase("idle");
       onError?.(err instanceof Error ? err.message : String(err));
