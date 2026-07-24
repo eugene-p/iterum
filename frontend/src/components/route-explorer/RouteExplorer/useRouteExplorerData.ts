@@ -2,6 +2,7 @@ import { useQueries } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getActivityDetail } from "../../../api";
 import { resolveSelectedPassIds, setComparePassIncluded } from "../../../app/appRoutes";
+import { defaultSelectedPassIds } from "../../../lib/defaultSelectedPasses";
 import { queryKeys } from "../../../queries/queryKeys";
 import type { SegmentCompare, SegmentPass, TrackPoint } from "../../../types";
 import { routeExplorerTargetKey, type RouteExplorerTarget } from "./RouteExplorerTarget";
@@ -28,6 +29,10 @@ export const useRouteExplorerData = (
     [comparison],
   );
   const matchedPassIds = useMemo(() => matchedPasses.map((pass) => pass.id), [matchedPasses]);
+  const defaultPassIds = useMemo(
+    () => defaultSelectedPassIds(matchedPasses),
+    [matchedPasses],
+  );
 
   const activityIds = useMemo(() => {
     if (target.kind === "activity") return [target.activityId];
@@ -80,13 +85,18 @@ export const useRouteExplorerData = (
 
   const selectedPassIds = useMemo(() => {
     if (isPassSelectionControlled) {
-      return resolveSelectedPassIds(controlledSelectedPassIds ?? null, matchedPassIds);
+      return resolveSelectedPassIds(
+        controlledSelectedPassIds ?? null,
+        matchedPassIds,
+        defaultPassIds,
+      );
     }
     return localSelectedPassIds;
   }, [
     isPassSelectionControlled,
     controlledSelectedPassIds,
     matchedPassIds,
+    defaultPassIds,
     localSelectedPassIds,
   ]);
 
@@ -94,19 +104,19 @@ export const useRouteExplorerData = (
 
   useEffect(() => {
     if (!isPassSelectionControlled && comparison) {
-      setLocalSelectedPassIds(matchedPassIds);
+      setLocalSelectedPassIds(defaultPassIds);
     }
-  }, [targetKey, isPassSelectionControlled, comparison, matchedPassIds]);
+  }, [targetKey, isPassSelectionControlled, comparison, defaultPassIds]);
 
   const setPassIncluded = useCallback(
     (pass: SegmentPass, included: boolean) => {
       const next = setComparePassIncluded(selectedPassIds, matchedPassIds, pass.id, included);
       if (next === null && !included) return;
-      const resolved = next ?? matchedPassIds;
+      const resolved = next ?? defaultPassIds;
       if (onSelectedPassIdsChange) onSelectedPassIdsChange(resolved);
       else setLocalSelectedPassIds(resolved);
     },
-    [selectedPassIds, matchedPassIds, onSelectedPassIdsChange],
+    [selectedPassIds, matchedPassIds, defaultPassIds, onSelectedPassIdsChange],
   );
 
   return {

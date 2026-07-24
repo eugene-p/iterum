@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { pinViewportScroll } from "../lib/pinViewportScroll";
 import { buildFullPassMetrics, buildStretchPassMetricsForStretch } from "../lib/mapHighlights";
+import { defaultSelectedPassIds } from "../lib/defaultSelectedPasses";
 import type { SegmentCompare, SegmentPass, Stretch, TrackPoint } from "../types";
 import type { AppLocation, AppSearchParams } from "./appRoutes";
 import {
@@ -30,26 +31,38 @@ export const useSegmentPassSelection = ({
   location,
   searchParams,
 }: UseSegmentPassSelectionOptions) => {
-  const matchedPassIds = useMemo(
-    () => (comparison?.passes ?? []).filter((pass) => pass.matched).map((pass) => pass.id),
+  const matchedPasses = useMemo(
+    () => (comparison?.passes ?? []).filter((pass) => pass.matched),
     [comparison],
+  );
+  const matchedPassIds = useMemo(
+    () => matchedPasses.map((pass) => pass.id),
+    [matchedPasses],
+  );
+  const defaultPassIds = useMemo(
+    () => defaultSelectedPassIds(matchedPasses),
+    [matchedPasses],
   );
 
   const [selectedPassIds, setSelectedPassIds] = useState<ReadonlyArray<number>>([]);
 
   useEffect(() => {
     const params = parseAppSearchParams(window.location.search);
-    setSelectedPassIds(resolveSelectedPassIds(params.comparePasses, matchedPassIds));
-  }, [segmentId, matchedPassIds]);
+    setSelectedPassIds(
+      resolveSelectedPassIds(params.comparePasses, matchedPassIds, defaultPassIds),
+    );
+  }, [segmentId, matchedPassIds, defaultPassIds]);
 
   useEffect(() => {
     const syncFromHistory = () => {
       const params = parseAppSearchParams(window.location.search);
-      setSelectedPassIds(resolveSelectedPassIds(params.comparePasses, matchedPassIds));
+      setSelectedPassIds(
+        resolveSelectedPassIds(params.comparePasses, matchedPassIds, defaultPassIds),
+      );
     };
     window.addEventListener("popstate", syncFromHistory);
     return () => window.removeEventListener("popstate", syncFromHistory);
-  }, [matchedPassIds]);
+  }, [matchedPassIds, defaultPassIds]);
 
   const applyPassSelection = useCallback(
     (nextSelected: ReadonlyArray<number>) => {
@@ -60,20 +73,24 @@ export const useSegmentPassSelection = ({
         location,
         nextSelected,
         matchedPassIds,
+        defaultPassIds,
       );
       pinViewportScroll();
       requestAnimationFrame(pinViewportScroll);
     },
-    [pathname, searchParams, location, matchedPassIds],
+    [pathname, searchParams, location, matchedPassIds, defaultPassIds],
   );
 
-  const includedPassIdSet = useMemo(() => new Set(selectedPassIds), [selectedPassIds]);
+  const includedPassIdSet = useMemo(() => {
+    if (selectedPassIds.length > 0) return new Set(selectedPassIds);
+    // Before the URL/effect sync runs, treat empty as the smart default — not all matches.
+    return new Set(defaultPassIds);
+  }, [selectedPassIds, defaultPassIds]);
 
-  const includedPasses = useMemo(() => {
-    const matched = (comparison?.passes ?? []).filter((pass) => pass.matched);
-    if (!includedPassIdSet.size) return matched;
-    return matched.filter((pass) => includedPassIdSet.has(pass.id));
-  }, [comparison?.passes, includedPassIdSet]);
+  const includedPasses = useMemo(
+    () => matchedPasses.filter((pass) => includedPassIdSet.has(pass.id)),
+    [matchedPasses, includedPassIdSet],
+  );
 
   const fullPassMetrics = useMemo(
     () => buildFullPassMetrics(includedPasses),
@@ -94,9 +111,9 @@ export const useSegmentPassSelection = ({
         included,
       );
       if (next === null && !included) return;
-      applyPassSelection(next ?? matchedPassIds);
+      applyPassSelection(next ?? defaultPassIds);
     },
-    [selectedPassIds, matchedPassIds, applyPassSelection],
+    [selectedPassIds, matchedPassIds, defaultPassIds, applyPassSelection],
   );
 
   const excludePass = useCallback(

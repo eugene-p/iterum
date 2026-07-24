@@ -34,7 +34,7 @@ export type CompareMode = (typeof APP_COMPARE_MODE)[keyof typeof APP_COMPARE_MOD
 export type AppSearchParams = {
   view: AppView | null;
   compareMode: CompareMode | null;
-  /** Null means all matched passes are selected (omitted from the URL). */
+  /** Null means use the default pass-selection policy (omitted from the URL). */
   comparePasses: ReadonlyArray<number> | null;
 };
 
@@ -87,24 +87,34 @@ export const parseAppSearchParams = (search: string): AppSearchParams => {
 export const resolveSelectedPassIds = (
   urlPasses: ReadonlyArray<number> | null,
   matchedPassIds: ReadonlyArray<number>,
+  defaultIds: ReadonlyArray<number> = matchedPassIds,
 ): ReadonlyArray<number> => {
   if (!matchedPassIds.length) return [];
-  if (!urlPasses?.length) return matchedPassIds;
+  if (!urlPasses?.length) return defaultIds;
   const matched = new Set(matchedPassIds);
   const filtered = urlPasses.filter((id) => matched.has(id));
-  return filtered.length > 0 ? filtered : matchedPassIds;
+  return filtered.length > 0 ? filtered : defaultIds;
 };
 
-/** Omit from the URL when every matched pass is selected. */
+const sameIdSet = (
+  a: ReadonlyArray<number>,
+  b: ReadonlyArray<number>,
+): boolean => {
+  if (a.length !== b.length) return false;
+  const setB = new Set(b);
+  return a.every((id) => setB.has(id));
+};
+
+/** Omit from the URL when selection equals the smart default. */
 export const serializeComparePassesParam = (
   selected: ReadonlyArray<number>,
   matchedPassIds: ReadonlyArray<number>,
+  defaultIds: ReadonlyArray<number> = matchedPassIds,
 ): ReadonlyArray<number> | null => {
   if (!matchedPassIds.length) return null;
-  const selectedSet = new Set(selected);
-  const allSelected = matchedPassIds.every((id) => selectedSet.has(id));
-  if (allSelected) return null;
-  return matchedPassIds.filter((id) => selectedSet.has(id));
+  const selectedInMatched = matchedPassIds.filter((id) => selected.includes(id));
+  if (sameIdSet(selectedInMatched, defaultIds)) return null;
+  return selectedInMatched;
 };
 
 /** Set whether a matched pass is included. Returns null when excluding the last pass. */
@@ -170,16 +180,22 @@ export const buildAppSearch = (params: AppSearchParams): string => {
   return serialized ? `?${serialized}` : "";
 };
 
-/** Update compare-pass selection in the URL without a React Router navigation. */
+/**
+ * Update compare-pass selection in the URL without a React Router navigation.
+ * Bases on `window.location.search` (not RR props) so successive toggles and later
+ * RR navigations that re-read the browser URL keep the latest `passes` value.
+ */
 export const replaceComparePassesInUrl = (
   pathname: string,
-  currentParams: AppSearchParams,
+  _currentParams: AppSearchParams,
   location: AppLocation,
   selected: ReadonlyArray<number>,
   matchedPassIds: ReadonlyArray<number>,
+  defaultIds: ReadonlyArray<number> = matchedPassIds,
 ): void => {
-  const merged = mergeAppSearchParams(currentParams, {
-    comparePasses: serializeComparePassesParam(selected, matchedPassIds),
+  const browserParams = parseAppSearchParams(window.location.search);
+  const merged = mergeAppSearchParams(browserParams, {
+    comparePasses: serializeComparePassesParam(selected, matchedPassIds, defaultIds),
   });
   const cleaned = cleanSearchForLocation(location, merged);
   const nextUrl = `${pathname}${buildAppSearch(cleaned)}`;

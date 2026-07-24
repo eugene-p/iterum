@@ -143,11 +143,25 @@ describe("appRoutes", () => {
 
   it("resolves and toggles compare pass selection", () => {
     const matched = [1, 2, 3];
+    const defaultIds = [1, 3];
 
+    // Without defaultIds arg, empty URL still means all matched (legacy callers).
     expect(resolveSelectedPassIds(null, matched)).toEqual(matched);
     expect(resolveSelectedPassIds([2, 99], matched)).toEqual([2]);
     expect(resolveSelectedPassIds([99], matched)).toEqual(matched);
 
+    // With smart default: empty/invalid URL uses default, not all matched.
+    expect(resolveSelectedPassIds(null, matched, defaultIds)).toEqual(defaultIds);
+    expect(resolveSelectedPassIds([], matched, defaultIds)).toEqual(defaultIds);
+    expect(resolveSelectedPassIds([2, 99], matched, defaultIds)).toEqual([2]);
+    expect(resolveSelectedPassIds([99], matched, defaultIds)).toEqual(defaultIds);
+
+    // Serialize omits when selection equals default (not when all selected).
+    expect(serializeComparePassesParam([1, 3], matched, defaultIds)).toBeNull();
+    expect(serializeComparePassesParam([3, 1], matched, defaultIds)).toBeNull(); // order-insensitive
+    expect(serializeComparePassesParam([1, 2, 3], matched, defaultIds)).toEqual([1, 2, 3]);
+    expect(serializeComparePassesParam([2, 3], matched, defaultIds)).toEqual([2, 3]);
+    // Legacy: defaultIds defaults to matched → all selected omits.
     expect(serializeComparePassesParam([1, 2, 3], matched)).toBeNull();
     expect(serializeComparePassesParam([2, 3], matched)).toEqual([2, 3]);
 
