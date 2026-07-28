@@ -14,4 +14,5 @@ export type SegmentEditorMode = {
   constrainIndices?: { min: number; max: number };
 };
 
+/** Map pick phase only — closing a loop is a button action, not a map pick. */
 export type SegmentPickMode = "none" | "start" | "end";

@@ -113,6 +113,7 @@ export const CreateSegmentScreenContainer = () => {
               editor.editorActions.setPickMode("end", editor.pickModeNotice("end")),
             );
           }}
+          onCloseLoop={() => editor.closeLoop()}
           onClearDraft={() => editor.dispatchEditor(editor.editorActions.clearDraft())}
           onRadiusChange={(radius) => editor.dispatchEditor(editor.editorActions.setRadius(radius))}
           onMatchThresholdChange={(matchThreshold) =>

@@ -15,7 +15,11 @@ import {
 } from "../queries/segments";
 import type { Segment } from "../types";
 import { useMapRoutes } from "../app/useMapRoutes";
-import { applyEditorMapClick, segmentDraftFromSegment } from "./segmentEditorUtils";
+import {
+  applyCloseLoop,
+  applyEditorMapClick,
+  segmentDraftFromSegment,
+} from "./segmentEditorUtils";
 import type { SegmentEditorMode } from "./segmentEditorTypes";
 
 const editorNoticeForKind = (kind: SegmentEditorMode["kind"]): string => {
@@ -152,13 +156,15 @@ export const useSegmentEditor = ({
     const { start_lat, start_lon, end_lat, end_lon, start_index, end_index } = screen.draft;
     if (start_lat == null || start_lon == null || start_index == null) {
       dispatchEditor(
-        editorActions.setError('Set a start point: click "Set start", then click the route.'),
+        editorActions.setError("Select a start point on the map first."),
       );
       return null;
     }
     if (end_lat == null || end_lon == null || end_index == null) {
       dispatchEditor(
-        editorActions.setError('Set an end point: click "Set end", then click the route.'),
+        editorActions.setError(
+          "Set the end: click the map, or choose Same as start.",
+        ),
       );
       return null;
     }
@@ -215,10 +221,15 @@ export const useSegmentEditor = ({
     );
   };
 
-  const pickModeNotice = (pickMode: "start" | "end") =>
-    pickMode === "start"
-      ? "Click the route for the segment start."
-      : "Click the route for the segment end.";
+  const closeLoop = () => {
+    if (!displayPoints?.length) return;
+    dispatchEditor(editorActions.replaceScreen(applyCloseLoop(screen, displayPoints)));
+  };
+
+  const pickModeNotice = (pickMode: "start" | "end") => {
+    if (pickMode === "start") return "Click the route for the segment start.";
+    return "Click the route for the segment end (further along the path).";
+  };
 
   return {
     screen,
@@ -231,6 +242,7 @@ export const useSegmentEditor = ({
     loading: createSegmentMutation.isPending || updateSegmentMutation.isPending,
     saveSegment,
     onMapClick,
+    closeLoop,
     pickModeNotice,
     editorActions,
   };

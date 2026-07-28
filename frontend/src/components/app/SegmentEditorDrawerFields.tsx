@@ -1,18 +1,18 @@
 import type { SegmentEditorMode } from "../../hooks/segmentEditorTypes";
 import type { Segment } from "../../types";
+import { MIN_LOOP_PATH_DISTANCE_M } from "../../utils";
 import { ActivityMap } from "../maps/ActivityMap";
 import { Button, EmptySurface, ErrorText, HintButton, Input } from "../ui";
 import { entityEditDrawerStyles } from "./entityEditDrawerStyles";
 import type { SegmentEditorFormState, SegmentEditorMapState } from "./segmentEditorTypes";
-
-const ALIGNMENT_HINT =
-  "Click Set start, then pick a point on the route. Set end marks the finish. Clear resets both points.";
 
 const MATCH_RADIUS_HINT =
   "How close a pass must be to each segment endpoint, in meters. Larger values tolerate more GPS drift.";
 
 const MATCH_THRESHOLD_HINT =
   "How similar a pass route must be to this segment (0.5–1). Higher values require a closer match.";
+
+const LOOP_MIN_PATH_DISCLAIMER = `Segments and loops under ${MIN_LOOP_PATH_DISTANCE_M} m path distance are not matched.`;
 
 type SegmentEditorDrawerFieldsProps = {
   segmentEditor: SegmentEditorMode;
@@ -22,10 +22,102 @@ type SegmentEditorDrawerFieldsProps = {
   onNameChange: (value: string) => void;
   onPickStart: () => void;
   onPickEnd: () => void;
+  onCloseLoop: () => void;
   onClearDraft: () => void;
   onRadiusChange: (value: number) => void;
   onMatchThresholdChange: (value: number) => void;
   onMapClick: (lat: number, lon: number) => void;
+};
+
+const PathBar = ({
+  hasStart,
+  hasEnd,
+  pickMode,
+  onPickStart,
+  onCloseLoop,
+  onClearDraft,
+}: {
+  hasStart: boolean;
+  hasEnd: boolean;
+  pickMode: SegmentEditorFormState["pickMode"];
+  onPickStart: () => void;
+  onCloseLoop: () => void;
+  onClearDraft: () => void;
+}) => {
+  const reselectingStart = hasStart && pickMode === "start";
+
+  if (!hasStart || reselectingStart) {
+    return (
+      <div className={entityEditDrawerStyles.pathToolbarMain} aria-label="Path: set start">
+        {pickMode !== "start" ? (
+          <Button
+            variant="primary"
+            size="sm"
+            className={entityEditDrawerStyles.segmentAdjustButton}
+            onClick={onPickStart}
+          >
+            Select start
+          </Button>
+        ) : (
+          <span className={entityEditDrawerStyles.pathMapPrompt} aria-live="polite">
+            Click map for start
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  if (!hasEnd) {
+    return (
+      <div className={entityEditDrawerStyles.pathEndStep} aria-label="Path: set end">
+        <div className={entityEditDrawerStyles.pathToolbarMain}>
+          <span className={entityEditDrawerStyles.pathMarker}>
+            <span className={entityEditDrawerStyles.pathMarkerDotStart} aria-hidden />
+            Start set
+          </span>
+          <Button
+            size="sm"
+            className={entityEditDrawerStyles.segmentAdjustButton}
+            onClick={onPickStart}
+          >
+            Reselect start
+          </Button>
+          <span className={entityEditDrawerStyles.pathMapPrompt} aria-live="polite">
+            Click map for end
+          </span>
+          <Button
+            size="sm"
+            className={entityEditDrawerStyles.segmentAdjustButton}
+            onClick={onCloseLoop}
+          >
+            Same as start
+          </Button>
+        </div>
+        <p className={entityEditDrawerStyles.pathDisclaimer}>{LOOP_MIN_PATH_DISCLAIMER}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={entityEditDrawerStyles.pathToolbarMain} aria-label="Path: complete">
+      <span className={entityEditDrawerStyles.pathMarker}>
+        <span className={entityEditDrawerStyles.pathMarkerDotStart} aria-hidden />
+        Start
+      </span>
+      <span className={entityEditDrawerStyles.pathMarker}>
+        <span className={entityEditDrawerStyles.pathMarkerDotEnd} aria-hidden />
+        End
+      </span>
+      <span className={entityEditDrawerStyles.pathDone}>set</span>
+      <Button
+        size="sm"
+        className={entityEditDrawerStyles.segmentAdjustButton}
+        onClick={onClearDraft}
+      >
+        Reset path
+      </Button>
+    </div>
+  );
 };
 
 export const SegmentEditorDrawerFields = ({
@@ -35,100 +127,96 @@ export const SegmentEditorDrawerFields = ({
   selectedSegment,
   onNameChange,
   onPickStart,
-  onPickEnd,
+  onPickEnd: _onPickEnd,
+  onCloseLoop,
   onClearDraft,
   onRadiusChange,
   onMatchThresholdChange,
   onMapClick,
-}: SegmentEditorDrawerFieldsProps) => (
-  <>
-    <Input
-      value={form.name}
-      onChange={(e) => onNameChange(e.target.value)}
-      placeholder="Segment name"
-      autoFocus
-    />
+}: SegmentEditorDrawerFieldsProps) => {
+  const hasStart = form.draft.start_lat != null;
+  const hasEnd = form.draft.end_lat != null;
 
-    <div className={entityEditDrawerStyles.segmentAdjustSection}>
-      <div className={entityEditDrawerStyles.segmentAdjustRow}>
-        <Button
-          variant={form.pickMode === "start" ? "primary" : "default"}
-          className={entityEditDrawerStyles.segmentAdjustButton}
-          onClick={onPickStart}
-        >
-          {form.pickMode === "start" ? "Click map…" : "Set start"}
-        </Button>
-        <Button
-          variant={form.pickMode === "end" ? "primary" : "default"}
-          className={entityEditDrawerStyles.segmentAdjustButton}
-          disabled={form.draft.start_lat == null}
-          onClick={onPickEnd}
-        >
-          {form.pickMode === "end" ? "Click map…" : "Set end"}
-        </Button>
-        <Button className={entityEditDrawerStyles.segmentAdjustButton} onClick={onClearDraft}>
-          Clear
-        </Button>
-        <label className={entityEditDrawerStyles.segmentAdjustField}>
-          <span className={entityEditDrawerStyles.segmentAdjustLabelRow}>
-            <span className={entityEditDrawerStyles.label}>Match radius (m)</span>
-            <HintButton text={MATCH_RADIUS_HINT} placement="top" />
-          </span>
-          <Input
-            type="number"
-            min={5}
-            max={200}
-            className={entityEditDrawerStyles.segmentAdjustInput}
-            value={form.radius}
-            onChange={(e) => onRadiusChange(Number(e.target.value))}
+  const segmentMode =
+    form.pickMode === "start"
+      ? "start"
+      : hasStart && !hasEnd
+        ? "end"
+        : "none";
+
+  return (
+    <>
+      <Input
+        value={form.name}
+        onChange={(e) => onNameChange(e.target.value)}
+        placeholder="Segment name"
+        autoFocus
+      />
+
+      <div className={entityEditDrawerStyles.segmentAdjustSection}>
+        <div className={entityEditDrawerStyles.pathToolbar}>
+          <PathBar
+            hasStart={hasStart}
+            hasEnd={hasEnd}
+            pickMode={form.pickMode}
+            onPickStart={onPickStart}
+            onCloseLoop={onCloseLoop}
+            onClearDraft={onClearDraft}
           />
-        </label>
-        <label className={entityEditDrawerStyles.segmentAdjustField}>
-          <span className={entityEditDrawerStyles.segmentAdjustLabelRow}>
-            <span className={entityEditDrawerStyles.label}>Match threshold (0–1)</span>
-            <HintButton text={MATCH_THRESHOLD_HINT} placement="top" />
-          </span>
-          <Input
-            type="number"
-            min={0.5}
-            max={1}
-            step={0.05}
-            className={entityEditDrawerStyles.segmentAdjustInput}
-            value={form.matchThreshold}
-            onChange={(e) => onMatchThresholdChange(Number(e.target.value))}
-          />
-        </label>
-        <div className={entityEditDrawerStyles.segmentAdjustHint}>
-          <HintButton
-            text={ALIGNMENT_HINT}
-            size="lg"
-            placement="top"
-            popoverClassName={entityEditDrawerStyles.segmentAdjustHintPopover}
-          />
+          {hasStart && hasEnd && (
+            <div className={entityEditDrawerStyles.matchRow} aria-label="Match settings">
+              <label className={entityEditDrawerStyles.segmentAdjustField}>
+                <span className={entityEditDrawerStyles.segmentAdjustLabelRow}>
+                  <span className={entityEditDrawerStyles.label}>Radius (m)</span>
+                  <HintButton text={MATCH_RADIUS_HINT} placement="top" />
+                </span>
+                <Input
+                  type="number"
+                  min={5}
+                  max={200}
+                  className={entityEditDrawerStyles.segmentAdjustInput}
+                  value={form.radius}
+                  onChange={(e) => onRadiusChange(Number(e.target.value))}
+                />
+              </label>
+              <label className={entityEditDrawerStyles.segmentAdjustField}>
+                <span className={entityEditDrawerStyles.segmentAdjustLabelRow}>
+                  <span className={entityEditDrawerStyles.label}>Match</span>
+                  <HintButton text={MATCH_THRESHOLD_HINT} placement="top" />
+                </span>
+                <Input
+                  type="number"
+                  min={0.5}
+                  max={1}
+                  step={0.05}
+                  className={entityEditDrawerStyles.segmentAdjustInput}
+                  value={form.matchThreshold}
+                  onChange={(e) => onMatchThresholdChange(Number(e.target.value))}
+                />
+              </label>
+            </div>
+          )}
         </div>
       </div>
-      {form.notice && form.pickMode !== "none" && (
-        <p className={entityEditDrawerStyles.pickNotice}>{form.notice}</p>
-      )}
-    </div>
 
-    <div className={entityEditDrawerStyles.mapWrap}>
-      {map.routes.length ? (
-        <ActivityMap
-          key={map.routes[0]?.id}
-          routes={map.routes}
-          segment={segmentEditor.kind === "edit" ? selectedSegment : null}
-          segmentDraft={form.draft}
-          segmentHighlight={map.parentSegmentHighlight}
-          draftHighlight={map.draftHighlightPoints}
-          segmentMode={form.pickMode}
-          onMapClick={onMapClick}
-        />
-      ) : (
-        <EmptySurface style={{ height: "100%" }}>Loading activity route…</EmptySurface>
-      )}
-    </div>
+      <div className={entityEditDrawerStyles.mapWrap}>
+        {map.routes.length ? (
+          <ActivityMap
+            key={map.routes[0]?.id}
+            routes={map.routes}
+            segment={segmentEditor.kind === "edit" ? selectedSegment : null}
+            segmentDraft={form.draft}
+            segmentHighlight={map.parentSegmentHighlight}
+            draftHighlight={map.draftHighlightPoints}
+            segmentMode={segmentMode}
+            onMapClick={onMapClick}
+          />
+        ) : (
+          <EmptySurface style={{ height: "100%" }}>Loading activity route…</EmptySurface>
+        )}
+      </div>
 
-    {form.error && <ErrorText>{form.error}</ErrorText>}
-  </>
-);
+      {form.error && <ErrorText>{form.error}</ErrorText>}
+    </>
+  );
+};
