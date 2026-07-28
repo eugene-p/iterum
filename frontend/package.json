@@ -1,5 +1,5 @@
 {
-  "name": "fit-analysis-frontend",
+  "name": "@eugene-p/iterum-frontend",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -14,7 +14,7 @@
     "validate": "npm run lint && npm run test"
   },
   "dependencies": {
-    "@fit-analysis/shared": "*",
+    "@eugene-p/iterum-shared": "*",
     "@tanstack/react-query": "^5.101.2",
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",

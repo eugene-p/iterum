@@ -71,7 +71,7 @@ const main = async () => {
   await startActivityJobs();
 
   app.listen(port, () => {
-    console.log(`Fit Analysis API running at http://127.0.0.1:${port}`);
+    console.log(`Iterum API running at http://127.0.0.1:${port}`);
   });
 
   process.once("SIGINT", () => {

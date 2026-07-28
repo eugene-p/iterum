@@ -1,5 +1,5 @@
 {
-  "name": "fit-analysis",
+  "name": "@eugene-p/iterum",
   "private": true,
   "version": "0.1.0",
   "workspaces": [
@@ -10,19 +10,19 @@
   "scripts": {
     "db:up": "podman compose up -d",
     "db:down": "podman compose down",
-    "dev": "concurrently -n server,frontend -c blue,green \"npm run dev -w server\" \"npm run dev -w frontend\"",
-    "dev:server": "npm run dev -w server",
-    "dev:frontend": "npm run dev -w frontend",
-    "prod": "npm run db:up && npm run db:migrate -w server && npm run start",
-    "db:migrate": "npm run db:migrate -w server",
-    "db:baseline": "npm run db:baseline -w server",
-    "prod:build": "npm run build -w @fit-analysis/shared && npm run build -w server && npm run build -w frontend",
-    "build": "npm run build -w frontend",
-    "test": "npm run test -w frontend && npm run test -w server",
-    "lint": "npm run lint -w frontend",
-    "validate": "npm run validate -w frontend",
+    "dev": "concurrently -n server,frontend -c blue,green \"npm run dev -w @eugene-p/iterum-server\" \"npm run dev -w @eugene-p/iterum-frontend\"",
+    "dev:server": "npm run dev -w @eugene-p/iterum-server",
+    "dev:frontend": "npm run dev -w @eugene-p/iterum-frontend",
+    "prod": "npm run db:up && npm run db:migrate -w @eugene-p/iterum-server && npm run start",
+    "db:migrate": "npm run db:migrate -w @eugene-p/iterum-server",
+    "db:baseline": "npm run db:baseline -w @eugene-p/iterum-server",
+    "prod:build": "npm run build -w @eugene-p/iterum-shared && npm run build -w @eugene-p/iterum-server && npm run build -w @eugene-p/iterum-frontend",
+    "build": "npm run build -w @eugene-p/iterum-frontend",
+    "test": "npm run test -w @eugene-p/iterum-frontend && npm run test -w @eugene-p/iterum-server",
+    "lint": "npm run lint -w @eugene-p/iterum-frontend",
+    "validate": "npm run validate -w @eugene-p/iterum-frontend",
     "validate:target": "node scripts/validate-target.mjs",
-    "start": "npm run start -w server"
+    "start": "npm run start -w @eugene-p/iterum-server"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"

@@ -13,7 +13,7 @@ import {
   formatSpeed,
 } from "../../../utils";
 import { ActivityDateTime } from "../../activities/ActivityDateTime";
-import { MutedText } from "../../ui";
+import { Button, MutedText } from "../../ui";
 import { stretchPanelStyles } from "./StretchPanel.styles";
 
 export type StretchComparisonRow = {
@@ -31,6 +31,7 @@ type StretchComparisonTableProps = {
   stretchSourcePassId?: number | null;
   canExcludePasses?: boolean;
   onExcludePass?: (pass: SegmentPass) => void;
+  onSetStretchSource?: (activityId: number) => void;
   loading?: boolean;
   emptyMessage?: string;
 };
@@ -44,6 +45,7 @@ export const StretchComparisonTable = ({
   stretchSourcePassId,
   canExcludePasses = false,
   onExcludePass,
+  onSetStretchSource,
   loading = false,
   emptyMessage = "No included passes to compare.",
 }: StretchComparisonTableProps) => {
@@ -83,13 +85,18 @@ export const StretchComparisonTable = ({
           <th className={stretchPanelStyles.comparisonTh}>Pace</th>
           <th className={stretchPanelStyles.comparisonTh}>HR</th>
           <th className={stretchPanelStyles.comparisonTh}>Elev</th>
+          {onSetStretchSource && (
+            <th className={stretchPanelStyles.comparisonTh}>Source</th>
+          )}
         </tr>
       </thead>
       <tbody>
-        {rows.map((row) => (
+        {rows.map((row) => {
+          const isSource = row.pass.id === stretchSourcePassId;
+          return (
           <tr
             key={row.pass.id}
-            className={stretchPanelStyles.comparisonRow(row.pass.id === stretchSourcePassId)}
+            className={stretchPanelStyles.comparisonRow(isSource)}
           >
             {onExcludePass && (
               <td className={stretchPanelStyles.comparisonTd}>
@@ -150,8 +157,23 @@ export const StretchComparisonTable = ({
                   ? `${Math.round(row.elevation_gain_m)} m`
                   : "—"}
             </td>
+            {onSetStretchSource && (
+              <td className={stretchPanelStyles.comparisonTd}>
+                <Button
+                  size="sm"
+                  variant={isSource ? "primary" : "default"}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onSetStretchSource(row.pass.activity_id);
+                  }}
+                >
+                  {isSource ? "Source" : "Use"}
+                </Button>
+              </td>
+            )}
           </tr>
-        ))}
+          );
+        })}
       </tbody>
     </table>
   );

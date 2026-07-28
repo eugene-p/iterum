@@ -1,21 +1,21 @@
 services:
   db:
     image: docker.io/library/postgres:18-alpine
-    container_name: fit_analysis_db
+    container_name: iterum_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: fit
-      POSTGRES_PASSWORD: fit
-      POSTGRES_DB: fit_analysis
+      POSTGRES_USER: iterum
+      POSTGRES_PASSWORD: iterum
+      POSTGRES_DB: iterum
     ports:
       - "5432:5432"
     volumes:
-      - fit_analysis_pg:/var/lib/postgresql
+      - iterum_pg:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fit -d fit_analysis"]
+      test: ["CMD-SHELL", "pg_isready -U iterum -d iterum"]
       interval: 5s
       timeout: 5s
       retries: 10
 
 volumes:
-  fit_analysis_pg:
+  iterum_pg:

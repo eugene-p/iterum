@@ -1,4 +1,4 @@
-const LAST_OPENED_KEY = "fit-analysis.last-opened";
+const LAST_OPENED_KEY = "iterum.last-opened";
 
 export type LastOpened = {
   segmentId: number | null;

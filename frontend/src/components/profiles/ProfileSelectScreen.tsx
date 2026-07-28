@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useProfileContext } from "../../app/ProfileContext";
+import { AppBrand } from "../app/AppBrand";
 import { sidebarListStyles } from "../AppSidebar/sidebarList.styles";
 import { LoadingState, Stack } from "../ui";
 import { CreateProfileModal } from "./CreateProfileModal";
@@ -20,7 +21,10 @@ export const ProfileSelectScreen = () => {
   return (
     <div className={profileSelectStyles.root}>
       <div className={profileSelectStyles.card}>
-        <h1 className={profileSelectStyles.title}>Choose a profile</h1>
+        <div className={profileSelectStyles.brand}>
+          <AppBrand />
+        </div>
+        <h2 className={profileSelectStyles.title}>Choose a profile</h2>
         <p className={profileSelectStyles.subtitle}>
           Activities belong to a profile. Segments are shared across profiles.
         </p>

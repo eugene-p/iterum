@@ -108,15 +108,24 @@ export const useRouteExplorerData = (
     }
   }, [targetKey, isPassSelectionControlled, comparison, defaultPassIds]);
 
+  const applyPassSelection = useCallback(
+    (ids: ReadonlyArray<number>) => {
+      const resolved = resolveSelectedPassIds(ids, matchedPassIds, defaultPassIds);
+      if (!resolved.length && defaultPassIds.length) return;
+      if (onSelectedPassIdsChange) onSelectedPassIdsChange(resolved);
+      else setLocalSelectedPassIds(resolved);
+    },
+    [matchedPassIds, defaultPassIds, onSelectedPassIdsChange],
+  );
+
   const setPassIncluded = useCallback(
     (pass: SegmentPass, included: boolean) => {
       const next = setComparePassIncluded(selectedPassIds, matchedPassIds, pass.id, included);
       if (next === null && !included) return;
       const resolved = next ?? defaultPassIds;
-      if (onSelectedPassIdsChange) onSelectedPassIdsChange(resolved);
-      else setLocalSelectedPassIds(resolved);
+      applyPassSelection(resolved);
     },
-    [selectedPassIds, matchedPassIds, defaultPassIds, onSelectedPassIdsChange],
+    [selectedPassIds, matchedPassIds, defaultPassIds, applyPassSelection],
   );
 
   return {
@@ -132,5 +141,6 @@ export const useRouteExplorerData = (
     passTracks,
     selectedPassIds: selectedPassIdSet,
     setPassIncluded,
+    applyPassSelection,
   };
 };

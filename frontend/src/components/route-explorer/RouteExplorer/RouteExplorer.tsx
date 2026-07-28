@@ -53,6 +53,7 @@ export const RouteExplorer = ({
     passTracks,
     selectedPassIds: selectedPassIdSet,
     setPassIncluded,
+    applyPassSelection,
   } = useRouteExplorerData(target, { selectedPassIds, onSelectedPassIdsChange });
 
   const zoneMaxHr = useMemo(() => {
@@ -151,9 +152,8 @@ export const RouteExplorer = ({
               <PassSelector
                 matchedPasses={matchedPasses}
                 selectedPassIdSet={selectedPassIdSet}
-                expanded={compare.passesExpanded}
-                onToggleExpanded={() => compare.setPassesExpanded((open) => !open)}
                 onSetPassIncluded={setPassIncluded}
+                onApplySelection={applyPassSelection}
               />
             )}
 

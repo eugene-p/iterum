@@ -66,12 +66,19 @@ export const useSegmentPassSelection = ({
 
   const applyPassSelection = useCallback(
     (nextSelected: ReadonlyArray<number>) => {
-      setSelectedPassIds(nextSelected);
+      // Empty mode results (e.g. all undated spaced) fall back to the default
+      // policy so selectedPassIds never desync from the displayed include set.
+      const resolved = resolveSelectedPassIds(
+        nextSelected,
+        matchedPassIds,
+        defaultPassIds,
+      );
+      setSelectedPassIds(resolved);
       replaceComparePassesInUrl(
         pathname,
         searchParams,
         location,
-        nextSelected,
+        resolved,
         matchedPassIds,
         defaultPassIds,
       );

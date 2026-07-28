@@ -9,7 +9,7 @@ import {
   parseStretchThresholds,
   updateProfileBodySchema,
   type UpdateProfileBody,
-} from "@fit-analysis/shared";
+} from "@eugene-p/iterum-shared";
 import { Router } from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { NotFoundError } from "../middleware/errors.js";

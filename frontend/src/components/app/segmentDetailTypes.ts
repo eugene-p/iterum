@@ -50,6 +50,7 @@ export type SegmentDetailActions = {
   onSelectStretch: (stretch: Stretch) => void;
   onClearStretchSelection: () => void;
   onSetPassIncluded: (pass: SegmentPass, included: boolean) => void;
+  onApplyPassSelection: (ids: ReadonlyArray<number>) => void;
   onExcludeIncludedPass: (pass: SegmentPass) => void;
   onPreviewStretchThresholds: (thresholds: StretchThresholds) => void;
   onSetStretchSourceActivity: (activityId: number) => void;

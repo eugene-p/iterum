@@ -70,7 +70,6 @@ export const useRouteExplorerCompareState = ({
   const [segmentElapsedSec, setSegmentElapsedSec] = useState(0);
   const [stretchVirtualSec, setStretchVirtualSec] = useState(0);
   const [localCompareMode, setLocalCompareMode] = useState<CompareMode>(APP_COMPARE_MODE.SEGMENT);
-  const [passesExpanded, setPassesExpanded] = useState(false);
   const isCompareModeControlled = onCompareModeChange != null;
   const targetKey = routeExplorerTargetKey(target);
 
@@ -90,7 +89,6 @@ export const useRouteExplorerCompareState = ({
   const stretches = useMemo(() => comparison?.stretches ?? [], [comparison?.stretches]);
 
   useEffect(() => {
-    setPassesExpanded(false);
     setPositionIndex(0);
     setSegmentElapsedSec(0);
     setStretchVirtualSec(0);
@@ -395,8 +393,6 @@ export const useRouteExplorerCompareState = ({
 
   return {
     referencePoints,
-    passesExpanded,
-    setPassesExpanded,
     activeTab,
     setActiveTab,
     compareTabsAvailable,

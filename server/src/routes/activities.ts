@@ -10,7 +10,7 @@ import {
   type UploadActivityBody,
   updateActivityBodySchema,
   uploadActivityBodySchema,
-} from "@fit-analysis/shared";
+} from "@eugene-p/iterum-shared";
 import { Router } from "express";
 import multer from "multer";
 import { asyncHandler } from "../middleware/asyncHandler.js";

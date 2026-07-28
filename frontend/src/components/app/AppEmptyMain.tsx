@@ -7,6 +7,7 @@ import {
 } from "../../lib/lastOpenedStorage";
 import { ActivityUploadControl } from "../activities/ActivityUploadControl";
 import { Button, EmptySurface, MutedText, Stack } from "../ui";
+import { AppBrand } from "./AppBrand";
 import { appEmptyMainStyles } from "./AppEmptyMain.styles";
 
 export const AppEmptyMain = () => {
@@ -25,6 +26,8 @@ export const AppEmptyMain = () => {
 
   return (
     <EmptySurface className={appEmptyMainStyles.root}>
+      <AppBrand />
+
       {hasResume && (
         <section className={appEmptyMainStyles.section} aria-label="Continue where you left off">
           <h2 className={appEmptyMainStyles.title}>Continue where you left off</h2>

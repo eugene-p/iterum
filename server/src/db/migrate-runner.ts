@@ -9,7 +9,7 @@ import { runner } from "node-pg-migrate";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const databaseUrl =
-  process.env.DATABASE_URL ?? "postgresql://fit:fit@localhost:5432/fit_analysis";
+  process.env.DATABASE_URL ?? "postgresql://iterum:iterum@localhost:5432/iterum";
 
 const direction = process.argv.includes("down") ? "down" : "up";
 const fake = process.argv.includes("--fake");

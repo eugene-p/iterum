@@ -2,7 +2,7 @@ import { parsePhotonReverseResponse } from "./parsePhotonResponse.js";
 import type { ReverseGeocoder } from "./types.js";
 
 const PHOTON_REVERSE_URL = "https://photon.komoot.io/reverse";
-const USER_AGENT = "fit_analysis/0.1 (personal fitness import)";
+const USER_AGENT = "iterum/0.1 (personal route analysis)";
 
 export const createPhotonGeocoder = (fetchFn: typeof fetch = fetch): ReverseGeocoder => ({
   provider: "photon",

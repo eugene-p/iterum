@@ -15,4 +15,4 @@ export type {
   StretchState,
   StretchThresholds,
   TrackPoint,
-} from "@fit-analysis/shared";
+} from "@eugene-p/iterum-shared";

@@ -1,12 +1,12 @@
 {
-  "name": "fit-analysis-server",
+  "name": "@eugene-p/iterum-server",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "build": "npm run build -w @fit-analysis/shared && tsc",
+    "build": "npm run build -w @eugene-p/iterum-shared && tsc",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:migrate": "tsx src/db/migrate-runner.ts",
@@ -18,7 +18,7 @@
     "backfill:previews": "tsx src/scripts/backfillPreviews.ts"
   },
   "dependencies": {
-    "@fit-analysis/shared": "*",
+    "@eugene-p/iterum-shared": "*",
     "@qkitt/queue": "^0.6.2",
     "@qkitt/queue-config": "^0.4.0",
     "cors": "^2.8.6",

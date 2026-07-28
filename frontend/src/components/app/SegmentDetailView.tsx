@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { appStyles } from "../../App.styles";
 import { stretchKindLabel } from "../../stretchUtils";
-import type { SegmentPass } from "../../types";
 import {
   formatDistance,
   formatDuration,
@@ -10,11 +9,10 @@ import {
   formatSpeed,
 } from "../../utils";
 import { PassDateProfileRow } from "../profiles/PassDateProfileRow";
-import { ComparisonTable } from "../segments/ComparisonTable";
+import { PassIncludeControl } from "../segments/PassIncludeControl";
 import { SegmentDetailMap } from "./SegmentDetailMap";
-import { stretchPanelStyles } from "../segments/StretchPanel/StretchPanel.styles";
 import { StretchPanel } from "../segments/StretchPanel";
-import { Badge, CollapsibleSection, MutedSpan, MutedText } from "../ui";
+import { Badge, MutedSpan } from "../ui";
 import { SegmentActionsBar } from "./SegmentActionsBar";
 import type { SegmentDetailViewProps } from "./segmentDetailTypes";
 
@@ -28,8 +26,10 @@ export const SegmentDetailView = ({
   headerActions,
   actions,
 }: SegmentDetailViewProps) => {
-  const matchedPassCount = (comparison?.passes ?? []).filter((pass) => pass.matched).length;
-  const [matchedPassesExpanded, setMatchedPassesExpanded] = useState(false);
+  const matchedPasses = useMemo(
+    () => (comparison?.passes ?? []).filter((pass) => pass.matched),
+    [comparison],
+  );
 
   return (
   <div className={appStyles.segmentDetail}>
@@ -93,6 +93,12 @@ export const SegmentDetailView = ({
       stretchOverlays={map.stretchOverlays}
     />
     <div className={appStyles.segmentDetailBody}>
+      <PassIncludeControl
+        matchedPasses={matchedPasses}
+        includedPassIdSet={includedPassIdSet}
+        onSetPassIncluded={actions.onSetPassIncluded}
+        onApplySelection={actions.onApplyPassSelection}
+      />
       <StretchPanel
         stretches={comparison?.stretches ?? []}
         fullPassMetrics={stretch.fullPassMetrics}
@@ -107,6 +113,7 @@ export const SegmentDetailView = ({
         onSelectStretch={actions.onSelectStretch}
         onClearStretchSelection={actions.onClearStretchSelection}
         onExcludeIncludedPass={actions.onExcludeIncludedPass}
+        onSetStretchSource={actions.onSetStretchSourceActivity}
         includedPassCount={includedPassIdSet.size}
         onPreviewThresholds={actions.onPreviewStretchThresholds}
         onResetStretchPreview={actions.onResetStretchPreview}
@@ -114,30 +121,6 @@ export const SegmentDetailView = ({
         defaultThresholds={stretch.defaultThresholds}
         loading={stretch.loading}
       />
-      <CollapsibleSection
-        variant="panel"
-        title="Matched passes"
-        headingLevel="h2"
-        expanded={matchedPassesExpanded}
-        onToggle={() => setMatchedPassesExpanded((open) => !open)}
-        meta={`${includedPassIdSet.size} of ${matchedPassCount} included`}
-      >
-        <MutedText className={stretchPanelStyles.hint}>
-          Uncheck passes to exclude them from comparisons and stretch stats. The highlighted row is
-          the stretch-source activity shown on the map — change it with Use. Green = best time /
-          speed / HR among included passes.
-        </MutedText>
-        <ComparisonTable
-          passes={comparison?.passes ?? []}
-          includedPassIdSet={includedPassIdSet}
-          stretchSourceActivityId={stretch.stretchSourceActivityId}
-          stretchSourcePassId={stretch.stretchSourcePassId}
-          onSetPassIncluded={actions.onSetPassIncluded}
-          onSetStretchSource={(pass: SegmentPass) =>
-            actions.onSetStretchSourceActivity(pass.activity_id)
-          }
-        />
-      </CollapsibleSection>
     </div>
   </div>
   );

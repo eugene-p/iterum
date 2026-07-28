@@ -18,6 +18,8 @@ type ComparisonTableProps = {
   stretchSourcePassId?: number | null;
   onSetPassIncluded?: (pass: SegmentPass, included: boolean) => void;
   onSetStretchSource?: (pass: SegmentPass) => void;
+  /** When passes is empty, override the default empty message. */
+  emptyMessage?: string;
 };
 
 export const ComparisonTable = ({
@@ -27,6 +29,7 @@ export const ComparisonTable = ({
   stretchSourcePassId,
   onSetPassIncluded,
   onSetStretchSource,
+  emptyMessage,
 }: ComparisonTableProps) => {
   const includedPasses = includedPassIdSet
     ? passes.filter((pass) => pass.matched && includedPassIdSet.has(pass.id))
@@ -44,7 +47,8 @@ export const ComparisonTable = ({
   if (!passes.length) {
     return (
       <p className={comparisonTableStyles.empty}>
-        No matched passes yet. Upload more activities or rescan this segment.
+        {emptyMessage ??
+          "No included passes to show. Include at least one matched pass above."}
       </p>
     );
   }

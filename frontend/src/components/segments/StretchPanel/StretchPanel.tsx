@@ -27,6 +27,8 @@ type StretchPanelProps = {
   onSelectStretch?: (stretch: Stretch) => void;
   onClearStretchSelection?: () => void;
   onExcludeIncludedPass?: (pass: SegmentPass) => void;
+  /** Set which activity defines stretch geometry / map source. */
+  onSetStretchSource?: (activityId: number) => void;
   includedPassCount?: number;
   onPreviewThresholds: (thresholds: StretchThresholds) => void;
   onResetStretchPreview: () => void;
@@ -47,6 +49,7 @@ export const StretchPanel = ({
   onSelectStretch,
   onClearStretchSelection,
   onExcludeIncludedPass,
+  onSetStretchSource,
   includedPassCount = 0,
   stretchState = "saved",
   stretchCanSave = false,
@@ -225,6 +228,7 @@ export const StretchPanel = ({
               stretchSourcePassId={stretchSourcePassId}
               canExcludePasses={includedPassCount > 1}
               onExcludePass={onExcludeIncludedPass}
+              onSetStretchSource={onSetStretchSource}
               loading={comparisonLoading}
               emptyMessage={
                 stretchSelected

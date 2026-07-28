@@ -2,7 +2,7 @@ import {
   DEFAULT_STRETCH_THRESHOLDS,
   parseStretchThresholds,
   type StretchThresholds,
-} from "@fit-analysis/shared";
+} from "@eugene-p/iterum-shared";
 import type { GeoPoint } from "../db/geoPoint.js";
 import { cumulativeDistancesM } from "../geo/pathMetrics.js";
 

@@ -1,5 +1,5 @@
-const ACTIVE_PROFILE_KEY = "fit-analysis.active-profile-id";
-const VIEW_SCOPE_KEY = "fit-analysis.view-scope";
+const ACTIVE_PROFILE_KEY = "iterum.active-profile-id";
+const VIEW_SCOPE_KEY = "iterum.view-scope";
 
 export const readActiveProfileId = (): number | null => {
   const raw = localStorage.getItem(ACTIVE_PROFILE_KEY);

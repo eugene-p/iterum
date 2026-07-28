@@ -1,9 +1,7 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { appStyles } from "../../App.styles";
-import { ComparisonTable } from "../segments/ComparisonTable";
-import { stretchPanelStyles } from "../segments/StretchPanel/StretchPanel.styles";
+import { PassIncludeControl } from "../segments/PassIncludeControl";
 import { StretchPanel } from "../segments/StretchPanel";
-import { CollapsibleSection, MutedText } from "../ui";
 import { useSegmentPassSelectionContext } from "./SegmentPassSelectionContext";
 import type { SegmentDetailActions, SegmentDetailStretchState } from "./segmentDetailTypes";
 import type { SegmentCompare } from "../../types";
@@ -14,7 +12,10 @@ type SegmentDetailBodyProps = {
     SegmentDetailStretchState,
     "fullPassMetrics" | "stretchPassMetrics"
   >;
-  actions: Omit<SegmentDetailActions, "onSetPassIncluded" | "onExcludeIncludedPass">;
+  actions: Omit<
+    SegmentDetailActions,
+    "onSetPassIncluded" | "onApplyPassSelection" | "onExcludeIncludedPass"
+  >;
 };
 
 export const SegmentDetailBody = ({ comparison, stretch, actions }: SegmentDetailBodyProps) => {
@@ -24,9 +25,12 @@ export const SegmentDetailBody = ({ comparison, stretch, actions }: SegmentDetai
     stretchPassMetrics,
     setPassIncluded,
     excludePass,
+    applyPassSelection,
   } = useSegmentPassSelectionContext();
-  const matchedPassCount = (comparison?.passes ?? []).filter((pass) => pass.matched).length;
-  const [matchedPassesExpanded, setMatchedPassesExpanded] = useState(false);
+  const matchedPasses = useMemo(
+    () => (comparison?.passes ?? []).filter((pass) => pass.matched),
+    [comparison],
+  );
   const bodyRef = useRef<HTMLDivElement>(null);
   const scrollTopRef = useRef(0);
   const includedPassKey = [...includedPassIdSet].join(",");
@@ -44,6 +48,12 @@ export const SegmentDetailBody = ({ comparison, stretch, actions }: SegmentDetai
         scrollTopRef.current = bodyRef.current?.scrollTop ?? 0;
       }}
     >
+      <PassIncludeControl
+        matchedPasses={matchedPasses}
+        includedPassIdSet={includedPassIdSet}
+        onSetPassIncluded={setPassIncluded}
+        onApplySelection={applyPassSelection}
+      />
       <StretchPanel
         stretches={comparison?.stretches ?? []}
         fullPassMetrics={fullPassMetrics}
@@ -58,6 +68,7 @@ export const SegmentDetailBody = ({ comparison, stretch, actions }: SegmentDetai
         onSelectStretch={actions.onSelectStretch}
         onClearStretchSelection={actions.onClearStretchSelection}
         onExcludeIncludedPass={excludePass}
+        onSetStretchSource={actions.onSetStretchSourceActivity}
         includedPassCount={includedPassIdSet.size}
         onPreviewThresholds={actions.onPreviewStretchThresholds}
         onResetStretchPreview={actions.onResetStretchPreview}
@@ -65,28 +76,6 @@ export const SegmentDetailBody = ({ comparison, stretch, actions }: SegmentDetai
         defaultThresholds={stretch.defaultThresholds}
         loading={stretch.loading}
       />
-      <CollapsibleSection
-        variant="panel"
-        title="Matched passes"
-        headingLevel="h2"
-        expanded={matchedPassesExpanded}
-        onToggle={() => setMatchedPassesExpanded((open) => !open)}
-        meta={`${includedPassIdSet.size} of ${matchedPassCount} included`}
-      >
-        <MutedText className={stretchPanelStyles.hint}>
-          Uncheck passes to exclude them from comparisons and stretch stats. The highlighted row is
-          the stretch-source activity shown on the map — change it with Use. Green = best time /
-          speed / HR among included passes.
-        </MutedText>
-        <ComparisonTable
-          passes={comparison?.passes ?? []}
-          includedPassIdSet={includedPassIdSet}
-          stretchSourceActivityId={stretch.stretchSourceActivityId}
-          stretchSourcePassId={stretch.stretchSourcePassId}
-          onSetPassIncluded={setPassIncluded}
-          onSetStretchSource={(pass) => actions.onSetStretchSourceActivity(pass.activity_id)}
-        />
-      </CollapsibleSection>
     </div>
   );
 };

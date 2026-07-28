@@ -7,7 +7,7 @@ import pg from "pg";
 const { Pool } = pg;
 
 const connectionString =
-  process.env.DATABASE_URL ?? "postgresql://fit:fit@localhost:5432/fit_analysis";
+  process.env.DATABASE_URL ?? "postgresql://iterum:iterum@localhost:5432/iterum";
 
 export const pool = new Pool({ connectionString });
 
