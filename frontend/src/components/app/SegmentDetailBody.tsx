@@ -43,7 +43,7 @@ export const SegmentDetailBody = ({ comparison, stretch, actions }: SegmentDetai
   return (
     <div
       ref={bodyRef}
-      className={appStyles.segmentDetailBody}
+      className={appStyles.detailPrimary}
       onScroll={() => {
         scrollTopRef.current = bodyRef.current?.scrollTop ?? 0;
       }}
@@ -68,7 +68,6 @@ export const SegmentDetailBody = ({ comparison, stretch, actions }: SegmentDetai
         onSelectStretch={actions.onSelectStretch}
         onClearStretchSelection={actions.onClearStretchSelection}
         onExcludeIncludedPass={excludePass}
-        onSetStretchSource={actions.onSetStretchSourceActivity}
         includedPassCount={includedPassIdSet.size}
         onPreviewThresholds={actions.onPreviewStretchThresholds}
         onResetStretchPreview={actions.onResetStretchPreview}

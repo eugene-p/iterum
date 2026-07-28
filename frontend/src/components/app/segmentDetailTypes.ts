@@ -44,6 +44,9 @@ export type SegmentHeaderActions = {
   onReverse: (segmentId: number, name: string) => Promise<boolean>;
   onRescan: () => void;
   onDelete: () => void;
+  stretchSourcePassId?: number | null;
+  stretchSourceActivityId?: number | null;
+  onSetStretchSource?: (activityId: number) => void;
 };
 
 export type SegmentDetailActions = {

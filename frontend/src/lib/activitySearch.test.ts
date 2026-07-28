@@ -81,4 +81,28 @@ describe("filterAndSortActivitiesBySearch", () => {
     const results = filterAndSortActivitiesBySearch(activities, "run");
     expect(results.map((activity) => activity.id)).toEqual([2, 1]);
   });
+
+  it("applies list sort within equal search scores", () => {
+    const activities: ActivitySummary[] = [
+      {
+        ...baseActivity,
+        id: 1,
+        name: "run A",
+        tags: ["run"],
+        distance_m: 5_000,
+        started_at: "2024-06-01T10:00:00Z",
+      },
+      {
+        ...baseActivity,
+        id: 2,
+        name: "run B",
+        tags: ["run"],
+        distance_m: 12_000,
+        started_at: "2024-01-01T10:00:00Z",
+      },
+    ];
+
+    const results = filterAndSortActivitiesBySearch(activities, "run", "longest_distance");
+    expect(results.map((activity) => activity.id)).toEqual([2, 1]);
+  });
 });

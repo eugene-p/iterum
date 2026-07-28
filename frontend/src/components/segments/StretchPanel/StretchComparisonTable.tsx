@@ -13,7 +13,7 @@ import {
   formatSpeed,
 } from "../../../utils";
 import { ActivityDateTime } from "../../activities/ActivityDateTime";
-import { Button, MutedText } from "../../ui";
+import { MutedText } from "../../ui";
 import { stretchPanelStyles } from "./StretchPanel.styles";
 
 export type StretchComparisonRow = {
@@ -31,7 +31,6 @@ type StretchComparisonTableProps = {
   stretchSourcePassId?: number | null;
   canExcludePasses?: boolean;
   onExcludePass?: (pass: SegmentPass) => void;
-  onSetStretchSource?: (activityId: number) => void;
   loading?: boolean;
   emptyMessage?: string;
 };
@@ -45,7 +44,6 @@ export const StretchComparisonTable = ({
   stretchSourcePassId,
   canExcludePasses = false,
   onExcludePass,
-  onSetStretchSource,
   loading = false,
   emptyMessage = "No included passes to compare.",
 }: StretchComparisonTableProps) => {
@@ -85,93 +83,78 @@ export const StretchComparisonTable = ({
           <th className={stretchPanelStyles.comparisonTh}>Pace</th>
           <th className={stretchPanelStyles.comparisonTh}>HR</th>
           <th className={stretchPanelStyles.comparisonTh}>Elev</th>
-          {onSetStretchSource && (
-            <th className={stretchPanelStyles.comparisonTh}>Source</th>
-          )}
         </tr>
       </thead>
       <tbody>
         {rows.map((row) => {
           const isSource = row.pass.id === stretchSourcePassId;
           return (
-          <tr
-            key={row.pass.id}
-            className={stretchPanelStyles.comparisonRow(isSource)}
-          >
-            {onExcludePass && (
+            <tr key={row.pass.id} className={stretchPanelStyles.comparisonRow(isSource)}>
+              {onExcludePass && (
+                <td className={stretchPanelStyles.comparisonTd}>
+                  <button
+                    type="button"
+                    className={stretchPanelStyles.excludeButton}
+                    aria-label={`Exclude ${row.pass.activity_name} pass ${row.pass.pass_number} from comparison`}
+                    title="Exclude from comparison"
+                    disabled={!canExcludePasses}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onExcludePass(row.pass);
+                    }}
+                  >
+                    ×
+                  </button>
+                </td>
+              )}
               <td className={stretchPanelStyles.comparisonTd}>
-                <button
-                  type="button"
-                  className={stretchPanelStyles.excludeButton}
-                  aria-label={`Exclude ${row.pass.activity_name} pass ${row.pass.pass_number} from comparison`}
-                  title="Exclude from comparison"
-                  disabled={!canExcludePasses}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onExcludePass(row.pass);
-                  }}
-                >
-                  ×
-                </button>
+                <div className={stretchPanelStyles.comparisonActivityName}>
+                  {row.pass.activity_name}
+                  {isSource ? (
+                    <span className={stretchPanelStyles.sourceBadge}> source</span>
+                  ) : null}
+                </div>
+                <ActivityDateTime
+                  started_at={row.pass.started_at}
+                  name={row.pass.activity_name}
+                  source_filename={row.pass.source_filename}
+                />
               </td>
-            )}
-            <td className={stretchPanelStyles.comparisonTd}>
-              <div className={stretchPanelStyles.comparisonActivityName}>{row.pass.activity_name}</div>
-              <ActivityDateTime
-                started_at={row.pass.started_at}
-                name={row.pass.activity_name}
-                source_filename={row.pass.source_filename}
-              />
-            </td>
-            <td className={stretchPanelStyles.comparisonTd}>{row.pass.pass_number}</td>
-            <td
-              className={stretchPanelStyles.comparisonTd}
-              style={bestCellStyle(row.duration_sec === bestDuration)}
-            >
-              {formatDuration(row.duration_sec)}
-            </td>
-            <td className={stretchPanelStyles.comparisonTd}>
-              {baseline
-                ? formatDistance(baseline.distance_m)
-                : formatDistance(row.distance_m)}
-            </td>
-            <td
-              className={stretchPanelStyles.comparisonTd}
-              style={bestCellStyle(rowSpeed(row) === bestSpeed)}
-            >
-              {formatSpeed(rowSpeed(row))}
-            </td>
-            <td className={stretchPanelStyles.comparisonTd}>
-              {formatPaceFromSpeed(rowSpeed(row))}
-            </td>
-            <td
-              className={stretchPanelStyles.comparisonTd}
-              style={bestCellStyle(row.avg_hr === bestHr)}
-            >
-              {formatHr(row.avg_hr)}
-            </td>
-            <td className={stretchPanelStyles.comparisonTd}>
-              {baseline?.elevation_delta_m != null
-                ? formatElevationDelta(baseline.elevation_delta_m)
-                : row.elevation_gain_m != null
-                  ? `${Math.round(row.elevation_gain_m)} m`
-                  : "—"}
-            </td>
-            {onSetStretchSource && (
+              <td className={stretchPanelStyles.comparisonTd}>{row.pass.pass_number}</td>
+              <td
+                className={stretchPanelStyles.comparisonTd}
+                style={bestCellStyle(row.duration_sec === bestDuration)}
+              >
+                {formatDuration(row.duration_sec)}
+              </td>
               <td className={stretchPanelStyles.comparisonTd}>
-                <Button
-                  size="sm"
-                  variant={isSource ? "primary" : "default"}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onSetStretchSource(row.pass.activity_id);
-                  }}
-                >
-                  {isSource ? "Source" : "Use"}
-                </Button>
+                {baseline
+                  ? formatDistance(baseline.distance_m)
+                  : formatDistance(row.distance_m)}
               </td>
-            )}
-          </tr>
+              <td
+                className={stretchPanelStyles.comparisonTd}
+                style={bestCellStyle(rowSpeed(row) === bestSpeed)}
+              >
+                {formatSpeed(rowSpeed(row))}
+              </td>
+              <td className={stretchPanelStyles.comparisonTd}>
+                {formatPaceFromSpeed(rowSpeed(row))}
+              </td>
+              <td
+                className={stretchPanelStyles.comparisonTd}
+                style={bestCellStyle(row.avg_hr === bestHr)}
+              >
+                {formatHr(row.avg_hr)}
+              </td>
+              <td className={stretchPanelStyles.comparisonTd}>
+                {baseline?.elevation_delta_m != null
+                  ? formatElevationDelta(baseline.elevation_delta_m)
+                  : row.elevation_gain_m != null
+                    ? `${Math.round(row.elevation_gain_m)} m`
+                    : "—"}
+              </td>
+            </tr>
           );
         })}
       </tbody>

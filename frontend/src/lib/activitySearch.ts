@@ -1,6 +1,19 @@
 import { activitySortTime } from "../activityDisplay";
 import type { ActivitySummary, SegmentPass } from "../types";
+import {
+  DEFAULT_ACTIVITY_LIST_SORT,
+  sortActivities,
+  type ActivityListSort,
+} from "./activityListSort";
 import { matchesFuzzySearch, scoreFuzzySearch, type SearchFields } from "./fuzzySearch";
+
+export type { ActivityListSort };
+export {
+  ACTIVITY_LIST_SORT_OPTIONS,
+  DEFAULT_ACTIVITY_LIST_SORT,
+  isActivityDayGroupSort,
+  sortActivities,
+} from "./activityListSort";
 
 export const activitySearchFields = (activity: ActivitySummary): SearchFields => ({
   tags: activity.tags,
@@ -35,51 +48,30 @@ export const sortSegmentPassesByTime = (passes: SegmentPass[]): SegmentPass[] =>
   });
 
 export const sortActivitiesByTime = (activities: ActivitySummary[]): ActivitySummary[] =>
-  [...activities].sort(
-    (a, b) =>
-      activitySortTime({
-        started_at: b.started_at,
-        created_at: b.created_at,
-        name: b.name,
-        source_filename: b.source_filename,
-      }) -
-      activitySortTime({
-        started_at: a.started_at,
-        created_at: a.created_at,
-        name: a.name,
-        source_filename: a.source_filename,
-      }),
-  );
+  sortActivities(activities, "newest");
 
 export const filterAndSortActivitiesBySearch = (
   activities: ActivitySummary[],
   query: string,
+  sort: ActivityListSort = DEFAULT_ACTIVITY_LIST_SORT,
 ): ActivitySummary[] => {
   const normalized = query.trim();
-  if (!normalized) return sortActivitiesByTime(activities);
+  if (!normalized) return sortActivities(activities, sort);
 
-  return [...activities]
+  const matched = activities
     .map((activity) => ({
       activity,
       ...scoreFuzzySearch(activitySearchFields(activity), normalized),
     }))
-    .filter((row) => row.matches)
-    .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return (
-        activitySortTime({
-          started_at: b.activity.started_at,
-          created_at: b.activity.created_at,
-          name: b.activity.name,
-          source_filename: b.activity.source_filename,
-        }) -
-        activitySortTime({
-          started_at: a.activity.started_at,
-          created_at: a.activity.created_at,
-          name: a.activity.name,
-          source_filename: a.activity.source_filename,
-        })
-      );
-    })
-    .map((row) => row.activity);
+    .filter((row) => row.matches);
+
+  const byScore = new Map<number, ActivitySummary[]>();
+  for (const row of matched) {
+    const bucket = byScore.get(row.score);
+    if (bucket) bucket.push(row.activity);
+    else byScore.set(row.score, [row.activity]);
+  }
+
+  const scores = [...byScore.keys()].sort((a, b) => b - a);
+  return scores.flatMap((score) => sortActivities(byScore.get(score) ?? [], sort));
 };

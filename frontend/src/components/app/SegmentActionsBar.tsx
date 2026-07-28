@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { appStyles } from "../../App.styles";
-import type { Segment, SegmentCompare } from "../../types";
+import type { Segment, SegmentCompare, SegmentPass } from "../../types";
 import { Button, DropdownMenu } from "../ui";
+import { StretchSourceControl } from "../segments/StretchPanel/StretchSourceControl";
 import { SegmentEditorDrawer } from "./SegmentEditorDrawer";
 import { SegmentReverseDrawer } from "./SegmentReverseDrawer";
 
@@ -15,6 +16,9 @@ type SegmentActionsBarProps = {
   onReverse: (segmentId: number, name: string) => Promise<boolean>;
   onRescan: () => void;
   onDelete: () => void;
+  stretchSourcePassId?: number | null;
+  stretchSourceActivityId?: number | null;
+  onSetStretchSource?: (activityId: number) => void;
 };
 
 export const SegmentActionsBar = ({
@@ -27,10 +31,21 @@ export const SegmentActionsBar = ({
   onReverse,
   onRescan,
   onDelete,
+  stretchSourcePassId,
+  stretchSourceActivityId,
+  onSetStretchSource,
 }: SegmentActionsBarProps) => {
   const [editOpen, setEditOpen] = useState(false);
   const [reverseOpen, setReverseOpen] = useState(false);
+  const [sourceOpen, setSourceOpen] = useState(false);
   const compareDisabled = loading || !comparison?.reference_points?.length;
+
+  const matchedPasses = useMemo(
+    () => (comparison?.passes ?? []).filter((pass): pass is SegmentPass => pass.matched),
+    [comparison],
+  );
+  const canChangeSource =
+    Boolean(onSetStretchSource) && matchedPasses.length > 1 && !loading;
 
   const actionGroups = useMemo(
     () => [
@@ -38,6 +53,12 @@ export const SegmentActionsBar = ({
         items: [
           { id: "edit", label: "Edit", onSelect: () => setEditOpen(true), disabled: loading },
           { id: "reverse", label: "Reverse", onSelect: () => setReverseOpen(true), disabled: loading },
+          {
+            id: "change-source",
+            label: "Change source",
+            onSelect: () => setSourceOpen(true),
+            disabled: !canChangeSource,
+          },
         ],
       },
       {
@@ -53,7 +74,7 @@ export const SegmentActionsBar = ({
         ],
       },
     ],
-    [loading, onDelete, onRescan],
+    [canChangeSource, loading, onDelete, onRescan],
   );
 
   return (
@@ -86,6 +107,17 @@ export const SegmentActionsBar = ({
           });
         }}
       />
+      {onSetStretchSource ? (
+        <StretchSourceControl
+          open={sourceOpen}
+          onClose={() => setSourceOpen(false)}
+          passes={matchedPasses}
+          stretchSourcePassId={stretchSourcePassId}
+          stretchSourceActivityId={stretchSourceActivityId}
+          onSetStretchSource={onSetStretchSource}
+          loading={loading}
+        />
+      ) : null}
     </>
   );
 };

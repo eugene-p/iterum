@@ -1,9 +1,8 @@
-import { memo } from "react";
-import { appStyles } from "../../App.styles";
+import { memo, useCallback } from "react";
 import type { Segment, TrackPoint } from "../../types";
 import { ActivityMap, type StretchOverlay } from "../maps/ActivityMap/ActivityMap";
+import { ExpandableDetailMap } from "../maps/ExpandableDetailMap";
 import type { MapRoute } from "./segmentDetailTypes";
-import { EmptySurface } from "../ui";
 
 type SegmentDetailMapProps = {
   routes: MapRoute[];
@@ -15,6 +14,7 @@ type SegmentDetailMapProps = {
 const areMapPropsEqual = (prev: SegmentDetailMapProps, next: SegmentDetailMapProps) =>
   prev.routes === next.routes &&
   prev.segment.id === next.segment.id &&
+  prev.segment.name === next.segment.name &&
   prev.segmentHighlightPoints === next.segmentHighlightPoints &&
   prev.stretchOverlays === next.stretchOverlays;
 
@@ -24,21 +24,28 @@ export const SegmentDetailMap = memo(function SegmentDetailMap({
   segmentHighlightPoints,
   stretchOverlays,
 }: SegmentDetailMapProps) {
+  const hasContent = routes.length > 0;
+  const renderMap = useCallback(
+    () => (
+      <ActivityMap
+        routes={routes}
+        segment={segment}
+        segmentDraft={undefined}
+        segmentHighlight={segmentHighlightPoints}
+        draftHighlight={[]}
+        stretchOverlays={stretchOverlays}
+        segmentMode="none"
+      />
+    ),
+    [routes, segment, segmentHighlightPoints, stretchOverlays],
+  );
+
   return (
-    <div className={appStyles.mapWrap}>
-      {routes.length ? (
-        <ActivityMap
-          routes={routes}
-          segment={segment}
-          segmentDraft={undefined}
-          segmentHighlight={segmentHighlightPoints}
-          draftHighlight={[]}
-          stretchOverlays={stretchOverlays}
-          segmentMode="none"
-        />
-      ) : (
-        <EmptySurface style={{ height: "100%" }}>Loading route…</EmptySurface>
-      )}
-    </div>
+    <ExpandableDetailMap
+      title={segment.name}
+      hasContent={hasContent}
+      emptyMessage="Loading route…"
+      renderMap={renderMap}
+    />
   );
 }, areMapPropsEqual);

@@ -8,7 +8,7 @@ import {
   formatSpeed,
 } from "../../../utils";
 import { PassDateProfileRow } from "../../profiles/PassDateProfileRow";
-import { Badge, Button, Switch } from "../../ui";
+import { Badge, Switch } from "../../ui";
 import { comparisonTableStyles } from "./ComparisonTable.styles";
 
 type ComparisonTableProps = {
@@ -17,7 +17,6 @@ type ComparisonTableProps = {
   stretchSourceActivityId?: number | null;
   stretchSourcePassId?: number | null;
   onSetPassIncluded?: (pass: SegmentPass, included: boolean) => void;
-  onSetStretchSource?: (pass: SegmentPass) => void;
   /** When passes is empty, override the default empty message. */
   emptyMessage?: string;
 };
@@ -28,7 +27,6 @@ export const ComparisonTable = ({
   stretchSourceActivityId,
   stretchSourcePassId,
   onSetPassIncluded,
-  onSetStretchSource,
   emptyMessage,
 }: ComparisonTableProps) => {
   const includedPasses = includedPassIdSet
@@ -68,7 +66,6 @@ export const ComparisonTable = ({
           <th className={comparisonTableStyles.th}>Avg HR</th>
           <th className={comparisonTableStyles.th}>Max HR</th>
           <th className={comparisonTableStyles.th}>Elev gain</th>
-          {onSetStretchSource && <th className={comparisonTableStyles.th}>Stretches</th>}
         </tr>
       </thead>
       <tbody>
@@ -76,93 +73,79 @@ export const ComparisonTable = ({
           const included =
             pass.matched && (!includedPassIdSet || includedPassIdSet.has(pass.id));
           return (
-          <tr
-            key={pass.id}
-            className={comparisonTableStyles.row(
-              pass.id === stretchSourcePassId,
-              !pass.matched || !included,
-            )}
-          >
-            {onSetPassIncluded && (
-              <td
-                className={comparisonTableStyles.td}
-                onClick={(event) => event.stopPropagation()}
-              >
-                {pass.matched ? (
-                  <Switch
-                    size="sm"
-                    checked={included}
-                    aria-label={`Include ${pass.activity_name}`}
-                    onChange={(e) => onSetPassIncluded(pass, e.target.checked)}
-                  />
-                ) : (
-                  "—"
-                )}
-              </td>
-            )}
-            <td className={comparisonTableStyles.td}>
-              <div className={comparisonTableStyles.cellName}>
-                {pass.activity_name}
-                {stretchSourceActivityId != null &&
-                  pass.activity_id === stretchSourceActivityId && (
-                    <Badge>Stretch source</Badge>
+            <tr
+              key={pass.id}
+              className={comparisonTableStyles.row(
+                pass.id === stretchSourcePassId,
+                !pass.matched || !included,
+              )}
+            >
+              {onSetPassIncluded && (
+                <td
+                  className={comparisonTableStyles.td}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {pass.matched ? (
+                    <Switch
+                      size="sm"
+                      checked={included}
+                      aria-label={`Include ${pass.activity_name}`}
+                      onChange={(e) => onSetPassIncluded(pass, e.target.checked)}
+                    />
+                  ) : (
+                    "—"
                   )}
-              </div>
-              <PassDateProfileRow
-                pass={pass}
-                className="w-full"
-                started_at={pass.started_at}
-                name={pass.activity_name}
-                source_filename={pass.source_filename}
-              />
-            </td>
-            <td className={comparisonTableStyles.td}>{pass.pass_number}</td>
-            <td className={comparisonTableStyles.td}>{Math.round(pass.match_score * 100)}%</td>
-            <td
-              className={comparisonTableStyles.best(
-                included && pass.duration_sec === bestDuration,
+                </td>
               )}
-            >
-              {formatDuration(pass.duration_sec)}
-            </td>
-            <td className={comparisonTableStyles.td}>{formatDistance(pass.distance_m)}</td>
-            <td
-              className={comparisonTableStyles.best(
-                included && pass.avg_speed_kmh === bestSpeed,
-              )}
-            >
-              {formatSpeed(pass.avg_speed_kmh)}
-            </td>
-            <td className={comparisonTableStyles.td}>{formatPaceFromSpeed(pass.avg_speed_kmh)}</td>
-            <td
-              className={comparisonTableStyles.best(included && pass.avg_hr === bestHr)}
-            >
-              {formatHr(pass.avg_hr)}
-            </td>
-            <td className={comparisonTableStyles.td}>{formatHr(pass.max_hr)}</td>
-            <td className={comparisonTableStyles.td}>
-              {pass.elevation_gain_m != null ? `${Math.round(pass.elevation_gain_m)} m` : "—"}
-            </td>
-            {onSetStretchSource && (
-              <td
-                className={comparisonTableStyles.td}
-                onClick={(event) => event.stopPropagation()}
-              >
-                {pass.matched ? (
-                  <Button
-                    size="sm"
-                    variant={stretchSourceActivityId === pass.activity_id ? "primary" : "default"}
-                    onClick={() => onSetStretchSource(pass)}
-                  >
-                    {stretchSourceActivityId === pass.activity_id ? "Source" : "Use"}
-                  </Button>
-                ) : (
-                  "—"
-                )}
+              <td className={comparisonTableStyles.td}>
+                <div className={comparisonTableStyles.cellName}>
+                  {pass.activity_name}
+                  {stretchSourceActivityId != null &&
+                    pass.activity_id === stretchSourceActivityId && (
+                      <Badge>Stretch source</Badge>
+                    )}
+                </div>
+                <PassDateProfileRow
+                  pass={pass}
+                  className="w-full"
+                  started_at={pass.started_at}
+                  name={pass.activity_name}
+                  source_filename={pass.source_filename}
+                />
               </td>
-            )}
-          </tr>
-        );
+              <td className={comparisonTableStyles.td}>{pass.pass_number}</td>
+              <td className={comparisonTableStyles.td}>
+                {Math.round(pass.match_score * 100)}%
+              </td>
+              <td
+                className={comparisonTableStyles.best(
+                  included && pass.duration_sec === bestDuration,
+                )}
+              >
+                {formatDuration(pass.duration_sec)}
+              </td>
+              <td className={comparisonTableStyles.td}>{formatDistance(pass.distance_m)}</td>
+              <td
+                className={comparisonTableStyles.best(
+                  included && pass.avg_speed_kmh === bestSpeed,
+                )}
+              >
+                {formatSpeed(pass.avg_speed_kmh)}
+              </td>
+              <td className={comparisonTableStyles.td}>
+                {formatPaceFromSpeed(pass.avg_speed_kmh)}
+              </td>
+              <td
+                className={comparisonTableStyles.best(included && pass.avg_hr === bestHr)}
+              >
+                {formatHr(pass.avg_hr)}
+              </td>
+              <td className={comparisonTableStyles.td}>{formatHr(pass.max_hr)}</td>
+              <td className={comparisonTableStyles.td}>
+                {pass.elevation_gain_m != null ? `${Math.round(pass.elevation_gain_m)} m` : "—"}
+              </td>
+            </tr>
+          );
         })}
       </tbody>
     </table>

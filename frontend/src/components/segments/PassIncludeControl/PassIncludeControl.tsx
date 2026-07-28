@@ -13,7 +13,7 @@ import {
 } from "../../../lib/passSelectModes";
 import type { SegmentPass } from "../../../types";
 import { formatDuration } from "../../../utils";
-import { Button, MutedSpan, Switch } from "../../ui";
+import { Button, CollapsibleSection, MutedSpan, Switch } from "../../ui";
 import { passIncludeControlStyles as styles } from "./PassIncludeControl.styles";
 
 type PassIncludeControlProps = {
@@ -126,6 +126,8 @@ export const PassIncludeControl = ({
   const simplePath = isSimplePassSelectionPath(matchedCount);
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  /** Simple path (≤5): collapsed by default; expand only when changing includes. */
+  const [simpleListOpen, setSimpleListOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<PassListSort>("latest");
   const [placement, setPlacement] = useState<{ top: number; left: number } | null>(null);
@@ -234,20 +236,26 @@ export const PassIncludeControl = ({
 
   if (simplePath) {
     return (
-      <div className={cn(styles.root, className)}>
-        <div className={styles.meta}>{metaLabel}</div>
-        <div className={styles.simpleList}>
-          {matchedPasses.map((pass) => (
-            <PassRow
-              key={pass.id}
-              pass={pass}
-              included={includedPassIdSet.has(pass.id)}
-              onSetPassIncluded={onSetPassIncluded}
-              color={passColorForId?.(pass.id)}
-            />
-          ))}
-        </div>
-      </div>
+      <CollapsibleSection
+        variant="panel"
+        title="Matched passes"
+        headingLevel="h2"
+        expanded={simpleListOpen}
+        onToggle={() => setSimpleListOpen((open) => !open)}
+        meta={metaLabel}
+        className={className}
+        bodyClassName={styles.simpleList}
+      >
+        {matchedPasses.map((pass) => (
+          <PassRow
+            key={pass.id}
+            pass={pass}
+            included={includedPassIdSet.has(pass.id)}
+            onSetPassIncluded={onSetPassIncluded}
+            color={passColorForId?.(pass.id)}
+          />
+        ))}
+      </CollapsibleSection>
     );
   }
 

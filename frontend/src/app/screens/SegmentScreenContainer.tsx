@@ -86,15 +86,12 @@ export const SegmentScreenContainer = () => {
           onReverse: screen.handleReverseSegment,
           onRescan: () => void screen.handleRescan(),
           onDelete: () => void screen.handleDelete(),
+          stretchSourcePassId: screen.stretchSourcePassId,
+          stretchSourceActivityId: screen.stretchSourceActivityId,
+          onSetStretchSource: screen.setStretchSourceActivity,
         }}
       />
-      <SegmentDetailMap
-        routes={screen.mapRoutes}
-        segment={screen.segmentEntity}
-        segmentHighlightPoints={screen.segmentHighlightPoints}
-        stretchOverlays={screen.stretchOverlays}
-      />
-      <div className={appStyles.segmentDetailScroll}>
+      <div className={appStyles.detailBody}>
         <SegmentPassSelectionProvider
           segmentId={segmentId}
           comparison={screen.comparison}
@@ -127,6 +124,14 @@ export const SegmentScreenContainer = () => {
               onSaveStretches: () => void screen.saveStretches(),
             }}
           />
+          <div className={appStyles.detailMapPane}>
+            <SegmentDetailMap
+              routes={screen.mapRoutes}
+              segment={screen.segmentEntity}
+              segmentHighlightPoints={screen.segmentHighlightPoints}
+              stretchOverlays={screen.stretchOverlays}
+            />
+          </div>
           {showCompareExplorer && compareTarget && (
             <SegmentCompareExplorer
               compareMode={searchParams.compareMode}

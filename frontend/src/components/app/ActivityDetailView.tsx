@@ -1,9 +1,11 @@
+import { useCallback } from "react";
 import { appStyles } from "../../App.styles";
 import type { ActivitySummary, Profile, TrackPoint } from "../../types";
 import { ActivityDateTime } from "../activities/ActivityDateTime";
 import { ActivityStatsPanel } from "../activities/ActivityStatsPanel";
 import { ActivityMap } from "../maps/ActivityMap";
-import { Badge, EmptySurface, MutedSpan } from "../ui";
+import { ExpandableDetailMap } from "../maps/ExpandableDetailMap";
+import { Badge, MutedSpan } from "../ui";
 import { ActivityActionsBar } from "./ActivityActionsBar";
 
 type MapRoute = { id: number; points: TrackPoint[]; selected: boolean };
@@ -34,54 +36,65 @@ export const ActivityDetailView = ({
   onViewRoute,
   onDelete,
   profiles,
-}: ActivityDetailViewProps) => (
-  <div className={appStyles.detailScreen}>
-    <div className={appStyles.segmentMode}>
-      <div className={appStyles.segmentModeInfo}>
-        <Badge>Activity</Badge>
-        <MutedSpan>{activity.name}</MutedSpan>
-        <span className={appStyles.segmentModeActivity}>
-          <ActivityDateTime
-            started_at={activity.started_at}
-            created_at={activity.created_at}
-            name={activity.name}
-            source_filename={activity.source_filename}
-          />
-        </span>
-      </div>
-      <ActivityActionsBar
-        activity={activity}
-        profiles={profiles}
-        loading={actionLoading}
-        editError={editError}
-        onSaveEdit={onSaveEdit}
-        onSegmentCreated={onSegmentCreated}
-        onViewRoute={onViewRoute}
-        onDelete={onDelete}
+}: ActivityDetailViewProps) => {
+  const hasMap = mapRoutes.length > 0;
+  const renderMap = useCallback(
+    () => (
+      <ActivityMap
+        routes={mapRoutes}
+        segment={null}
+        segmentDraft={undefined}
+        segmentHighlight={[]}
+        draftHighlight={[]}
+        segmentMode="none"
       />
-    </div>
-    <div className={appStyles.activityContent}>
-      <div className={appStyles.mapWrapGrow}>
-        {mapRoutes.length ? (
-          <ActivityMap
-            routes={mapRoutes}
-            segment={null}
-            segmentDraft={undefined}
-            segmentHighlight={[]}
-            draftHighlight={[]}
-            segmentMode="none"
-          />
-        ) : (
-          <EmptySurface style={{ height: "100%" }}>Loading activity route…</EmptySurface>
-        )}
-      </div>
-      <div className={appStyles.activityStatsAside}>
-        <ActivityStatsPanel
+    ),
+    [mapRoutes],
+  );
+
+  return (
+    <div className={appStyles.detailScreen}>
+      <div className={appStyles.segmentMode}>
+        <div className={appStyles.segmentModeInfo}>
+          <Badge>Activity</Badge>
+          <MutedSpan>{activity.name}</MutedSpan>
+          <span className={appStyles.segmentModeActivity}>
+            <ActivityDateTime
+              started_at={activity.started_at}
+              created_at={activity.created_at}
+              name={activity.name}
+              source_filename={activity.source_filename}
+            />
+          </span>
+        </div>
+        <ActivityActionsBar
           activity={activity}
-          trackPoints={trackPoints}
-          onSelectSegment={onSelectSegment}
+          profiles={profiles}
+          loading={actionLoading}
+          editError={editError}
+          onSaveEdit={onSaveEdit}
+          onSegmentCreated={onSegmentCreated}
+          onViewRoute={onViewRoute}
+          onDelete={onDelete}
         />
       </div>
+      <div className={appStyles.detailBody}>
+        <div className={appStyles.detailPrimary}>
+          <ActivityStatsPanel
+            activity={activity}
+            trackPoints={trackPoints}
+            onSelectSegment={onSelectSegment}
+          />
+        </div>
+        <div className={appStyles.detailMapPane}>
+          <ExpandableDetailMap
+            title={activity.name}
+            hasContent={hasMap}
+            emptyMessage="Loading activity route…"
+            renderMap={renderMap}
+          />
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};

@@ -81,6 +81,9 @@ export const SegmentDetailHeader = ({
       onReverse={headerActions.onReverse}
       onRescan={headerActions.onRescan}
       onDelete={headerActions.onDelete}
+      stretchSourcePassId={headerActions.stretchSourcePassId}
+      stretchSourceActivityId={headerActions.stretchSourceActivityId}
+      onSetStretchSource={headerActions.onSetStretchSource}
     />
   </div>
 );

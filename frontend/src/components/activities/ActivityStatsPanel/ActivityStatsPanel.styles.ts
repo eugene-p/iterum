@@ -2,7 +2,7 @@ import { cn } from "../../../lib/cn";
 import { textStyles } from "../../ui/Text/Text.styles";
 
 export const activityStatsPanelStyles = {
-  root: "flex h-full flex-col gap-3 overflow-auto px-3 py-2.5",
+  root: "flex flex-col gap-3 px-3 py-2.5",
   section: "flex flex-col gap-1.5",
   sectionTitle: cn(textStyles.muted, "text-[0.72rem] font-medium uppercase tracking-wide"),
   tagRow: "flex flex-wrap gap-1",
