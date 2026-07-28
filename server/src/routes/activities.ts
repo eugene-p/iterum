@@ -53,8 +53,8 @@ activitiesRouter.post(
     }
 
     const { profile_id: profileId } = validated<UploadActivityBody>(req, "body");
-    const content = req.file.buffer.toString("utf8");
-    const { id } = await importFileContent(content, req.file.originalname, profileId);
+    // Keep the raw buffer so binary formats (e.g. FIT) are not corrupted by UTF-8 decode.
+    const { id } = await importFileContent(req.file.buffer, req.file.originalname, profileId);
     const activity = await getActivitySummary(id);
     res.status(201).json(activity);
   }),

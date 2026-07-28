@@ -136,11 +136,11 @@ const resolveProfileId = async (profileId?: number): Promise<number> => {
 };
 
 export async function importFileContent(
-  content: string,
+  content: string | Buffer | ArrayBuffer | Uint8Array,
   filename: string,
   profileId?: number,
 ) {
-  const parsed = parseActivityFile(content, filename);
+  const parsed = await parseActivityFile(content, filename);
   // Geocode runs after save via the activity job queue so upload is not blocked
   // on Photon. Tags and a provisional display name are still computed here.
   const metadata = await enrichActivityMetadata(

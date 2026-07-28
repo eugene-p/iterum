@@ -25,6 +25,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "fast-xml-parser": "^5.9.3",
+    "fit-file-parser": "^4.1.0",
     "multer": "^2.2.0",
     "node-pg-migrate": "^8.0.4",
     "pg": "^8.22.0",

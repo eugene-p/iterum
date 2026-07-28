@@ -11,7 +11,7 @@ import {
 } from "../../ui";
 import { activityUploadControlStyles } from "./ActivityUploadControl.styles";
 
-export const ACTIVITY_UPLOAD_ACCEPT = ".gpx,.tcx,.kml,.kmz,.fitlog,.csv";
+export const ACTIVITY_UPLOAD_ACCEPT = ".gpx,.tcx,.kml,.kmz,.fitlog,.csv,.fit";
 
 type ActivityUploadControlProps = {
   variant: "footer" | "main";
