@@ -27,11 +27,15 @@ const SegmentCompareExplorer = ({
   compareMode: ReturnType<typeof parseAppSearchParams>["compareMode"];
   onCompareModeChange: ReturnType<typeof useAppNavigation>["setCompareMode"];
   onClose: () => void;
-  target: { kind: "segment"; comparison: NonNullable<ReturnType<typeof useSegmentScreen>["comparison"]> };
+  target: {
+    kind: "segment";
+    comparison: NonNullable<ReturnType<typeof useSegmentScreen>["comparison"]>;
+  };
 }) => {
   const { selectedPassIds, applyPassSelection } = useSegmentPassSelectionContext();
   return (
     <RouteExplorer
+      presentation="workspace"
       target={target}
       compareMode={compareMode}
       onCompareModeChange={onCompareModeChange}
@@ -69,79 +73,82 @@ export const SegmentScreenContainer = () => {
 
   return (
     <div className={appStyles.segmentDetail}>
-      <SegmentDetailHeader
-        segment={screen.segmentEntity}
+      <SegmentPassSelectionProvider
+        segmentId={segmentId}
         comparison={screen.comparison}
-        selectedPass={screen.pass}
         selectedStretch={screen.selectedStretch}
-        selectedPassStretchMetrics={screen.selectedPassStretchMetrics}
-        headerActions={{
-          loading: screen.actionsLoading,
-          editError: screen.editError,
-          onSegmentSaved: navigation.goSegment,
-          onComparePasses: () => {
-            if (!screen.comparison) return;
-            navigation.openCompareView();
-          },
-          onReverse: screen.handleReverseSegment,
-          onRescan: () => void screen.handleRescan(),
-          onDelete: () => void screen.handleDelete(),
-          stretchSourcePassId: screen.stretchSourcePassId,
-          stretchSourceActivityId: screen.stretchSourceActivityId,
-          onSetStretchSource: screen.setStretchSourceActivity,
-        }}
-      />
-      <div className={appStyles.detailBody}>
-        <SegmentPassSelectionProvider
-          segmentId={segmentId}
-          comparison={screen.comparison}
-          selectedStretch={screen.selectedStretch}
-          activityTracks={screen.activityTracks}
-          pathname={pathname}
-          location={location}
-          searchParams={searchParams}
-        >
-          <SegmentDetailBody
-            comparison={screen.comparison}
-            stretch={{
-              selectedStretch: screen.selectedStretch,
-              selectedPassStretchMetrics: screen.selectedPassStretchMetrics,
-              thresholds: screen.stretchThresholds,
-              defaultThresholds: screen.defaultStretchThresholds,
-              stretchSourceActivityId: screen.stretchSourceActivityId,
-              stretchCanSave: screen.stretchCanSave,
-              stretchState: screen.stretchState,
-              selectedStretchIndex: screen.selectedStretchIndex,
-              stretchSourcePassId: screen.stretchSourcePassId,
-              loading: screen.stretchLoading,
-            }}
-            actions={{
-              onSelectStretch: screen.selectStretch,
-              onClearStretchSelection: screen.clearStretchSelection,
-              onPreviewStretchThresholds: screen.previewStretchThresholds,
-              onSetStretchSourceActivity: screen.setStretchSourceActivity,
-              onResetStretchPreview: screen.resetStretchPreview,
-              onSaveStretches: () => void screen.saveStretches(),
-            }}
+        activityTracks={screen.activityTracks}
+        pathname={pathname}
+        location={location}
+        searchParams={searchParams}
+      >
+        {showCompareExplorer && compareTarget ? (
+          <SegmentCompareExplorer
+            compareMode={searchParams.compareMode}
+            onCompareModeChange={navigation.setCompareMode}
+            onClose={navigation.closeView}
+            target={compareTarget}
           />
-          <div className={appStyles.detailMapPane}>
-            <SegmentDetailMap
-              routes={screen.mapRoutes}
+        ) : (
+          <>
+            <SegmentDetailHeader
               segment={screen.segmentEntity}
-              segmentHighlightPoints={screen.segmentHighlightPoints}
-              stretchOverlays={screen.stretchOverlays}
+              comparison={screen.comparison}
+              selectedPass={screen.pass}
+              selectedStretch={screen.selectedStretch}
+              selectedPassStretchMetrics={screen.selectedPassStretchMetrics}
+              headerActions={{
+                loading: screen.actionsLoading,
+                editError: screen.editError,
+                onSegmentSaved: navigation.goSegment,
+                onComparePasses: () => {
+                  if (!screen.comparison) return;
+                  navigation.openCompareView();
+                },
+                onReverse: screen.handleReverseSegment,
+                onRescan: () => void screen.handleRescan(),
+                onDelete: () => void screen.handleDelete(),
+                stretchSourcePassId: screen.stretchSourcePassId,
+                stretchSourceActivityId: screen.stretchSourceActivityId,
+                onSetStretchSource: screen.setStretchSourceActivity,
+              }}
             />
-          </div>
-          {showCompareExplorer && compareTarget && (
-            <SegmentCompareExplorer
-              compareMode={searchParams.compareMode}
-              onCompareModeChange={navigation.setCompareMode}
-              onClose={navigation.closeView}
-              target={compareTarget}
-            />
-          )}
-        </SegmentPassSelectionProvider>
-      </div>
+            <div className={appStyles.detailBody}>
+              <SegmentDetailBody
+                comparison={screen.comparison}
+                stretch={{
+                  selectedStretch: screen.selectedStretch,
+                  selectedPassStretchMetrics: screen.selectedPassStretchMetrics,
+                  thresholds: screen.stretchThresholds,
+                  defaultThresholds: screen.defaultStretchThresholds,
+                  stretchSourceActivityId: screen.stretchSourceActivityId,
+                  stretchCanSave: screen.stretchCanSave,
+                  stretchState: screen.stretchState,
+                  selectedStretchIndex: screen.selectedStretchIndex,
+                  stretchSourcePassId: screen.stretchSourcePassId,
+                  loading: screen.stretchLoading,
+                }}
+                actions={{
+                  onSelectStretch: screen.selectStretch,
+                  onClearStretchSelection: screen.clearStretchSelection,
+                  onPreviewStretchThresholds: screen.previewStretchThresholds,
+                  onSetStretchSourceActivity: screen.setStretchSourceActivity,
+                  onResetStretchPreview: screen.resetStretchPreview,
+                  onSaveStretches: () => void screen.saveStretches(),
+                }}
+              />
+              <div className={appStyles.detailMapPane}>
+                <SegmentDetailMap
+                  routes={screen.mapRoutes}
+                  segment={screen.segmentEntity}
+                  segmentHighlightPoints={screen.segmentHighlightPoints}
+                  stretchOverlays={screen.stretchOverlays}
+                />
+              </div>
+            </div>
+          </>
+        )}
+      </SegmentPassSelectionProvider>
     </div>
   );
 };

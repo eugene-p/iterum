@@ -3,7 +3,6 @@ import { appStyles } from "../../App.styles";
 import type { ActivitySummary, Profile } from "../../types";
 import { Button, DropdownMenu } from "../ui";
 import { ActivityEditDrawer } from "./ActivityEditDrawer";
-import { SegmentEditorDrawer } from "./SegmentEditorDrawer";
 
 type ActivityActionsBarProps = {
   activity: ActivitySummary;
@@ -11,7 +10,7 @@ type ActivityActionsBarProps = {
   loading: boolean;
   editError: string | null;
   onSaveEdit: (activityId: number, name: string, profileId: number) => Promise<boolean>;
-  onSegmentCreated: (segmentId: number) => void;
+  onCreateSegment: () => void;
   onViewRoute: () => void;
   onDelete: () => void;
 };
@@ -22,12 +21,11 @@ export const ActivityActionsBar = ({
   loading,
   editError,
   onSaveEdit,
-  onSegmentCreated,
+  onCreateSegment,
   onViewRoute,
   onDelete,
 }: ActivityActionsBarProps) => {
   const [editOpen, setEditOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
 
   const actionGroups = useMemo(
     () => [
@@ -63,7 +61,7 @@ export const ActivityActionsBar = ({
         <Button
           variant="primary"
           size="sm"
-          onClick={() => setCreateOpen(true)}
+          onClick={onCreateSegment}
           disabled={loading}
         >
           Create segment
@@ -81,16 +79,6 @@ export const ActivityActionsBar = ({
           void onSaveEdit(activityId, name, profileId).then((saved) => {
             if (saved) setEditOpen(false);
           });
-        }}
-      />
-      <SegmentEditorDrawer
-        open={createOpen}
-        target={{ kind: "create", activityId: activity.id }}
-        loading={loading}
-        onClose={() => setCreateOpen(false)}
-        onSaved={(segmentId) => {
-          setCreateOpen(false);
-          onSegmentCreated(segmentId);
         }}
       />
     </>

@@ -17,7 +17,7 @@ type ActivityDetailViewProps = {
   actionLoading: boolean;
   editError: string | null;
   onSaveEdit: (activityId: number, name: string, profileId: number) => Promise<boolean>;
-  onSegmentCreated: (segmentId: number) => void;
+  onCreateSegment: () => void;
   onSelectSegment: (segmentId: number) => void;
   onViewRoute: () => void;
   onDelete: () => void;
@@ -31,7 +31,7 @@ export const ActivityDetailView = ({
   actionLoading,
   editError,
   onSaveEdit,
-  onSegmentCreated,
+  onCreateSegment,
   onSelectSegment,
   onViewRoute,
   onDelete,
@@ -73,7 +73,7 @@ export const ActivityDetailView = ({
           loading={actionLoading}
           editError={editError}
           onSaveEdit={onSaveEdit}
-          onSegmentCreated={onSegmentCreated}
+          onCreateSegment={onCreateSegment}
           onViewRoute={onViewRoute}
           onDelete={onDelete}
         />

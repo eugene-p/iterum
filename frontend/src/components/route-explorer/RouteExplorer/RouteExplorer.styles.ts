@@ -4,10 +4,21 @@ import { modalStyles } from "../../ui/Modal/Modal.styles";
 
 export const routeExplorerStyles = {
   panel: cn(modalStyles.panel, "max-w-[1280px]"),
+  /** Full main-area shell when compare is a workspace (not a modal). */
+  workspace: "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface",
+  workspaceHeader:
+    "flex h-9 shrink-0 items-center gap-3 border-b border-border px-3",
+  /** Plain text link: no chrome, underline only on hover. */
+  workspaceBack:
+    "shrink-0 appearance-none border-0 bg-transparent p-0 text-[0.78rem] font-normal leading-none text-muted shadow-none ring-0 outline-none hover:text-fg hover:underline hover:underline-offset-2 focus-visible:underline focus-visible:underline-offset-2 focus-visible:outline-none",
+  workspaceHeaderLead: "flex min-w-0 flex-1 items-center gap-x-1.5 overflow-hidden",
+  workspaceTitle: "m-0 shrink-0 text-[0.82rem] font-semibold leading-none text-fg",
+  workspaceBody: "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain px-3 py-3",
+  workspaceTabBar: "ml-auto flex shrink-0 items-center gap-0 border-b-0",
   headerWithTabs: "border-b-0 pb-0",
   tabBar: "-mx-3 px-3",
   toolbarSep: "shrink-0 text-[0.82rem] text-muted",
-  toolbarSubtitle: "min-w-0 truncate text-[0.82rem] text-muted",
+  toolbarSubtitle: "min-w-0 truncate text-[0.78rem] text-muted",
   toolbarDateTime: "shrink-0 text-[0.75rem] text-muted",
   body: "flex-1",
 

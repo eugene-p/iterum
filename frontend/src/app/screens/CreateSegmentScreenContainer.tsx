@@ -1,76 +1,85 @@
 import { useMemo } from "react";
-import type { Segment } from "../../types";
-import { useAppWorkspace } from "../../app/useAppWorkspaceContext";
+import { useParams } from "react-router-dom";
+import { SegmentEditorDrawerFields } from "../../components/app/SegmentEditorDrawerFields";
+import { Button } from "../../components/ui";
 import { useSegmentEditor } from "../../hooks/useSegmentEditor";
-import { Button, Drawer } from "../ui";
-import { entityEditDrawerStyles } from "./entityEditDrawerStyles";
-import { SegmentEditorDrawerFields } from "./SegmentEditorDrawerFields";
+import { useAppNavigation } from "../useAppNavigation";
+import { useAppWorkspace } from "../useAppWorkspaceContext";
+import { createSegmentScreenStyles } from "./CreateSegmentScreenContainer.styles";
 
-const SEGMENT_EDITOR_FORM_ID = "segment-editor-form";
+const SEGMENT_EDITOR_FORM_ID = "create-segment-form";
 
-export type SegmentEditorDrawerTarget = { kind: "edit"; segment: Segment };
-
-type SegmentEditorDrawerProps = {
-  open: boolean;
-  target: SegmentEditorDrawerTarget;
-  loading: boolean;
-  onClose: () => void;
-  onSaved: (segmentId: number) => void;
-};
-
-export const SegmentEditorDrawer = ({
-  open,
-  target,
-  loading,
-  onClose,
-  onSaved,
-}: SegmentEditorDrawerProps) => {
+export const CreateSegmentScreenContainer = () => {
+  const { activityId: activityIdParam } = useParams();
+  const parsedActivityId = Number.parseInt(activityIdParam ?? "", 10);
+  const activityId =
+    Number.isFinite(parsedActivityId) && parsedActivityId > 0 ? parsedActivityId : -1;
+  const navigation = useAppNavigation();
   const { segments } = useAppWorkspace();
+
   const editorMode = useMemo(
-    () => ({
-      kind: "edit" as const,
-      activityId: target.segment.source_activity_id,
-      segmentId: target.segment.id,
-    }),
-    [target.segment.id, target.segment.source_activity_id],
+    () => ({ kind: "create" as const, activityId }),
+    [activityId],
   );
+
   const editor = useSegmentEditor({
     mode: editorMode,
     segments,
-    enabled: open,
+    enabled: activityId > 0,
   });
+
+  if (activityId <= 0) return null;
 
   const handleSave = async () => {
     const savedId = await editor.saveSegment();
-    if (savedId != null) onSaved(savedId);
+    if (savedId != null) navigation.goSegment(savedId, { replace: true });
+  };
+
+  const handleBack = () => {
+    navigation.goActivity(activityId);
   };
 
   return (
-    <Drawer
-      open={open}
-      onClose={onClose}
-      title="Edit segment"
-      size="map"
-      bodyClassName={entityEditDrawerStyles.mapDrawerBody}
-      footer={
-        <div className={entityEditDrawerStyles.footerActions}>
-          <Button type="button" onClick={onClose} disabled={loading || editor.loading}>
+    <div className={createSegmentScreenStyles.root}>
+      <div className={createSegmentScreenStyles.header}>
+        <button
+          type="button"
+          className={createSegmentScreenStyles.back}
+          onClick={handleBack}
+        >
+          Back to activity
+        </button>
+        <span className={createSegmentScreenStyles.sep} aria-hidden="true">
+          ·
+        </span>
+        <div className={createSegmentScreenStyles.headerLead}>
+          <h2 className={createSegmentScreenStyles.title}>Create segment</h2>
+        </div>
+        <div className={createSegmentScreenStyles.actions}>
+          <Button
+            type="button"
+            size="sm"
+            className={createSegmentScreenStyles.actionBtn}
+            onClick={handleBack}
+            disabled={editor.loading}
+          >
             Cancel
           </Button>
           <Button
             type="submit"
             form={SEGMENT_EDITOR_FORM_ID}
             variant="primary"
-            disabled={loading || editor.loading || !editor.screen.name.trim()}
+            size="sm"
+            className={createSegmentScreenStyles.actionBtn}
+            disabled={editor.loading || !editor.screen.name.trim()}
           >
-            Save
+            Create
           </Button>
         </div>
-      }
-    >
+      </div>
       <form
         id={SEGMENT_EDITOR_FORM_ID}
-        className={entityEditDrawerStyles.mapDrawerForm}
+        className={createSegmentScreenStyles.form}
         onSubmit={(e) => {
           e.preventDefault();
           void handleSave();
@@ -112,6 +121,6 @@ export const SegmentEditorDrawer = ({
           onMapClick={editor.onMapClick}
         />
       </form>
-    </Drawer>
+    </div>
   );
 };

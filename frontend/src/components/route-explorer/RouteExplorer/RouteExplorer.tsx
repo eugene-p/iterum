@@ -22,9 +22,13 @@ import type { RouteExplorerTarget } from "./RouteExplorerTarget";
 import { useRouteExplorerData } from "./useRouteExplorerData";
 import { useRouteExplorerCompareState } from "./useRouteExplorerCompareState";
 
+type RouteExplorerPresentation = "modal" | "workspace";
+
 type RouteExplorerProps = {
   target: RouteExplorerTarget;
   onClose: () => void;
+  /** modal = overlay (activity view route); workspace = full main (segment compare). */
+  presentation?: RouteExplorerPresentation;
   compareMode?: CompareMode | null;
   onCompareModeChange?: (mode: CompareMode) => void;
   selectedPassIds?: ReadonlyArray<number> | null;
@@ -34,6 +38,7 @@ type RouteExplorerProps = {
 export const RouteExplorer = ({
   target,
   onClose,
+  presentation = "modal",
   compareMode = null,
   onCompareModeChange,
   selectedPassIds = null,
@@ -92,6 +97,192 @@ export const RouteExplorer = ({
 
   const showCompareTabs = !loading && !error && !isActivity && compare.compareTabsAvailable;
 
+  const subtitle = (
+    <>
+      <span className={routeExplorerStyles.toolbarSep} aria-hidden="true">
+        ·
+      </span>
+      <span className={routeExplorerStyles.toolbarSubtitle} title={title}>
+        {title}
+      </span>
+      {isActivity && activityDateTime && (
+        <>
+          <span className={routeExplorerStyles.toolbarSep} aria-hidden="true">
+            ·
+          </span>
+          <ActivityDateTime
+            className={routeExplorerStyles.toolbarDateTime}
+            {...activityDateTime}
+          />
+        </>
+      )}
+    </>
+  );
+
+  const compareModeTabs = showCompareTabs ? (
+    <>
+      {compare.segmentTimeAvailable && (
+        <Tabs.Trigger value={APP_COMPARE_MODE.SEGMENT}>Segment time</Tabs.Trigger>
+      )}
+      {compare.stretchTimeAvailable && (
+        <Tabs.Trigger value={APP_COMPARE_MODE.STRETCH}>Stretch time</Tabs.Trigger>
+      )}
+    </>
+  ) : null;
+
+  const explorerContent = (
+    <>
+      {error && <ErrorText>{error}</ErrorText>}
+
+      {loading ? (
+        <LoadingState message="Loading track data…" />
+      ) : isActivity && activityPoints.length < 2 ? (
+        <MutedText>Not enough track points for this activity.</MutedText>
+      ) : !isActivity && compare.referencePoints.length < 2 ? (
+        <MutedText>Not enough reference points for this segment.</MutedText>
+      ) : (
+        <Stack className={routeExplorerStyles.body}>
+          {!isActivity && (
+            <PassSelector
+              matchedPasses={matchedPasses}
+              selectedPassIdSet={selectedPassIdSet}
+              onSetPassIncluded={setPassIncluded}
+              onApplySelection={applyPassSelection}
+            />
+          )}
+
+          {compare.showActivityScrub ? (
+            <PositionComparePanel
+              isActivity
+              zoneMaxHr={zoneMaxHr}
+              activityDurationSec={activityDurationSec}
+              matchedPasses={matchedPasses}
+              slider={{
+                index: compare.positionIndex,
+                max: compare.positionMax,
+                fraction: compare.positionFraction,
+                currentStretch: null,
+                onChange: compare.onPositionSlider,
+              }}
+              map={{
+                routePoints: activityPoints,
+                highlightPoints: [],
+                stretchOverlays: [],
+                clickableRoute: activityPoints,
+                markers: compare.activityMapMarkers,
+              }}
+              metrics={{
+                activity: compare.activityMetrics,
+                reference: null,
+                referenceStretchContext: null,
+                referencePositionColor: null,
+                showPositionLegend: false,
+                passRows: [],
+              }}
+            />
+          ) : compare.showStretchTime ? (
+            <StretchTimePanel
+              zoneMaxHr={zoneMaxHr}
+              matchedPasses={matchedPasses}
+              slider={{
+                virtualSec: compare.stretchVirtualSec,
+                virtualMaxSec: compare.stretchVirtualMax,
+                step: compare.stretchTimeStep,
+                localElapsedSec: compare.localStretchElapsed,
+                localMaxSec: compare.localStretchMax,
+                stretchIndex: compare.stretchPos.stretchIndex,
+                stretchesCount: compare.stretchesCount,
+                currentStretch: compare.currentStretch,
+                canPrev: compare.canPrevStretch,
+                canNext: compare.canNextStretch,
+                onVirtualChange: compare.setStretchVirtualSec,
+                onPrev: compare.onPrevStretch,
+                onNext: compare.onNextStretch,
+                onLocalFractionChange: compare.onStretchLocalFractionChange,
+              }}
+              map={{
+                routePoints: compare.referencePoints,
+                stretchElevationPoints: compare.stretchChartElevationPoints,
+                fitPoints: compare.stretchChartElevationPoints,
+                fitKey:
+                  compare.currentStretch != null
+                    ? `stretch-${compare.currentStretch.index}`
+                    : "stretch",
+                stretchOverlays: compare.stretchOverlays,
+                markers: compare.stretchMapMarkers,
+              }}
+              metrics={{
+                reference: compare.stretchReferenceMetrics,
+                referenceStretchContext: compare.stretchReferenceStretchContext,
+                referencePositionColor: compare.stretchReferencePositionColor,
+                showPositionLegend: compare.showAheadLegend,
+                passRows: compare.stretchPassRows,
+              }}
+            />
+          ) : (
+            <TimeComparePanel
+              zoneMaxHr={zoneMaxHr}
+              matchedPasses={matchedPasses}
+              slider={{
+                elapsedSec: compare.segmentElapsedSec,
+                maxSec: compare.maxSegmentTimeSec,
+                step: compare.segmentTimeStep,
+                currentStretch: compare.segmentCurrentStretch,
+                onChange: compare.setSegmentElapsedSec,
+              }}
+              map={{
+                routePoints: compare.referencePoints,
+                stretchOverlays: compare.stretchOverlays,
+                markers: compare.segmentMapMarkers,
+              }}
+              metrics={{
+                reference: compare.segmentReferenceMetrics,
+                referenceStretchContext: compare.segmentReferenceStretchContext,
+                referencePositionColor: compare.segmentReferencePositionColor,
+                showPositionLegend: compare.showAheadLegend,
+                passRows: compare.segmentPassRows,
+              }}
+            />
+          )}
+        </Stack>
+      )}
+    </>
+  );
+
+  if (presentation === "workspace") {
+    return (
+      <div className={routeExplorerStyles.workspace}>
+        <Tabs
+          className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+          value={compare.activeTab}
+          onValueChange={compare.setActiveTab}
+          aria-label="Route explorer comparison mode"
+        >
+          <div className={routeExplorerStyles.workspaceHeader}>
+            <button
+              type="button"
+              className={routeExplorerStyles.workspaceBack}
+              onClick={onClose}
+            >
+              Back to segment
+            </button>
+            <span className={routeExplorerStyles.toolbarSep} aria-hidden="true">
+              ·
+            </span>
+            <div className={routeExplorerStyles.workspaceHeaderLead}>
+              <h2 className={routeExplorerStyles.workspaceTitle}>Compare passes</h2>
+              {subtitle}
+            </div>
+            {showCompareTabs && (
+              <Tabs.List className={routeExplorerStyles.workspaceTabBar}>{compareModeTabs}</Tabs.List>
+            )}
+          </div>
+          <div className={routeExplorerStyles.workspaceBody}>{explorerContent}</div>
+        </Tabs>
+      </div>
+    );
+  }
+
   return (
     <Modal open onClose={onClose} panelClassName={routeExplorerStyles.panel}>
       <ModalHeader
@@ -99,159 +290,17 @@ export const RouteExplorer = ({
         onClose={onClose}
         closeLabel="Close Route Explorer"
         className={showCompareTabs ? routeExplorerStyles.headerWithTabs : undefined}
-        subtitle={
-          <>
-            <span className={routeExplorerStyles.toolbarSep} aria-hidden="true">
-              ·
-            </span>
-            <span className={routeExplorerStyles.toolbarSubtitle} title={title}>
-              {title}
-            </span>
-            {isActivity && activityDateTime && (
-              <>
-                <span className={routeExplorerStyles.toolbarSep} aria-hidden="true">
-                  ·
-                </span>
-                <ActivityDateTime
-                  className={routeExplorerStyles.toolbarDateTime}
-                  {...activityDateTime}
-                />
-              </>
-            )}
-          </>
-        }
+        subtitle={subtitle}
       />
-
       <Tabs
         value={compare.activeTab}
         onValueChange={compare.setActiveTab}
         aria-label="Route explorer comparison mode"
       >
         {showCompareTabs && (
-          <Tabs.List className={routeExplorerStyles.tabBar}>
-            {compare.segmentTimeAvailable && (
-              <Tabs.Trigger value={APP_COMPARE_MODE.SEGMENT}>Segment time</Tabs.Trigger>
-            )}
-            {compare.stretchTimeAvailable && (
-              <Tabs.Trigger value={APP_COMPARE_MODE.STRETCH}>Stretch time</Tabs.Trigger>
-            )}
-          </Tabs.List>
+          <Tabs.List className={routeExplorerStyles.tabBar}>{compareModeTabs}</Tabs.List>
         )}
-
-        {error && <ErrorText>{error}</ErrorText>}
-
-        {loading ? (
-          <LoadingState message="Loading track data…" />
-        ) : isActivity && activityPoints.length < 2 ? (
-          <MutedText>Not enough track points for this activity.</MutedText>
-        ) : !isActivity && compare.referencePoints.length < 2 ? (
-          <MutedText>Not enough reference points for this segment.</MutedText>
-        ) : (
-          <Stack className={routeExplorerStyles.body}>
-            {!isActivity && (
-              <PassSelector
-                matchedPasses={matchedPasses}
-                selectedPassIdSet={selectedPassIdSet}
-                onSetPassIncluded={setPassIncluded}
-                onApplySelection={applyPassSelection}
-              />
-            )}
-
-            {compare.showActivityScrub ? (
-              <PositionComparePanel
-                isActivity
-                zoneMaxHr={zoneMaxHr}
-                activityDurationSec={activityDurationSec}
-                matchedPasses={matchedPasses}
-                slider={{
-                  index: compare.positionIndex,
-                  max: compare.positionMax,
-                  fraction: compare.positionFraction,
-                  currentStretch: null,
-                  onChange: compare.onPositionSlider,
-                }}
-                map={{
-                  routePoints: activityPoints,
-                  highlightPoints: [],
-                  stretchOverlays: [],
-                  clickableRoute: activityPoints,
-                  markers: compare.activityMapMarkers,
-                }}
-                metrics={{
-                  activity: compare.activityMetrics,
-                  reference: null,
-                  referenceStretchContext: null,
-                  referencePositionColor: null,
-                  showPositionLegend: false,
-                  passRows: [],
-                }}
-              />
-            ) : compare.showStretchTime ? (
-              <StretchTimePanel
-                zoneMaxHr={zoneMaxHr}
-                matchedPasses={matchedPasses}
-                slider={{
-                  virtualSec: compare.stretchVirtualSec,
-                  virtualMaxSec: compare.stretchVirtualMax,
-                  step: compare.stretchTimeStep,
-                  localElapsedSec: compare.localStretchElapsed,
-                  localMaxSec: compare.localStretchMax,
-                  stretchIndex: compare.stretchPos.stretchIndex,
-                  stretchesCount: compare.stretchesCount,
-                  currentStretch: compare.currentStretch,
-                  canPrev: compare.canPrevStretch,
-                  canNext: compare.canNextStretch,
-                  onVirtualChange: compare.setStretchVirtualSec,
-                  onPrev: compare.onPrevStretch,
-                  onNext: compare.onNextStretch,
-                  onLocalFractionChange: compare.onStretchLocalFractionChange,
-                }}
-                map={{
-                  routePoints: compare.referencePoints,
-                  stretchElevationPoints: compare.stretchChartElevationPoints,
-                  fitPoints: compare.stretchChartElevationPoints,
-                  fitKey:
-                    compare.currentStretch != null
-                      ? `stretch-${compare.currentStretch.index}`
-                      : "stretch",
-                  stretchOverlays: compare.stretchOverlays,
-                  markers: compare.stretchMapMarkers,
-                }}
-                metrics={{
-                  reference: compare.stretchReferenceMetrics,
-                  referenceStretchContext: compare.stretchReferenceStretchContext,
-                  referencePositionColor: compare.stretchReferencePositionColor,
-                  showPositionLegend: compare.showAheadLegend,
-                  passRows: compare.stretchPassRows,
-                }}
-              />
-            ) : (
-              <TimeComparePanel
-                zoneMaxHr={zoneMaxHr}
-                matchedPasses={matchedPasses}
-                slider={{
-                  elapsedSec: compare.segmentElapsedSec,
-                  maxSec: compare.maxSegmentTimeSec,
-                  step: compare.segmentTimeStep,
-                  currentStretch: compare.segmentCurrentStretch,
-                  onChange: compare.setSegmentElapsedSec,
-                }}
-                map={{
-                  routePoints: compare.referencePoints,
-                  stretchOverlays: compare.stretchOverlays,
-                  markers: compare.segmentMapMarkers,
-                }}
-                metrics={{
-                  reference: compare.segmentReferenceMetrics,
-                  referenceStretchContext: compare.segmentReferenceStretchContext,
-                  referencePositionColor: compare.segmentReferencePositionColor,
-                  showPositionLegend: compare.showAheadLegend,
-                  passRows: compare.segmentPassRows,
-                }}
-              />
-            )}
-          </Stack>
-        )}
+        {explorerContent}
       </Tabs>
     </Modal>
   );

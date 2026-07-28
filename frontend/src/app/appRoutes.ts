@@ -339,15 +339,18 @@ export const syncSidebarTabFromLocation = (
   return deriveSidebarTab(location, currentTab);
 };
 
-/** Leave detail view when switching to the other sidebar list. */
-export const shouldClearDetailOnSidebarTabChange = (
+/**
+ * Whether a sidebar list tab change should navigate to that list route.
+ * Profile is handled by the shell only. On detail/create workspaces, tab changes
+ * only switch which sidebar list is shown — the open entity stays mounted.
+ */
+export const shouldNavigateOnSidebarTabChange = (
   location: AppLocation,
   nextTab: SidebarTab,
 ): boolean => {
   if (nextTab === APP_TAB.PROFILE) return false;
-  if (location.type === "activity") return nextTab !== APP_TAB.ACTIVITIES;
-  if (location.type === "segment") return nextTab !== APP_TAB.SEGMENTS;
-  return false;
+  if (location.type !== "list") return false;
+  return location.tab !== nextTab;
 };
 
 export const selectedActivityIdFromLocation = (location: AppLocation): number | null =>

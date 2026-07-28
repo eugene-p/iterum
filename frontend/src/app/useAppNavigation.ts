@@ -17,7 +17,7 @@ import {
   parseAppLocation,
   parseAppSearchParams,
   serializeComparePassesParam,
-  shouldClearDetailOnSidebarTabChange,
+  shouldNavigateOnSidebarTabChange,
   type AppSearchParams,
   type CompareMode,
 } from "./appRoutes";
@@ -69,16 +69,10 @@ export const useAppNavigation = () => {
 
   const setSidebarTab = useCallback(
     (tab: SidebarTab) => {
-      if (tab === "profile") return;
-      if (shouldClearDetailOnSidebarTabChange(location, tab)) {
-        goHome(tab);
-        return;
-      }
-      if (location.type === "list" && location.tab !== tab) {
-        navigate(listRouteForTab(tab));
-      }
+      if (!shouldNavigateOnSidebarTabChange(location, tab)) return;
+      navigate(listRouteForTab(tab));
     },
-    [goHome, location, navigate],
+    [location, navigate],
   );
 
   return {
@@ -92,9 +86,15 @@ export const useAppNavigation = () => {
       [navigate],
     ),
     goSegment: useCallback(
-      (segmentId: number) => {
+      (segmentId: number, options?: { replace?: boolean }) => {
         writeLastOpenedSegment(segmentId);
-        navigate(appRoutes.segment(segmentId));
+        navigate(appRoutes.segment(segmentId), options);
+      },
+      [navigate],
+    ),
+    goCreateSegment: useCallback(
+      (activityId: number) => {
+        navigate(appRoutes.createSegment(activityId));
       },
       [navigate],
     ),

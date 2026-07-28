@@ -19,7 +19,7 @@ import {
   setComparePassIncluded,
   toggleComparePassSelection,
   selectedSegmentIdFromLocation,
-  shouldClearDetailOnSidebarTabChange,
+  shouldNavigateOnSidebarTabChange,
   shouldRedirectUnknownEntity,
   syncSidebarTabFromLocation,
 } from "./appRoutes";
@@ -318,27 +318,31 @@ describe("appRoutes", () => {
     );
   });
 
-  it("clears detail view when switching to the other sidebar tab", () => {
+  it("navigates sidebar tabs only between list routes", () => {
+    expect(shouldNavigateOnSidebarTabChange(parseAppLocation(SEGMENTS_PATH), "activities")).toBe(
+      true,
+    );
+    expect(shouldNavigateOnSidebarTabChange(parseAppLocation(ACTIVITIES_PATH), "segments")).toBe(
+      true,
+    );
+    expect(shouldNavigateOnSidebarTabChange(parseAppLocation(SEGMENTS_PATH), "segments")).toBe(
+      false,
+    );
+    expect(shouldNavigateOnSidebarTabChange(parseAppLocation(SEGMENTS_PATH), "profile")).toBe(
+      false,
+    );
+    // Detail / create workspaces keep the open entity when switching lists.
+    expect(shouldNavigateOnSidebarTabChange(parseAppLocation(SEGMENT_PATH), "activities")).toBe(
+      false,
+    );
+    expect(shouldNavigateOnSidebarTabChange(parseAppLocation(ACTIVITY_PATH), "segments")).toBe(
+      false,
+    );
     expect(
-      shouldClearDetailOnSidebarTabChange(parseAppLocation(SEGMENT_PATH), "activities"),
-    ).toBe(true);
-    expect(
-      shouldClearDetailOnSidebarTabChange(parseAppLocation(ACTIVITY_PATH), "segments"),
-    ).toBe(true);
-    expect(
-      shouldClearDetailOnSidebarTabChange(parseAppLocation(SEGMENT_PATH), "segments"),
+      shouldNavigateOnSidebarTabChange(parseAppLocation(CREATE_SEGMENT_PATH), "segments"),
     ).toBe(false);
-    expect(
-      shouldClearDetailOnSidebarTabChange(parseAppLocation(ACTIVITY_PATH), "activities"),
-    ).toBe(false);
-    expect(
-      shouldClearDetailOnSidebarTabChange(parseAppLocation(SEGMENTS_PATH), "activities"),
-    ).toBe(false);
-    expect(
-      shouldClearDetailOnSidebarTabChange(parseAppLocation(SEGMENT_PATH), "profile"),
-    ).toBe(false);
-    expect(
-      shouldClearDetailOnSidebarTabChange(parseAppLocation(ACTIVITY_PATH), "profile"),
-    ).toBe(false);
+    expect(shouldNavigateOnSidebarTabChange(parseAppLocation(SEGMENT_PATH), "profile")).toBe(
+      false,
+    );
   });
 });

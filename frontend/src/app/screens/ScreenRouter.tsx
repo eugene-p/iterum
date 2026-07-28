@@ -10,6 +10,12 @@ const ActivityScreenContainer = lazy(() =>
   })),
 );
 
+const CreateSegmentScreenContainer = lazy(() =>
+  import("./CreateSegmentScreenContainer").then((module) => ({
+    default: module.CreateSegmentScreenContainer,
+  })),
+);
+
 const SegmentScreenContainer = lazy(() =>
   import("./SegmentScreenContainer").then((module) => ({
     default: module.SegmentScreenContainer,
@@ -23,11 +29,6 @@ const RedirectEditSegment = () => {
   return <Navigate to={`/segments/${segmentId}`} replace />;
 };
 
-const RedirectCreateSegment = () => {
-  const { activityId } = useParams();
-  return <Navigate to={`/activities/${activityId}`} replace />;
-};
-
 export const ScreenRouter = () => (
   <div className={appStyles.screenOutlet}>
     <Suspense fallback={<ScreenFallback />}>
@@ -36,7 +37,10 @@ export const ScreenRouter = () => (
         <Route path="/segments" element={<AppEmptyMain />} />
         <Route path="/activities" element={<AppEmptyMain />} />
         <Route path="/activities/:activityId" element={<ActivityScreenContainer />} />
-        <Route path="/activities/:activityId/segments/new" element={<RedirectCreateSegment />} />
+        <Route
+          path="/activities/:activityId/segments/new"
+          element={<CreateSegmentScreenContainer />}
+        />
         <Route path="/segments/:segmentId" element={<SegmentScreenContainer />} />
         <Route path="/segments/:segmentId/edit" element={<RedirectEditSegment />} />
         <Route path="/segments/:segmentId/subset" element={<RedirectEditSegment />} />
