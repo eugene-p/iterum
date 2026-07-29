@@ -84,4 +84,4 @@ compose.yaml       Postgres service
 
 ## License
 
-Private / unpublished.
+[MIT](LICENSE)
