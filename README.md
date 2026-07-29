@@ -54,7 +54,7 @@ npm run dev:server
 npm run dev:frontend
 ```
 
-- API: `http://127.0.0.1:8000` when using `.env.example` (`PORT=8000`), otherwise the server default is `8181`
+- API: `http://127.0.0.1:8181` (`.env.example` / server default; Vite proxies `/api` here)
 - Frontend (Vite): `http://127.0.0.1:5173`
 
 ## Scripts

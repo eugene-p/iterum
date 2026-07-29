@@ -8,13 +8,13 @@ import type { TrackPoint } from "../types";
  * start snap would land on the return visit (index 4).
  */
 const outAndBack: TrackPoint[] = [
-  { lat: 48.0, lon: 16.0, ele: null, time: null, hr: null, cadence: null, speed: null },
-  { lat: 48.001, lon: 16.0, ele: null, time: null, hr: null, cadence: null, speed: null },
-  { lat: 48.002, lon: 16.0, ele: null, time: null, hr: null, cadence: null, speed: null },
-  { lat: 48.003, lon: 16.0, ele: null, time: null, hr: null, cadence: null, speed: null },
-  { lat: 48.00205, lon: 16.0, ele: null, time: null, hr: null, cadence: null, speed: null },
-  { lat: 48.001, lon: 16.0, ele: null, time: null, hr: null, cadence: null, speed: null },
-  { lat: 48.0, lon: 16.0, ele: null, time: null, hr: null, cadence: null, speed: null },
+  { lat: 48.0, lon: 16.0 },
+  { lat: 48.001, lon: 16.0 },
+  { lat: 48.002, lon: 16.0 },
+  { lat: 48.003, lon: 16.0 },
+  { lat: 48.00205, lon: 16.0 },
+  { lat: 48.001, lon: 16.0 },
+  { lat: 48.0, lon: 16.0 },
 ];
 
 describe("applyEditorMapClick", () => {
@@ -52,15 +52,15 @@ describe("applyEditorMapClick", () => {
 describe("applyCloseLoop", () => {
   it("sets end same as start from the earliest visit, not a late snap", () => {
     const twoLaps: TrackPoint[] = [
-      { lat: 48.0, lon: 16.0, ele: null, time: null, hr: null, cadence: null, speed: null },
-      { lat: 48.0, lon: 16.001, ele: null, time: null, hr: null, cadence: null, speed: null },
-      { lat: 48.001, lon: 16.001, ele: null, time: null, hr: null, cadence: null, speed: null },
-      { lat: 48.001, lon: 16.0, ele: null, time: null, hr: null, cadence: null, speed: null },
-      { lat: 48.0, lon: 16.0, ele: null, time: null, hr: null, cadence: null, speed: null },
-      { lat: 48.0, lon: 16.001, ele: null, time: null, hr: null, cadence: null, speed: null },
-      { lat: 48.001, lon: 16.001, ele: null, time: null, hr: null, cadence: null, speed: null },
-      { lat: 48.001, lon: 16.0, ele: null, time: null, hr: null, cadence: null, speed: null },
-      { lat: 48.0, lon: 16.0, ele: null, time: null, hr: null, cadence: null, speed: null },
+      { lat: 48.0, lon: 16.0 },
+      { lat: 48.0, lon: 16.001 },
+      { lat: 48.001, lon: 16.001 },
+      { lat: 48.001, lon: 16.0 },
+      { lat: 48.0, lon: 16.0 },
+      { lat: 48.0, lon: 16.001 },
+      { lat: 48.001, lon: 16.001 },
+      { lat: 48.001, lon: 16.0 },
+      { lat: 48.0, lon: 16.0 },
     ];
 
     const mode = { kind: "create" as const, activityId: 1 };
