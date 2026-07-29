@@ -55,8 +55,9 @@ export const stopActivityJobs = async (): Promise<void> => {
   if (!system) return;
   const current = system;
   system = null;
-  current.stop();
+  // Drain already-queued work while pumps still run, then stop.
   await current.flushAll();
+  current.stop();
 };
 
 /**

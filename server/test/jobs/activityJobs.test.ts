@@ -40,7 +40,6 @@ describe("activityJobs", () => {
       publishActivityImported,
       flushAll,
       stop,
-      router: {} as ActivityJobSystem["router"],
       queues: {} as ActivityJobSystem["queues"],
     });
 

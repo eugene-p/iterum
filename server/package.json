@@ -19,8 +19,7 @@
   },
   "dependencies": {
     "@eugene-p/iterum-shared": "*",
-    "@qkitt/queue": "^0.6.2",
-    "@qkitt/queue-config": "^0.4.0",
+    "@qkitt/tinyq": "^0.1.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { whenIdle } from "@qkitt/tinyq";
 import {
   ACTIVITY_IMPORTED_TOPIC,
   createActivityJobSystem,
@@ -6,27 +7,11 @@ import {
   type ActivityJobSystem,
 } from "@/jobs/createActivityJobSystem.js";
 
-const waitQueueIdle = (queue: {
-  on: (event: "worker:idle", cb: () => void) => () => void;
-  isProcessing: () => boolean;
-  isEmpty: () => boolean;
-}): Promise<void> =>
-  new Promise((resolve) => {
-    const off = queue.on("worker:idle", () => {
-      off();
-      resolve();
-    });
-    if (queue.isEmpty() && !queue.isProcessing()) {
-      off();
-      resolve();
-    }
-  });
-
 const waitSystemIdle = async (system: ActivityJobSystem): Promise<void> => {
   await Promise.all([
-    waitQueueIdle(system.queues.geocode),
-    waitQueueIdle(system.queues.match),
-    waitQueueIdle(system.queues.preview),
+    whenIdle(system.queues.geocode),
+    whenIdle(system.queues.match),
+    whenIdle(system.queues.preview),
   ]);
 };
 
@@ -104,8 +89,8 @@ describe("createActivityJobSystem", () => {
 
     // Preview + geocode should finish both while match is still blocked on #1.
     await Promise.all([
-      waitQueueIdle(system.queues.preview),
-      waitQueueIdle(system.queues.geocode),
+      whenIdle(system.queues.preview),
+      whenIdle(system.queues.geocode),
     ]);
     expect(previewOrder).toEqual([1, 2]);
     expect(geocodeOrder).toEqual([1, 2]);
@@ -205,22 +190,6 @@ describe("createActivityJobSystem", () => {
     expect(matched).toEqual([9]);
     expect(previewFailures).toHaveLength(1);
     expect(previewFailures[0]?.activityId).toBe(9);
-
-    system.stop();
-  });
-
-  it("parks unknown topics on the unrouted queue", async () => {
-    const system = await createActivityJobSystem({
-      handlers: baseHandlers({
-        matchActivity: vi.fn(async () => undefined),
-        warmPreview: vi.fn(async () => undefined),
-      }),
-    });
-
-    const matched = system.router.publish("something.else", { activityId: 1 });
-    expect(matched).toBe(0);
-    expect(system.queues.unrouted.size()).toBe(1);
-    expect(system.queues.unrouted.peek()?.topic).toBe("something.else");
 
     system.stop();
   });

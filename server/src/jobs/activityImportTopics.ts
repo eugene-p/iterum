@@ -9,7 +9,6 @@ export const ACTIVITY_JOB_QUEUES = {
   geocode: "geocode",
   match: "match",
   preview: "preview",
-  unrouted: "unrouted",
 } as const;
 
 /** In-call retries after the first geocode attempt (Photon / network). */
