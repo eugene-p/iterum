@@ -35,6 +35,7 @@ ehthumbs.db
 Desktop.ini
 
 # Editor / IDE (personal)
+.vscode/
 .idea/
 *.suo
 *.ntvs*
@@ -47,8 +48,11 @@ Desktop.ini
 compose.override.yaml
 compose.override.yml
 
-# Grok-generated design artifacts
-docs/.grok-design-*
-.grok/**
-terminals/**
+# Local design notes (not product docs)
+docs/
+
+# Agent / session / harness (local only)
+.grok/
+terminals/
 mcps/
+agent-tools/
