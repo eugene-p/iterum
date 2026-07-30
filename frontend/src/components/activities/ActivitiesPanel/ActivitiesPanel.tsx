@@ -9,6 +9,7 @@ import { CollapsibleSection, Input, Stack } from "../../ui";
 import type { ActivitySummary } from "../../../types";
 import { formatSidebarListCount } from "../../AppSidebar/sidebarListUtils";
 import { sidebarListStyles } from "../../AppSidebar/sidebarList.styles";
+import { SidebarFilterSection, SidebarListButton } from "../../AppSidebar";
 import { ProfileScopeHint } from "../../profiles/ProfileScopeHint";
 import { ActivityPreviewPopover } from "../../previews/ActivityPreviewPopover";
 import { useActivityRouteSamplesMapQuery } from "../../../queries/activityRouteSamples";
@@ -192,38 +193,37 @@ export const ActivitiesPanel = ({
     const context = activityContextLine(activity);
 
     return (
-      <li
-        key={activity.id}
-        className={activitiesPanelStyles.listItem(
-          selectedActivityId === activity.id,
-          dayStripe,
-        )}
-        onClick={() => onSelectActivity(activity.id)}
-        onMouseEnter={(e) => schedulePreview(activity, e.currentTarget)}
-        onMouseLeave={clearPreview}
-      >
-        <div className={activitiesPanelStyles.itemPrimaryRow} title={`${dateTimeLabel} · ${activity.name}`}>
-          <span className={activitiesPanelStyles.itemDateTime}>{dateTimeLabel}</span>
-          <span className={activitiesPanelStyles.itemSep} aria-hidden>
-            |
-          </span>
-          <span className={activitiesPanelStyles.itemName}>{activity.name}</span>
-          {viewingAll && (
-            <span className={activitiesPanelStyles.itemProfile} title={activity.profile_name}>
-              {activity.profile_name}
+      <li key={activity.id}>
+        <SidebarListButton
+          selected={selectedActivityId === activity.id}
+          className={activitiesPanelStyles.listItem(dayStripe)}
+          onClick={() => onSelectActivity(activity.id)}
+          onMouseEnter={(e) => schedulePreview(activity, e.currentTarget)}
+          onMouseLeave={clearPreview}
+        >
+          <div className={activitiesPanelStyles.itemPrimaryRow} title={`${dateTimeLabel} · ${activity.name}`}>
+            <span className={activitiesPanelStyles.itemDateTime}>{dateTimeLabel}</span>
+            <span className={activitiesPanelStyles.itemSep} aria-hidden>
+              |
             </span>
+            <span className={activitiesPanelStyles.itemName}>{activity.name}</span>
+            {viewingAll && (
+              <span className={activitiesPanelStyles.itemProfile} title={activity.profile_name}>
+                {activity.profile_name}
+              </span>
+            )}
+          </div>
+          {stats && (
+            <div className={activitiesPanelStyles.itemStats} title={stats}>
+              {stats}
+            </div>
           )}
-        </div>
-        {stats && (
-          <div className={activitiesPanelStyles.itemStats} title={stats}>
-            {stats}
-          </div>
-        )}
-        {context && (
-          <div className={activitiesPanelStyles.itemContext} title={context}>
-            {context}
-          </div>
-        )}
+          {context && (
+            <div className={activitiesPanelStyles.itemContext} title={context}>
+              {context}
+            </div>
+          )}
+        </SidebarListButton>
       </li>
     );
   };
@@ -339,30 +339,12 @@ export const ActivitiesPanel = ({
       <div className={activitiesPanelStyles.root}>
         <div className={activitiesPanelStyles.body}>
           <Stack>
-            <CollapsibleSection
-              className={activitiesPanelStyles.filters}
-              headerClassName={activitiesPanelStyles.filtersHeader}
-              titleClassName={activitiesPanelStyles.filtersTitle}
-              bodyClassName={activitiesPanelStyles.filtersBody}
-              headingLevel="h3"
+            <SidebarFilterSection
+              countLabel={countLabel}
+              summary={filtersSummary}
+              active={filtersActive}
               expanded={filtersOpen}
               onToggle={() => setFiltersOpen((open) => !open)}
-              title={
-                <span className={activitiesPanelStyles.filtersTitleRow}>
-                  <span className={activitiesPanelStyles.filtersCount(filtersActive)}>
-                    {countLabel}
-                  </span>
-                  <span className={activitiesPanelStyles.filtersSep} aria-hidden="true">
-                    |
-                  </span>
-                  <span
-                    className={activitiesPanelStyles.filtersSort(filtersActive)}
-                    title={filtersSummary}
-                  >
-                    {filtersSummary}
-                  </span>
-                </span>
-              }
             >
               <Input
                 className={sidebarListStyles.search}
@@ -406,7 +388,7 @@ export const ActivitiesPanel = ({
                   </select>
                 </div>
               )}
-            </CollapsibleSection>
+            </SidebarFilterSection>
 
             {activities.length > 0 && (
               <div className={activitiesPanelStyles.density}>

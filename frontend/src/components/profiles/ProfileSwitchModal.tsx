@@ -1,5 +1,6 @@
 import { useProfileContext } from "../../app/ProfileContext";
 import { sidebarListStyles } from "../AppSidebar/sidebarList.styles";
+import { SidebarListButton } from "../AppSidebar";
 import { LoadingState, Modal, ModalHeader } from "../ui";
 import { profileModalStyles } from "./profileModalStyles";
 
@@ -26,17 +27,20 @@ export const ProfileSwitchModal = ({ open, onClose, onAddProfile }: ProfileSwitc
         ) : (
           <ul className={sidebarListStyles.list}>
             {profiles.map((profile) => (
-              <li
-                key={profile.id}
-                className={sidebarListStyles.listItem(profile.id === activeProfileId)}
-                onClick={() => handleSelect(profile.id)}
-              >
-                <div className={sidebarListStyles.itemName}>{profile.name}</div>
+              <li key={profile.id}>
+                <SidebarListButton
+                  selected={profile.id === activeProfileId}
+                  onClick={() => handleSelect(profile.id)}
+                >
+                  <div className={sidebarListStyles.itemName}>{profile.name}</div>
+                </SidebarListButton>
               </li>
             ))}
-            <li className={sidebarListStyles.listItem(false)} onClick={onAddProfile}>
-              <div className={sidebarListStyles.itemName}>Add profile</div>
-              <div className={sidebarListStyles.itemMeta}>Create a new activity profile</div>
+            <li>
+              <SidebarListButton onClick={onAddProfile}>
+                <div className={sidebarListStyles.itemName}>Add profile</div>
+                <div className={sidebarListStyles.itemMeta}>Create a new activity profile</div>
+              </SidebarListButton>
             </li>
           </ul>
         )}

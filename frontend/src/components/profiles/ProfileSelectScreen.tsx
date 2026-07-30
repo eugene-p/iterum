@@ -3,6 +3,7 @@ import { useProfileContext } from "../../app/ProfileContext";
 import { cn } from "../../lib/cn";
 import { AppBrand } from "../app/AppBrand";
 import { sidebarListStyles } from "../AppSidebar/sidebarList.styles";
+import { SidebarListButton } from "../AppSidebar";
 import { LoadingState, Stack } from "../ui";
 import { CreateProfileModal } from "./CreateProfileModal";
 import { profileSelectStyles } from "./ProfileSelectScreen.styles";
@@ -40,26 +41,24 @@ export const ProfileSelectScreen = ({ embedded = false }: ProfileSelectScreenPro
       <Stack>
         <ul className={sidebarListStyles.list}>
           {profiles.map((profile) => (
-            <li
-              key={profile.id}
-              className={cn(
-                sidebarListStyles.listItem(false),
-                profile.id === activeProfileId && "border-accent bg-accent/10",
-              )}
-              onClick={() => selectProfile(profile.id)}
-            >
-              <div className={sidebarListStyles.itemName}>
-                {profile.name}
-                {profile.id === activeProfileId && " (current)"}
-              </div>
+            <li key={profile.id}>
+              <SidebarListButton
+                selected={profile.id === activeProfileId}
+                className={cn(profile.id === activeProfileId && "border-accent bg-accent/10")}
+                onClick={() => selectProfile(profile.id)}
+              >
+                <div className={sidebarListStyles.itemName}>
+                  {profile.name}
+                  {profile.id === activeProfileId && " (current)"}
+                </div>
+              </SidebarListButton>
             </li>
           ))}
-          <li
-            className={sidebarListStyles.listItem(false)}
-            onClick={() => setAddOpen(true)}
-          >
-            <div className={sidebarListStyles.itemName}>Add profile</div>
-            <div className={sidebarListStyles.itemMeta}>Create a new activity profile</div>
+          <li>
+            <SidebarListButton onClick={() => setAddOpen(true)}>
+              <div className={sidebarListStyles.itemName}>Add profile</div>
+              <div className={sidebarListStyles.itemMeta}>Create a new activity profile</div>
+            </SidebarListButton>
           </li>
         </ul>
       </Stack>

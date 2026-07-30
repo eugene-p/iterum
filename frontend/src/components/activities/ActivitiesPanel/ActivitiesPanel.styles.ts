@@ -7,17 +7,6 @@ export const activitiesPanelStyles = {
   body: "min-h-0 flex-1 overflow-y-auto py-3",
   footer: "w-full shrink-0",
 
-  filters: "shrink-0",
-  filtersHeader: "gap-1 px-1 py-1",
-  filtersTitle: "min-w-0 flex-1 font-normal text-inherit",
-  filtersTitleRow: "flex min-w-0 items-center gap-1.5 text-[0.78rem] leading-none",
-  filtersCount: (active: boolean) =>
-    cn("shrink-0 font-semibold text-subtle", active && "text-fg"),
-  filtersSep: "shrink-0 text-muted opacity-50",
-  filtersSort: (active: boolean) =>
-    cn("min-w-0 font-medium text-muted", active && "text-subtle"),
-  filtersBody: "flex flex-col gap-1.5 px-1 pb-1.5 pt-0",
-
   modeRow: "flex items-center gap-1",
   modeButton: (active: boolean) =>
     cn(
@@ -72,11 +61,9 @@ export const activitiesPanelStyles = {
   ),
   weekHeaderCount: "font-normal opacity-80",
 
-  listItem: (active: boolean, dayStripe: boolean) =>
+  listItem: (dayStripe: boolean) =>
     cn(
-      "cursor-pointer border-b border-border px-2 py-1.5 transition-colors hover:bg-card-active",
-      dayStripe && !active && "bg-drop-surface/70",
-      active && "bg-card-active shadow-[inset_3px_0_0_theme(--color-primary)]",
+      dayStripe && "bg-drop-surface/70",
     ),
   itemPrimaryRow: "flex min-w-0 items-baseline gap-1",
   itemDateTime: "shrink-0 text-[0.78rem] font-semibold leading-[1.25] tabular-nums text-fg",

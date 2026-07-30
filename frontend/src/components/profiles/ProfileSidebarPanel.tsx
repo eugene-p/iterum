@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useProfileContext } from "../../app/ProfileContext";
 import { sidebarListStyles } from "../AppSidebar/sidebarList.styles";
+import { SidebarListButton } from "../AppSidebar";
 import { Stack, Switch } from "../ui";
 import { CreateProfileModal } from "./CreateProfileModal";
 import { ProfileEditDrawer } from "./ProfileEditDrawer";
@@ -44,31 +45,28 @@ export const ProfileSidebarPanel = () => {
             </li>
 
             {activeProfile && (
-              <li
-                className={sidebarListStyles.listItem(false)}
-                onClick={() => setModal("edit")}
-              >
-                <div className={sidebarListStyles.itemName}>Edit profile</div>
-                <div className={sidebarListStyles.itemMeta}>
-                  Name, stretch defaults, delete
-                </div>
+              <li>
+                <SidebarListButton onClick={() => setModal("edit")}>
+                  <div className={sidebarListStyles.itemName}>Edit profile</div>
+                  <div className={sidebarListStyles.itemMeta}>
+                    Name, stretch defaults, delete
+                  </div>
+                </SidebarListButton>
               </li>
             )}
 
-            <li
-              className={sidebarListStyles.listItem(false)}
-              onClick={() => setModal("switch")}
-            >
-              <div className={sidebarListStyles.itemName}>Switch profile</div>
-              <div className={sidebarListStyles.itemMeta}>Choose a different profile</div>
+            <li>
+              <SidebarListButton onClick={() => setModal("switch")}>
+                <div className={sidebarListStyles.itemName}>Switch profile</div>
+                <div className={sidebarListStyles.itemMeta}>Choose a different profile</div>
+              </SidebarListButton>
             </li>
 
-            <li
-              className={sidebarListStyles.listItem(false)}
-              onClick={() => setModal("add")}
-            >
-              <div className={sidebarListStyles.itemName}>Add profile</div>
-              <div className={sidebarListStyles.itemMeta}>Create a new activity profile</div>
+            <li>
+              <SidebarListButton onClick={() => setModal("add")}>
+                <div className={sidebarListStyles.itemName}>Add profile</div>
+                <div className={sidebarListStyles.itemMeta}>Create a new activity profile</div>
+              </SidebarListButton>
             </li>
           </ul>
         </Stack>

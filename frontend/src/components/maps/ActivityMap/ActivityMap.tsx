@@ -6,6 +6,7 @@ import { FitBounds } from "../shared/FitBounds";
 import { MapResizeHandler } from "../shared/MapResizeHandler";
 import { LatLonClickHandler } from "../shared/MapClickHandler";
 import { PathHighlight } from "../shared/PathHighlight";
+import { mapPalette } from "../shared/mapPalette";
 import { activityMapStyles } from "./ActivityMap.styles";
 
 type SegmentDraft = {
@@ -129,7 +130,7 @@ export const ActivityMap = memo(function ActivityMap({
           <Polyline
             key={route.id}
             positions={positions}
-            color={route.selected ? "#2f6fed" : "#6b8cb8"}
+            color={route.selected ? mapPalette.routePrimary : mapPalette.routeSecondary}
             weight={route.selected ? 4 : 3}
             opacity={route.selected ? (dimmed ? 0.45 : 1) : 0.42}
             interactive={!picking}
@@ -153,8 +154,8 @@ export const ActivityMap = memo(function ActivityMap({
       {hasSegmentHighlight && (
         <PathHighlight
           points={segmentHighlight}
-          glowColor="#5fd38d"
-          lineColor="#7dffb0"
+          glowColor={mapPalette.selectionGlow}
+          lineColor={mapPalette.selectionLine}
           glowOpacity={hasStretchOverlays ? 0.14 : 0.38}
           lineOpacity={hasStretchOverlays ? 0.32 : 0.95}
         />
@@ -185,7 +186,11 @@ export const ActivityMap = memo(function ActivityMap({
         <CircleMarker
           center={[segmentDraft.start_lat, segmentDraft.start_lon]}
           radius={10}
-          pathOptions={{ color: "#5fd38d", fillColor: "#5fd38d", fillOpacity: 0.95 }}
+          pathOptions={{
+            color: mapPalette.segmentStart,
+            fillColor: mapPalette.segmentStart,
+            fillOpacity: 0.95,
+          }}
           interactive={false}
         />
       )}
@@ -193,7 +198,11 @@ export const ActivityMap = memo(function ActivityMap({
         <CircleMarker
           center={[segmentDraft.end_lat, segmentDraft.end_lon]}
           radius={10}
-          pathOptions={{ color: "#ff8f8f", fillColor: "#ff8f8f", fillOpacity: 0.95 }}
+          pathOptions={{
+            color: mapPalette.segmentEnd,
+            fillColor: mapPalette.segmentEnd,
+            fillOpacity: 0.95,
+          }}
           interactive={false}
         />
       )}
@@ -202,13 +211,21 @@ export const ActivityMap = memo(function ActivityMap({
           <CircleMarker
             center={[segment.start_lat, segment.start_lon]}
             radius={8}
-            pathOptions={{ color: "#5fd38d", fillColor: "#5fd38d", fillOpacity: 0.9 }}
+            pathOptions={{
+              color: mapPalette.segmentStart,
+              fillColor: mapPalette.segmentStart,
+              fillOpacity: 0.9,
+            }}
             interactive={false}
           />
           <CircleMarker
             center={[segment.end_lat, segment.end_lon]}
             radius={8}
-            pathOptions={{ color: "#ff8f8f", fillColor: "#ff8f8f", fillOpacity: 0.9 }}
+            pathOptions={{
+              color: mapPalette.segmentEnd,
+              fillColor: mapPalette.segmentEnd,
+              fillOpacity: 0.9,
+            }}
             interactive={false}
           />
         </>

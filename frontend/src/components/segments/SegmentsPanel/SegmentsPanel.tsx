@@ -2,8 +2,9 @@ import { useMemo, useRef, useState } from "react";
 import type { Segment } from "../../../types";
 import { formatSidebarListCount } from "../../AppSidebar/sidebarListUtils";
 import { sidebarListStyles } from "../../AppSidebar/sidebarList.styles";
+import { SidebarFilterSection, SidebarListButton } from "../../AppSidebar";
 import { ProfileScopeHint } from "../../profiles/ProfileScopeHint";
-import { CollapsibleSection, Input, Stack } from "../../ui";
+import { Input, Stack } from "../../ui";
 import { SegmentPreviewPopover } from "../SegmentPreviewPopover";
 import { segmentsPanelStyles } from "./SegmentsPanel.styles";
 import {
@@ -76,30 +77,10 @@ export const SegmentsPanel = ({
     <>
       <div className="min-h-0 flex-1 overflow-y-auto">
         <Stack className="gap-1.5">
-          <CollapsibleSection
-            className={segmentsPanelStyles.filters}
-            headerClassName={segmentsPanelStyles.filtersHeader}
-            titleClassName={segmentsPanelStyles.filtersTitle}
-            bodyClassName={segmentsPanelStyles.filtersBody}
-            title={
-              <span className={segmentsPanelStyles.filtersTitleRow}>
-                <span
-                  className={segmentsPanelStyles.filtersCount(filtersActive)}
-                >
-                  {countLabel}
-                </span>
-                <span className={segmentsPanelStyles.filtersSep} aria-hidden="true">
-                  |
-                </span>
-                <span
-                  className={segmentsPanelStyles.filtersSort(filtersActive)}
-                  title={filtersSummary}
-                >
-                  {filtersSummary}
-                </span>
-              </span>
-            }
-            headingLevel="h3"
+          <SidebarFilterSection
+            countLabel={countLabel}
+            summary={filtersSummary}
+            active={filtersActive}
             expanded={filtersOpen}
             onToggle={() => setFiltersOpen((open) => !open)}
           >
@@ -128,7 +109,7 @@ export const SegmentsPanel = ({
                 ))}
               </select>
             </div>
-          </CollapsibleSection>
+          </SidebarFilterSection>
 
           <ProfileScopeHint />
 
@@ -144,12 +125,10 @@ export const SegmentsPanel = ({
               const hero = index === 0;
               const context = segmentContextMetaLine(segment);
               return (
-                <li
-                  key={segment.id}
-                  className={segmentsPanelStyles.listItem(
-                    selectedSegmentId === segment.id,
-                    hero,
-                  )}
+              <li key={segment.id}>
+                <SidebarListButton
+                  selected={selectedSegmentId === segment.id}
+                  className={segmentsPanelStyles.listItem(hero)}
                   onClick={() => onSelectSegment(segment.id)}
                   onMouseEnter={(e) => schedulePreview(segment, e.currentTarget)}
                   onMouseLeave={clearPreview}
@@ -168,7 +147,8 @@ export const SegmentsPanel = ({
                       {context}
                     </div>
                   )}
-                </li>
+                </SidebarListButton>
+              </li>
               );
             })}
           </ul>

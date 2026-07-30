@@ -2,7 +2,7 @@ import { cn } from "./lib/cn";
 import { panelStyles } from "./components/ui/Panel/Panel.styles";
 import { stackStyles } from "./components/ui/Stack/Stack.styles";
 
-export const SIDEBAR_WIDTH_PX = 360;
+export const SIDEBAR_WIDTH_PX = 320;
 export const SIDEBAR_RAIL_WIDTH_PX = 48;
 
 /** Demoted map column for data-centric detail (activity + segment). */

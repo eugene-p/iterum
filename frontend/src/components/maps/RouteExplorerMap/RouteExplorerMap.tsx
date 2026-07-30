@@ -6,6 +6,7 @@ import { FitBounds } from "../shared/FitBounds";
 import { MapResizeHandler } from "../shared/MapResizeHandler";
 import { IndexClickHandler } from "../shared/MapClickHandler";
 import { PathHighlight } from "../shared/PathHighlight";
+import { mapPalette } from "../shared/mapPalette";
 import { routeExplorerMapStyles } from "./RouteExplorerMap.styles";
 
 export type StretchOverlay = {
@@ -94,7 +95,7 @@ export const RouteExplorerMap = ({
       {routeLine.length > 1 && (
         <Polyline
           positions={routeLine}
-          color="#2f6fed"
+          color={mapPalette.routePrimary}
           weight={4}
           opacity={hasHighlight ? 0.35 : 0.9}
           interactive={false}
@@ -117,8 +118,8 @@ export const RouteExplorerMap = ({
       {hasHighlight && (
         <PathHighlight
           points={highlightPoints}
-          glowColor="#5fd38d"
-          lineColor="#7dffb0"
+          glowColor={mapPalette.selectionGlow}
+          lineColor={mapPalette.selectionLine}
           glowOpacity={hasStretchOverlays ? 0.14 : 0.28}
           lineOpacity={hasStretchOverlays ? 0.32 : 0.95}
         />
