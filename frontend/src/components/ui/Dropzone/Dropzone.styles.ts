@@ -4,7 +4,7 @@ import { buttonStyles } from "../Button/Button.styles";
 export const dropzoneStyles = {
   root: (state?: "dragover" | "uploading" | "upload-done") =>
     cn(
-      "flex flex-col items-center gap-[0.65rem] rounded-[10px] border border-dashed border-border-strong p-4 text-center text-subtle",
+      "flex flex-col items-center gap-[0.65rem] rounded-md border border-dashed border-border-strong p-4 text-center text-subtle",
       state === "dragover" && "border-primary bg-card-active",
       state === "uploading" && "pointer-events-none border-solid border-primary bg-card-active",
       state === "upload-done" && "border-success bg-success-surface",

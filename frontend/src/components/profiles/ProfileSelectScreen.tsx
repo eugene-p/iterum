@@ -4,7 +4,7 @@ import { cn } from "../../lib/cn";
 import { AppBrand } from "../app/AppBrand";
 import { sidebarListStyles } from "../AppSidebar/sidebarList.styles";
 import { SidebarListButton } from "../AppSidebar";
-import { LoadingState, Stack } from "../ui";
+import { Card, LoadingState, Stack, Switch } from "../ui";
 import { CreateProfileModal } from "./CreateProfileModal";
 import { profileSelectStyles } from "./ProfileSelectScreen.styles";
 
@@ -14,8 +14,23 @@ type ProfileSelectScreenProps = {
 };
 
 export const ProfileSelectScreen = ({ embedded = false }: ProfileSelectScreenProps) => {
-  const { profiles, ready, activeProfileId, selectProfile } = useProfileContext();
+  const {
+    profiles,
+    ready,
+    activeProfileId,
+    activeProfile,
+    viewScope,
+    selectProfile,
+    showAllProfiles,
+  } = useProfileContext();
   const [addOpen, setAddOpen] = useState(false);
+  const scopedToProfile = viewScope !== "all";
+
+  const handleScopeChange = (checked: boolean) => {
+    if (!activeProfile) return;
+    if (checked) selectProfile(activeProfile.id);
+    else showAllProfiles();
+  };
 
   if (!ready) {
     const loading = <LoadingState message="Loading profiles…" />;
@@ -23,20 +38,37 @@ export const ProfileSelectScreen = ({ embedded = false }: ProfileSelectScreenPro
   }
 
   const card = (
-    <div className={profileSelectStyles.card(embedded)}>
-      {!embedded && (
-        <div className={profileSelectStyles.brand}>
-          <AppBrand />
-        </div>
-      )}
-      <h2 className={profileSelectStyles.title}>
-        {activeProfileId == null ? "Choose a profile" : "Profiles"}
-      </h2>
-      <p className={profileSelectStyles.subtitle}>
-        {activeProfileId == null
-          ? "Activities belong to a profile. Segments are shared across profiles."
-          : "Switch profiles or create another activity profile."}
-      </p>
+    <Card
+      className={profileSelectStyles.card(embedded)}
+      bodyClassName={profileSelectStyles.body}
+      header={
+        <>
+        {!embedded && (
+          <div className={profileSelectStyles.brand}>
+            <AppBrand />
+          </div>
+        )}
+        <h2 className={profileSelectStyles.title}>
+          {activeProfileId == null ? "Choose a profile" : "Profiles"}
+        </h2>
+        <p className={profileSelectStyles.subtitle}>
+          {activeProfileId == null
+            ? "Activities belong to a profile. Segments are shared across profiles."
+            : "Switch profiles or create another activity profile."}
+        </p>
+        {embedded && activeProfile && (
+          <Switch
+            size="sm"
+            labelPosition="end"
+            className={profileSelectStyles.scopeCheck}
+            checked={scopedToProfile}
+            onChange={(event) => handleScopeChange(event.target.checked)}
+            label="Scope activities to this profile"
+          />
+        )}
+        </>
+      }
+    >
 
       <Stack>
         <ul className={sidebarListStyles.list}>
@@ -62,7 +94,7 @@ export const ProfileSelectScreen = ({ embedded = false }: ProfileSelectScreenPro
           </li>
         </ul>
       </Stack>
-    </div>
+    </Card>
   );
 
   return (

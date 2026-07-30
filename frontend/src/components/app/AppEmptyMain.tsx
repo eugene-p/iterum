@@ -6,8 +6,9 @@ import {
   resolveResumeTargets,
 } from "../../lib/lastOpenedStorage";
 import { ActivityUploadControl } from "../activities/ActivityUploadControl";
-import { Button, MutedText } from "../ui";
-import { AppBrand } from "./AppBrand";
+import { SidebarListButton } from "../AppSidebar";
+import { sidebarListStyles } from "../AppSidebar/sidebarList.styles";
+import { Card, MutedText } from "../ui";
 import { appEmptyMainStyles } from "./AppEmptyMain.styles";
 import { ProfileSelectScreen } from "../profiles/ProfileSelectScreen";
 
@@ -28,20 +29,23 @@ export const AppEmptyMain = () => {
   return (
     <div className={appEmptyMainStyles.root}>
       <div className={appEmptyMainStyles.canvas}>
-        <header className={appEmptyMainStyles.hero}>
-          <AppBrand />
-        </header>
-
         <div className={appEmptyMainStyles.grid}>
-          <section className={appEmptyMainStyles.uploadSection} aria-label="Upload an activity">
-            <div className={appEmptyMainStyles.sectionHead}>
+          <Card
+            className={appEmptyMainStyles.uploadSection}
+            aria-label="Upload an activity"
+            headerClassName={appEmptyMainStyles.sectionHead}
+            bodyClassName={appEmptyMainStyles.uploadBody}
+            header={
+              <>
               <h2 className={appEmptyMainStyles.title}>Upload an activity</h2>
               <MutedText>
                 {canUpload
                   ? "Drop one or more route files here to add them to the current profile."
                   : "Choose a profile to enable uploading."}
               </MutedText>
-            </div>
+              </>
+            }
+          >
             {canUpload ? (
               <ActivityUploadControl
                 variant="main"
@@ -57,7 +61,7 @@ export const AppEmptyMain = () => {
             ) : (
               <MutedText role="status">Select or create a profile to enable uploads.</MutedText>
             )}
-          </section>
+          </Card>
 
           <aside className={appEmptyMainStyles.sideColumn}>
             <section className={appEmptyMainStyles.profileSection} aria-label="Choose a profile">
@@ -65,30 +69,33 @@ export const AppEmptyMain = () => {
             </section>
 
             {hasResume && (
-              <section
+              <Card
                 className={appEmptyMainStyles.resumeSection}
                 aria-label="Continue where you left off"
+                bodyClassName={appEmptyMainStyles.resumeBody}
+                header={
+                  <h2 className={appEmptyMainStyles.title}>Continue where you left off</h2>
+                }
               >
-                <h2 className={appEmptyMainStyles.title}>Continue where you left off</h2>
-                <div className={appEmptyMainStyles.resumeList}>
+                <ul className={sidebarListStyles.list}>
                   {resumeSegment && (
-                    <Button
-                      className={appEmptyMainStyles.resumeButton}
-                      onClick={() => navigation.goSegment(resumeSegment.id)}
-                    >
-                      Segment: {resumeSegment.name}
-                    </Button>
+                    <li>
+                      <SidebarListButton onClick={() => navigation.goSegment(resumeSegment.id)}>
+                        <div className={sidebarListStyles.itemName}>{resumeSegment.name}</div>
+                        <div className={sidebarListStyles.itemMeta}>Segment</div>
+                      </SidebarListButton>
+                    </li>
                   )}
                   {resumeActivity && (
-                    <Button
-                      className={appEmptyMainStyles.resumeButton}
-                      onClick={() => navigation.goActivity(resumeActivity.id)}
-                    >
-                      Activity: {resumeActivity.name}
-                    </Button>
+                    <li>
+                      <SidebarListButton onClick={() => navigation.goActivity(resumeActivity.id)}>
+                        <div className={sidebarListStyles.itemName}>{resumeActivity.name}</div>
+                        <div className={sidebarListStyles.itemMeta}>Activity</div>
+                      </SidebarListButton>
+                    </li>
                   )}
-                </div>
-              </section>
+                </ul>
+              </Card>
             )}
           </aside>
         </div>

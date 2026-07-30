@@ -1,5 +1,6 @@
 export { Badge, type BadgeVariant } from "./Badge";
 export { Button, type ButtonVariant, type ButtonSize } from "./Button";
+export { Card } from "./Card";
 export { CollapsibleSection } from "./CollapsibleSection";
 export { Drawer } from "./Drawer";
 export { DropdownMenu, type DropdownMenuGroup, type DropdownMenuItem } from "./DropdownMenu";

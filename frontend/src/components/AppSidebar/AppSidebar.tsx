@@ -4,6 +4,7 @@ import { ActivitiesPanel } from "../activities/ActivitiesPanel";
 import { SegmentsPanel } from "../segments/SegmentsPanel";
 import { appSidebarStyles } from "./AppSidebar.styles";
 import { ProfileSidebarPanel } from "../profiles/ProfileSidebarPanel";
+import { AppBrand } from "../app/AppBrand";
 import { PanelLeftCloseIcon, UserIcon } from "./sidebarIcons";
 
 type SidebarTab = "segments" | "activities" | "profile";
@@ -89,6 +90,7 @@ export const AppSidebar = ({
         </Tabs.Panel>
       </div>
     </Tabs>
+    <AppBrand compact />
   </aside>
 );
 
