@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { whenIdle } from "@qkitt/tinyq";
+import { whenIdle } from "@qkitt/queue";
 import {
   ACTIVITY_IMPORTED_TOPIC,
   createActivityJobSystem,
@@ -44,7 +44,7 @@ describe("createActivityJobSystem", () => {
       }),
     });
 
-    const delivered = system.publishActivityImported(42);
+    const delivered = await system.publishActivityImported(42);
     expect(delivered).toBe(3);
 
     await waitSystemIdle(system);
@@ -84,8 +84,8 @@ describe("createActivityJobSystem", () => {
       }),
     });
 
-    system.publishActivityImported(1);
-    system.publishActivityImported(2);
+    await system.publishActivityImported(1);
+    await system.publishActivityImported(2);
 
     // Preview + geocode should finish both while match is still blocked on #1.
     await Promise.all([
@@ -125,7 +125,7 @@ describe("createActivityJobSystem", () => {
       }),
     });
 
-    system.publishActivityImported(7);
+    await system.publishActivityImported(7);
     await waitSystemIdle(system);
 
     expect(previewed).toEqual([7]);
@@ -156,7 +156,7 @@ describe("createActivityJobSystem", () => {
       }),
     });
 
-    system.publishActivityImported(5);
+    await system.publishActivityImported(5);
     await waitSystemIdle(system);
 
     expect(matched).toEqual([5]);
@@ -184,7 +184,7 @@ describe("createActivityJobSystem", () => {
       }),
     });
 
-    system.publishActivityImported(9);
+    await system.publishActivityImported(9);
     await waitSystemIdle(system);
 
     expect(matched).toEqual([9]);

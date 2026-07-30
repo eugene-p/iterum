@@ -9,6 +9,8 @@ import { readCachedTile, writeCachedTile } from "./tileCache.js";
 import type { MapBackgroundPaintRequest, MapBackgroundProvider } from "./types.js";
 
 const OSM_TILE_SUBDOMAINS = ["a", "b", "c"] as const;
+const TILE_FETCH_TIMEOUT_MS = 10_000;
+const pendingTileFetches = new Map<string, Promise<Buffer | null>>();
 
 export type TileFetch = (zoom: number, x: number, y: number) => Promise<Buffer | null>;
 
@@ -21,7 +23,9 @@ const tileUrl = (zoom: number, x: number, y: number): string => {
 
 const fetchTileFromNetwork = async (zoom: number, x: number, y: number): Promise<Buffer | null> => {
   try {
-    const response = await fetch(tileUrl(zoom, x, y));
+    const response = await fetch(tileUrl(zoom, x, y), {
+      signal: AbortSignal.timeout(TILE_FETCH_TIMEOUT_MS),
+    });
     if (!response.ok) return null;
     return Buffer.from(await response.arrayBuffer());
   } catch {
@@ -33,9 +37,21 @@ const fetchTileWithCache = async (zoom: number, x: number, y: number): Promise<B
   const cached = await readCachedTile(zoom, x, y);
   if (cached) return cached;
 
-  const buffer = await fetchTileFromNetwork(zoom, x, y);
-  if (buffer) await writeCachedTile(zoom, x, y, buffer);
-  return buffer;
+  const key = `${zoom}/${x}/${y}`;
+  const pending = pendingTileFetches.get(key);
+  if (pending) return pending;
+
+  const fetchAndCache = (async () => {
+    const buffer = await fetchTileFromNetwork(zoom, x, y);
+    if (buffer) await writeCachedTile(zoom, x, y, buffer);
+    return buffer;
+  })();
+  pendingTileFetches.set(key, fetchAndCache);
+  try {
+    return await fetchAndCache;
+  } finally {
+    pendingTileFetches.delete(key);
+  }
 };
 /* v8 ignore stop -- @preserve */
 

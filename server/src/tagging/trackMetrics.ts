@@ -8,14 +8,19 @@ export const computeElevationGain = (points: readonly TaggingPoint[]): number | 
   elevationGainM(points);
 
 export const computeDurationSec = (points: readonly TaggingPoint[]): number | null => {
-  const timestamps = points
-    .map((point) => point.timestamp)
-    .filter((value): value is Date | string => value != null)
-    .map((value) => new Date(value).getTime())
-    .filter((value) => Number.isFinite(value));
+  let earliest = Infinity;
+  let latest = -Infinity;
+  let count = 0;
+  for (const point of points) {
+    if (point.timestamp == null) continue;
+    const timestamp = new Date(point.timestamp).getTime();
+    if (!Number.isFinite(timestamp)) continue;
+    earliest = Math.min(earliest, timestamp);
+    latest = Math.max(latest, timestamp);
+    count += 1;
+  }
 
-  if (timestamps.length < 2) return null;
-  return (Math.max(...timestamps) - Math.min(...timestamps)) / 1000;
+  return count >= 2 ? (latest - earliest) / 1000 : null;
 };
 
 export const computeAvgSpeedKmh = (
@@ -23,13 +28,16 @@ export const computeAvgSpeedKmh = (
   durationSec: number | null,
   points: readonly TaggingPoint[],
 ): number | null => {
-  const pointSpeeds = points
-    .map((point) => point.speed_mps)
-    .filter((value): value is number => value != null)
-    .map((speedMps) => speedMps * 3.6);
+  let speedTotal = 0;
+  let speedCount = 0;
+  for (const point of points) {
+    if (point.speed_mps == null) continue;
+    speedTotal += point.speed_mps * 3.6;
+    speedCount += 1;
+  }
 
-  if (pointSpeeds.length) {
-    return pointSpeeds.reduce((sum, speed) => sum + speed, 0) / pointSpeeds.length;
+  if (speedCount) {
+    return speedTotal / speedCount;
   }
 
   if (distanceM != null && durationSec != null && durationSec > 0) {

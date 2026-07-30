@@ -60,8 +60,8 @@ describe("activityJobs", () => {
   });
 
   it("start is idempotent and stop clears the system", async () => {
-    const first = await startActivityJobs();
-    const second = await startActivityJobs();
+    const first = await startActivityJobs({ persistence: null });
+    const second = await startActivityJobs({ persistence: null });
     expect(second).toBe(first);
 
     await stopActivityJobs();

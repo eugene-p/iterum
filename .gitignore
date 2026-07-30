@@ -23,6 +23,9 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Local durable queue store
+server/data/jobs.sqlite*
 pnpm-debug.log*
 
 # Vite (source is vite.config.ts)

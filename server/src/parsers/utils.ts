@@ -59,10 +59,19 @@ export function finalizeActivity(
     throw new BadRequestError("No GPS track points found");
   }
 
-  const heartRates = points.map((p) => p.heartRate).filter((hr): hr is number => hr != null);
+  let heartRateTotal = 0;
+  let heartRateCount = 0;
+  let computedMaxHr: number | null = null;
+  for (const point of points) {
+    if (point.heartRate == null) continue;
+    heartRateTotal += point.heartRate;
+    heartRateCount += 1;
+    computedMaxHr =
+      computedMaxHr == null ? point.heartRate : Math.max(computedMaxHr, point.heartRate);
+  }
   const avgHr =
-    partial.avgHr ?? (heartRates.length ? heartRates.reduce((a, b) => a + b, 0) / heartRates.length : null);
-  const maxHr = partial.maxHr ?? (heartRates.length ? Math.max(...heartRates) : null);
+    partial.avgHr ?? (heartRateCount ? heartRateTotal / heartRateCount : null);
+  const maxHr = partial.maxHr ?? computedMaxHr;
 
   let startedAt =
     partial.startedAt ?? points[0].timestamp ?? parseDateFromText(fallbackName) ?? parseDateFromText(partial.name ?? "");
@@ -73,8 +82,12 @@ export function finalizeActivity(
 
   let distanceM = partial.distanceM;
   if (distanceM == null) {
-    const last = points.map((p) => p.distanceM).filter((d): d is number => d != null).at(-1);
-    distanceM = last ?? null;
+    for (let index = points.length - 1; index >= 0; index -= 1) {
+      if (points[index].distanceM != null) {
+        distanceM = points[index].distanceM;
+        break;
+      }
+    }
   }
 
   const name =

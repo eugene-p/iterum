@@ -37,15 +37,21 @@ export const cumulativeDistancesM = (points: readonly LatLon[]): number[] => {
 
 /** Sum of positive elevation deltas; null if fewer than two elevation samples. */
 export const elevationGainM = (points: readonly ElevPoint[]): number | null => {
-  const elevations = points
-    .map((p) => p.elevation_m)
-    .filter((e): e is number => e != null);
-  if (elevations.length < 2) return null;
-
+  let previous: number | null = null;
+  let count = 0;
   let gain = 0;
-  for (let i = 1; i < elevations.length; i++) {
-    const delta = elevations[i] - elevations[i - 1];
+  for (const point of points) {
+    const elevation = point.elevation_m;
+    if (elevation == null) continue;
+    if (previous == null) {
+      previous = elevation;
+      count += 1;
+      continue;
+    }
+    const delta = elevation - previous;
     if (delta > 0) gain += delta;
+    previous = elevation;
+    count += 1;
   }
-  return gain;
+  return count >= 2 ? gain : null;
 };

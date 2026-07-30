@@ -1,0 +1,29 @@
+{
+  "name": "@qkitt/queue-adapter-node-sqlite",
+  "private": true,
+  "version": "0.1.0",
+  "license": "ISC",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@qkitt/queue": "^0.9.0"
+  },
+  "devDependencies": {
+    "@qkitt/queue": "^0.9.0",
+    "@types/node": "^22.20.0",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

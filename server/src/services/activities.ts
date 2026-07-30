@@ -117,7 +117,7 @@ export async function saveActivity(
 
   // Match + preview are best-effort after commit so a large rematch cannot
   // roll back the import and so upload latency is not blocked on side work.
-  scheduleActivityImported(activityId);
+  await scheduleActivityImported(activityId);
 
   return activityId;
 }

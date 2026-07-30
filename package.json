@@ -5,6 +5,7 @@
   "license": "MIT",
   "workspaces": [
     "packages/shared",
+    "packages/queue-adapter-node-sqlite",
     "server",
     "frontend"
   ],

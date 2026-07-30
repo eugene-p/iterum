@@ -146,16 +146,32 @@ export const buildPassResult = ({
   }
 
   const distanceM = pathDistanceM(slice);
-  const speeds = slice.map((p) => speedKmh(p.speed_mps)).filter((s): s is number => s != null);
-  let avgSpeedKmh: number | null = speeds.length ? speeds.reduce((a, b) => a + b, 0) / speeds.length : null;
-  const maxSpeedKmh = speeds.length ? Math.max(...speeds) : null;
+  let speedTotal = 0;
+  let speedCount = 0;
+  let maxSpeedKmh: number | null = null;
+  let heartRateTotal = 0;
+  let heartRateCount = 0;
+  let maxHr: number | null = null;
+
+  for (const point of slice) {
+    const speed = speedKmh(point.speed_mps);
+    if (speed != null) {
+      speedTotal += speed;
+      speedCount += 1;
+      maxSpeedKmh = maxSpeedKmh == null ? speed : Math.max(maxSpeedKmh, speed);
+    }
+    if (point.heart_rate != null) {
+      heartRateTotal += point.heart_rate;
+      heartRateCount += 1;
+      maxHr = maxHr == null ? point.heart_rate : Math.max(maxHr, point.heart_rate);
+    }
+  }
+
+  let avgSpeedKmh: number | null = speedCount ? speedTotal / speedCount : null;
   if (avgSpeedKmh == null && durationSec && durationSec > 0) {
     avgSpeedKmh = (distanceM / durationSec) * 3.6;
   }
-
-  const heartRates = slice.map((p) => p.heart_rate).filter((hr): hr is number => hr != null);
-  const avgHr = heartRates.length ? heartRates.reduce((a, b) => a + b, 0) / heartRates.length : null;
-  const maxHr = heartRates.length ? Math.max(...heartRates) : null;
+  const avgHr = heartRateCount ? heartRateTotal / heartRateCount : null;
 
   return {
     matched: true,
