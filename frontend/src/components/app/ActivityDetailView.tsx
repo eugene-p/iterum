@@ -53,6 +53,8 @@ export const ActivityDetailView = ({
   );
 
   return (
+  <>
+    <title>Iterum: Activity</title>    
     <div className={appStyles.detailScreen}>
       <div className={appStyles.segmentMode}>
         <div className={appStyles.segmentModeInfo}>
@@ -96,5 +98,6 @@ export const ActivityDetailView = ({
         </div>
       </div>
     </div>
+  </>
   );
 };

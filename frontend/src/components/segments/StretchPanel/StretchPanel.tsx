@@ -5,6 +5,7 @@ import {
   comparisonBaselineFromStretch,
   stretchKindLabel,
   type StretchPassMetrics,
+  formatStretchLabel,
 } from "../../../stretchUtils";
 import type { SegmentPass, Stretch, StretchState, StretchThresholds } from "../../../types";
 import { DEFAULT_STRETCH_THRESHOLDS } from "../../../stretchUtils";
@@ -180,10 +181,10 @@ export const StretchPanel = ({
                   <td className={stretchPanelStyles.stretchTd}>
                     {fullSegmentBaseline && fullSegmentBaseline.distance_m > 0
                       ? `${(
-                          ((fullSegmentBaseline.elevation_delta_m ?? 0) /
-                            fullSegmentBaseline.distance_m) *
-                          100
-                        ).toFixed(1)}%`
+                        ((fullSegmentBaseline.elevation_delta_m ?? 0) /
+                          fullSegmentBaseline.distance_m) *
+                        100
+                      ).toFixed(1)}%`
                       : "—"}
                   </td>
                 </tr>
@@ -192,7 +193,7 @@ export const StretchPanel = ({
                     key={stretch.index}
                     className={stretchPanelStyles.stretchRow(
                       arrayIndex === selectedStretchIndex ||
-                        stretch.index === selectedStretchIndex,
+                      stretch.index === selectedStretchIndex,
                       geometryDirty,
                     )}
                     onClick={
@@ -224,7 +225,7 @@ export const StretchPanel = ({
             <div className={stretchPanelStyles.comparisonHeader}>
               <h3 className={stretchPanelStyles.comparisonTitle}>
                 {stretchSelected && selectedStretch
-                  ? `Stretch ${stretchDisplayNumber(selectedStretch.index)} · ${stretchKindLabel(selectedStretch.kind)} · ${formatDistance(selectedStretch.length_m)}`
+                  ? `${formatStretchLabel(selectedStretch)} · ${stretchKindLabel(selectedStretch.kind)} · ${formatDistance(selectedStretch.length_m)} \u2194 · ${formatDistance(selectedStretch.elevation_delta_m)} \u2195`
                   : fullSegmentBaseline
                     ? `Full segment · ${formatDistance(fullSegmentBaseline.distance_m)} · all included passes`
                     : "Full segment · all included passes"}

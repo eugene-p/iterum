@@ -13,6 +13,7 @@ import {
   metricsAtIndex,
   sliceDurationSec,
 } from "./routeExplorerUtils";
+import { stretchDisplayNumber } from "./lib/stretchEdit";
 
 export { cumulativeDistances };
 
@@ -179,7 +180,7 @@ export function stretchPointContextAtIndex(
 }
 
 export function formatStretchLabel(stretch: Stretch): string {
-  return `${stretchKindLabel(stretch.kind)} #${stretch.index}`;
+  return stretch.name ?? `Stretch ${stretchDisplayNumber(stretch.index)}`;
 }
 
 export const STRETCH_PROGRESS_COLORS = ["#7dffb0", "#f5c542", "#ff8f8f", "#4a4a4a"] as const;
