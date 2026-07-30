@@ -13,6 +13,7 @@ import {
 import type {
   ProfileViewScope,
   SegmentStretchPreviewOptions,
+  Stretch,
   StretchThresholds,
 } from "../types";
 import { queryKeys } from "./queryKeys";
@@ -51,12 +52,18 @@ export const useSaveSegmentStretchesMutation = () => {
       segmentId,
       thresholds,
       stretchSourceActivityId,
+      stretches,
     }: {
       segmentId: number;
       thresholds: StretchThresholds;
       stretchSourceActivityId?: number | null;
-    }) => saveSegmentStretches(segmentId, thresholds, stretchSourceActivityId),
-    onSuccess: (_result, { segmentId }) => {
+      stretches?: Stretch[] | null;
+    }) => saveSegmentStretches(segmentId, thresholds, stretchSourceActivityId, stretches),
+    onSuccess: (result, { segmentId }) => {
+      queryClient.setQueriesData(
+        { queryKey: queryKeys.segmentCompareRoot(segmentId) },
+        result,
+      );
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentCompareRoot(segmentId) });
     },
   });

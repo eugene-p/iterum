@@ -25,6 +25,12 @@ export const segmentUiReducer = (
         stretchIndex: state.stretchIndex === action.stretchIndex ? null : action.stretchIndex,
       };
 
+    case SEGMENT_UI_ACTION_TYPES.SELECT_STRETCH:
+      return {
+        ...state,
+        stretchIndex: action.stretchIndex,
+      };
+
     case SEGMENT_UI_ACTION_TYPES.CLEAR_STRETCH_SELECTION:
       return {
         ...state,

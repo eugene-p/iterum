@@ -43,7 +43,7 @@ export const SegmentDetailHeader = ({
             {selectedStretch && selectedPassStretchMetrics ? (
               <>
                 {" "}
-                · stretch {selectedStretch.index} ({stretchKindLabel(selectedStretch.kind)})
+                · stretch {selectedStretch.index + 1} ({stretchKindLabel(selectedStretch.kind)})
                 {" · "}
                 {formatDistance(selectedPassStretchMetrics.distance_m)}
                 {" · "}
@@ -78,6 +78,7 @@ export const SegmentDetailHeader = ({
       editError={headerActions.editError}
       onSegmentSaved={headerActions.onSegmentSaved}
       onComparePasses={headerActions.onComparePasses}
+      onEditStretches={headerActions.onEditStretches}
       onReverse={headerActions.onReverse}
       onRescan={headerActions.onRescan}
       onDelete={headerActions.onDelete}

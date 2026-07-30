@@ -76,10 +76,26 @@ export const segmentCompareQuerySchema = z
   });
 export type SegmentCompareQuery = z.infer<typeof segmentCompareQuerySchema>;
 
+const stretchGeoPointSchema = z.object({
+  lat: z.number().finite(),
+  lon: z.number().finite(),
+  elevation_m: z.number().finite(),
+});
+
+export const manualStretchBodySchema = z.object({
+  index: z.number().int().nonnegative().optional(),
+  start: stretchGeoPointSchema,
+  end: stretchGeoPointSchema,
+  length_m: z.number().positive(),
+  name: z.string().trim().min(1).max(120).nullable().optional(),
+});
+
 export const saveSegmentStretchesBodySchema = z.object({
   thresholds: stretchThresholdsSchema.partial().default({}),
   stretch_source_activity_id: z
     .union([z.null(), z.coerce.number().int().positive()])
     .optional(),
+  /** When set, persist these boundaries instead of recomputing from thresholds. */
+  stretches: z.array(manualStretchBodySchema).min(1).optional(),
 });
 export type SaveSegmentStretchesBody = z.infer<typeof saveSegmentStretchesBodySchema>;

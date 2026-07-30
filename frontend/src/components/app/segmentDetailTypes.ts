@@ -13,7 +13,11 @@ export type PassStretchMetrics = Omit<StretchPassMetrics, "pass">;
 
 export type MapRoute = { id: number; points: TrackPoint[]; selected: boolean };
 
-export type StretchOverlay = { id: number; points: TrackPoint[]; color: string };
+export type StretchOverlay = {
+  id: number | string;
+  points: TrackPoint[];
+  color: string;
+};
 
 export type SegmentDetailMapState = {
   routes: MapRoute[];
@@ -41,6 +45,7 @@ export type SegmentHeaderActions = {
   editError: string | null;
   onSegmentSaved: (segmentId: number) => void;
   onComparePasses: () => void;
+  onEditStretches: () => void;
   onReverse: (segmentId: number, name: string) => Promise<boolean>;
   onRescan: () => void;
   onDelete: () => void;

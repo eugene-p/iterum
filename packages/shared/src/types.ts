@@ -99,6 +99,8 @@ export interface Stretch {
   kind: StretchKind;
   elevation_delta_m: number;
   avg_grade_pct: number;
+  /** Optional user label; null/omitted uses kind + 1-based index in the UI. */
+  name?: string | null;
 }
 
 export type StretchState = "saved" | "preview" | "unsaved";

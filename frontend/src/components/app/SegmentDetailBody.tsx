@@ -4,7 +4,7 @@ import { PassIncludeControl } from "../segments/PassIncludeControl";
 import { StretchPanel } from "../segments/StretchPanel";
 import { useSegmentPassSelectionContext } from "./SegmentPassSelectionContext";
 import type { SegmentDetailActions, SegmentDetailStretchState } from "./segmentDetailTypes";
-import type { SegmentCompare } from "../../types";
+import type { SegmentCompare, Stretch } from "../../types";
 
 type SegmentDetailBodyProps = {
   comparison: SegmentCompare | null;
@@ -16,9 +16,15 @@ type SegmentDetailBodyProps = {
     SegmentDetailActions,
     "onSetPassIncluded" | "onApplyPassSelection" | "onExcludeIncludedPass"
   >;
+  displayStretches?: Stretch[];
 };
 
-export const SegmentDetailBody = ({ comparison, stretch, actions }: SegmentDetailBodyProps) => {
+export const SegmentDetailBody = ({
+  comparison,
+  stretch,
+  actions,
+  displayStretches,
+}: SegmentDetailBodyProps) => {
   const {
     includedPassIdSet,
     fullPassMetrics,
@@ -55,7 +61,7 @@ export const SegmentDetailBody = ({ comparison, stretch, actions }: SegmentDetai
         onApplySelection={applyPassSelection}
       />
       <StretchPanel
-        stretches={comparison?.stretches ?? []}
+        stretches={displayStretches ?? comparison?.stretches ?? []}
         fullPassMetrics={fullPassMetrics}
         thresholds={stretch.thresholds}
         reason={comparison?.stretch_reason}

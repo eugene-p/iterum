@@ -29,8 +29,10 @@ import {
 } from "./segmentRepository.js";
 import {
   persistDefaultStretches,
+  saveManualStretchesForSegment,
   saveStretchesForSegment,
 } from "./stretchCompare.js";
+import type { ManualStretchInput } from "./stretchManual.js";
 import type { StretchThresholds } from "./stretchSegmentation.js";
 import { getProfileStretchThresholdsForActivity } from "./profiles.js";
 
@@ -312,9 +314,24 @@ export const saveSegmentStretchesFromPreview = async (
   segmentId: number,
   thresholds: StretchThresholds,
   stretchSourceActivityId?: number | null,
+  stretches?: ManualStretchInput[] | null,
 ) => {
   const segment = await loadSegment(segmentId);
   if (!segment) throw new NotFoundError("Segment not found");
+  if (stretches?.length) {
+    try {
+      return await saveManualStretchesForSegment(
+        segmentId,
+        segment.source_activity_id,
+        thresholds,
+        stretches,
+        stretchSourceActivityId,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid stretches";
+      throw new BadRequestError(message);
+    }
+  }
   return saveStretchesForSegment(
     segmentId,
     segment.source_activity_id,

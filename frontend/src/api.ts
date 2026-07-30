@@ -8,6 +8,7 @@ import type {
   Segment,
   SegmentCompare,
   SegmentStretchPreviewOptions,
+  Stretch,
   StretchThresholds,
   TrackPoint,
 } from "./types";
@@ -201,6 +202,7 @@ export async function saveSegmentStretches(
   segmentId: number,
   thresholds: StretchThresholds,
   stretchSourceActivityId?: number | null,
+  stretches?: Stretch[] | null,
 ) {
   const data = await request<SegmentCompare>(`/api/segments/${segmentId}/stretches`, {
     method: "PUT",
@@ -208,6 +210,17 @@ export async function saveSegmentStretches(
     body: JSON.stringify({
       thresholds,
       stretch_source_activity_id: stretchSourceActivityId ?? null,
+      ...(stretches?.length
+        ? {
+            stretches: stretches.map((s) => ({
+              index: s.index,
+              start: s.start,
+              end: s.end,
+              length_m: s.length_m,
+              name: s.name ?? null,
+            })),
+          }
+        : {}),
     }),
   });
   return { ...data, passes: sortSegmentPassesByTime(data.passes) };

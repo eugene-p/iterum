@@ -38,7 +38,7 @@ export const loadSegmentStretches = async (
   if (!meta.rowCount) return null;
 
   const stretchRows = await query<Record<string, unknown>>(
-    `SELECT stretch_index, ${geoPointSelect("start_point", "start")}, ${geoPointSelect("end_point", "end")}, length_m
+    `SELECT stretch_index, ${geoPointSelect("start_point", "start")}, ${geoPointSelect("end_point", "end")}, length_m, name
      FROM segment_stretches WHERE segment_id = $1 ORDER BY stretch_index`,
     [segmentId],
   );
@@ -57,6 +57,10 @@ export const loadSegmentStretches = async (
           start: geoPointFromRow(stretch, "start"),
           end: geoPointFromRow(stretch, "end"),
           length_m: Number(stretch.length_m),
+          name:
+            stretch.name == null || stretch.name === ""
+              ? null
+              : String(stretch.name),
         },
         thresholds,
       ),
@@ -67,7 +71,7 @@ export const loadSegmentStretches = async (
   };
 };
 
-const STRETCH_PARAMS = 9;
+const STRETCH_PARAMS = 10;
 
 export const saveSegmentStretches = async (
   segmentId: number,
@@ -85,19 +89,23 @@ export const saveSegmentStretches = async (
 
         for (let i = start; i < end; i++) {
           const stretch = result.stretches[i];
+          const name =
+            stretch.name != null && String(stretch.name).trim()
+              ? String(stretch.name).trim()
+              : null;
           values.push(segmentId, stretch.index);
           pushGeoPoint(values, stretch.start);
           pushGeoPoint(values, stretch.end);
-          values.push(stretch.length_m);
+          values.push(stretch.length_m, name);
           placeholders.push(
-            `($${param},$${param + 1},${geoPointSql(param + 2)},${geoPointSql(param + 5)},$${param + 8})`,
+            `($${param},$${param + 1},${geoPointSql(param + 2)},${geoPointSql(param + 5)},$${param + 8},$${param + 9})`,
           );
           param += STRETCH_PARAMS;
         }
 
         await query(
           `INSERT INTO segment_stretches
-            (segment_id, stretch_index, start_point, end_point, length_m)
+            (segment_id, stretch_index, start_point, end_point, length_m, name)
            VALUES ${placeholders.join(", ")}`,
           values,
         );

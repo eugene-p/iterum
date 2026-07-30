@@ -13,11 +13,16 @@ export const stretchPanelStyles = {
   stretchTable: "w-full border-collapse text-[0.75rem]",
   stretchTh: "border-b border-border px-1.5 py-0.5 text-left font-medium text-muted",
   stretchTd: "border-b border-border/60 px-1.5 py-0.5 align-middle whitespace-nowrap",
-  stretchRow: (selected: boolean) =>
-    cn("cursor-pointer transition-colors hover:bg-accent/5", selected && "bg-accent/10"),
-  fullSegmentRow: (selected: boolean) =>
+  stretchRow: (selected: boolean, locked = false) =>
     cn(
-      "cursor-pointer font-medium text-subtle transition-colors hover:bg-accent/5",
+      "transition-colors",
+      locked ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-accent/5",
+      selected && "bg-accent/10",
+    ),
+  fullSegmentRow: (selected: boolean, locked = false) =>
+    cn(
+      "font-medium text-subtle transition-colors",
+      locked ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-accent/5",
       selected && "bg-accent/10",
     ),
   kindBadge: (kind: "climb" | "flat" | "descent") =>

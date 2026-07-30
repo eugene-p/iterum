@@ -165,6 +165,7 @@ segmentsRouter.put(
       id,
       parsedThresholds,
       body.stretch_source_activity_id ?? undefined,
+      body.stretches ?? null,
     );
     const data = await getSegmentPasses(id);
     if (!data) {

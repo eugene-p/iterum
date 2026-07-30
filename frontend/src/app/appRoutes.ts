@@ -20,6 +20,7 @@ export const APP_TAB = {
 export const APP_VIEW = {
   ROUTE: "route",
   COMPARE: "compare",
+  STRETCHES: "stretches",
 } as const;
 
 /** Segment multi-pass compare modes (activity solo has no mode tabs). */
@@ -49,7 +50,13 @@ export const appRoutes = {
 } as const;
 
 const parseAppView = (value: string | null): AppView | null => {
-  if (value === APP_VIEW.ROUTE || value === APP_VIEW.COMPARE) return value;
+  if (
+    value === APP_VIEW.ROUTE ||
+    value === APP_VIEW.COMPARE ||
+    value === APP_VIEW.STRETCHES
+  ) {
+    return value;
+  }
   return null;
 };
 
@@ -260,8 +267,10 @@ export const cleanSearchForLocation = (
     }
     return { view: null, compareMode: null, comparePasses: null };
   }
-  if (params.view === APP_VIEW.COMPARE) {
-    return params;
+  if (params.view === APP_VIEW.COMPARE || params.view === APP_VIEW.STRETCHES) {
+    return params.view === APP_VIEW.STRETCHES
+      ? { view: APP_VIEW.STRETCHES, compareMode: null, comparePasses: null }
+      : params;
   }
   return { view: null, compareMode: null, comparePasses: params.comparePasses };
 };
@@ -272,7 +281,9 @@ export const isViewValidForLocation = (
 ): boolean => {
   if (!view) return true;
   if (view === APP_VIEW.ROUTE) return location.type === "activity";
-  if (view === APP_VIEW.COMPARE) return location.type === "segment";
+  if (view === APP_VIEW.COMPARE || view === APP_VIEW.STRETCHES) {
+    return location.type === "segment";
+  }
   return false;
 };
 

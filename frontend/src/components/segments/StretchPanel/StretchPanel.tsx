@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Button, CollapsibleSection, MutedText } from "../../ui";
 import {
   comparisonBaselineFromStretches,
@@ -8,6 +8,7 @@ import {
 } from "../../../stretchUtils";
 import type { SegmentPass, Stretch, StretchState, StretchThresholds } from "../../../types";
 import { DEFAULT_STRETCH_THRESHOLDS } from "../../../stretchUtils";
+import { stretchDisplayNumber } from "../../../lib/stretchEdit";
 import { formatDistance } from "../../../utils";
 import { stretchPanelStyles } from "./StretchPanel.styles";
 import { StretchThresholdSettings } from "./StretchThresholdSettings";
@@ -33,6 +34,10 @@ type StretchPanelProps = {
   onSaveStretches: () => void;
   defaultThresholds?: StretchThresholds;
   loading?: boolean;
+  /** Movie-style boundary editor (merge / split / resize / convert). */
+  stripEditor?: ReactNode;
+  /** When true, threshold controls are locked (geometry edit dirty). */
+  geometryDirty?: boolean;
 };
 
 export const StretchPanel = ({
@@ -55,6 +60,8 @@ export const StretchPanel = ({
   onSaveStretches,
   defaultThresholds = DEFAULT_STRETCH_THRESHOLDS,
   loading = false,
+  stripEditor = null,
+  geometryDirty = false,
 }: StretchPanelProps) => {
   const resolvedThresholds = thresholds ?? defaultThresholds;
   const [draft, setDraft] = useState<StretchThresholds>(resolvedThresholds);
@@ -97,16 +104,20 @@ export const StretchPanel = ({
             : "No stretches"}
           {stretchState === "preview" ? " · preview" : ""}
           {stretchSelected && selectedStretch
-            ? ` · ${stretchKindLabel(selectedStretch.kind)} #${selectedStretch.index}`
+            ? ` · ${stretchKindLabel(selectedStretch.kind)} #${stretchDisplayNumber(selectedStretch.index)}`
             : " · full segment"}
         </>
       }
     >
       <div className={stretchPanelStyles.actions}>
-        <Button size="sm" onClick={() => setSettingsOpen((open) => !open)}>
+        <Button
+          size="sm"
+          onClick={() => setSettingsOpen((open) => !open)}
+          disabled={geometryDirty}
+        >
           {settingsOpen ? "Hide thresholds" : "Adjust thresholds"}
         </Button>
-        {stretchCanSave && (
+        {stretchCanSave && !geometryDirty && (
           <>
             <Button size="sm" onClick={onResetStretchPreview} disabled={loading}>
               Reset
@@ -118,13 +129,13 @@ export const StretchPanel = ({
         )}
       </div>
 
-      {stretchCanSave && (
+      {stretchCanSave && !geometryDirty && (
         <MutedText className={stretchPanelStyles.hint}>
           Unsaved stretch changes. Save to keep, or reset to discard.
         </MutedText>
       )}
 
-      {settingsOpen && (
+      {settingsOpen && !geometryDirty && (
         <StretchThresholdSettings
           draft={draft}
           onDraftChange={setDraft}
@@ -133,6 +144,8 @@ export const StretchPanel = ({
           loading={loading}
         />
       )}
+
+      {stripEditor}
 
       {!stretches.length ? (
         <MutedText>
@@ -152,8 +165,9 @@ export const StretchPanel = ({
               </thead>
               <tbody>
                 <tr
-                  className={stretchPanelStyles.fullSegmentRow(!stretchSelected)}
-                  onClick={handleClearSelection}
+                  className={stretchPanelStyles.fullSegmentRow(!stretchSelected, geometryDirty)}
+                  onClick={geometryDirty ? undefined : handleClearSelection}
+                  aria-disabled={geometryDirty || undefined}
                 >
                   <td className={stretchPanelStyles.stretchTd} colSpan={2}>
                     Full segment
@@ -173,13 +187,22 @@ export const StretchPanel = ({
                       : "—"}
                   </td>
                 </tr>
-                {stretches.map((stretch) => (
+                {stretches.map((stretch, arrayIndex) => (
                   <tr
                     key={stretch.index}
-                    className={stretchPanelStyles.stretchRow(stretch.index === selectedStretchIndex)}
-                    onClick={() => onSelectStretch?.(stretch)}
+                    className={stretchPanelStyles.stretchRow(
+                      arrayIndex === selectedStretchIndex ||
+                        stretch.index === selectedStretchIndex,
+                      geometryDirty,
+                    )}
+                    onClick={
+                      geometryDirty ? undefined : () => onSelectStretch?.(stretch)
+                    }
+                    aria-disabled={geometryDirty || undefined}
                   >
-                    <td className={stretchPanelStyles.stretchTd}>{stretch.index}</td>
+                    <td className={stretchPanelStyles.stretchTd}>
+                      {stretchDisplayNumber(arrayIndex)}
+                    </td>
                     <td className={stretchPanelStyles.stretchTd}>
                       <span className={stretchPanelStyles.kindBadge(stretch.kind)}>
                         {stretchKindLabel(stretch.kind)}
@@ -201,7 +224,7 @@ export const StretchPanel = ({
             <div className={stretchPanelStyles.comparisonHeader}>
               <h3 className={stretchPanelStyles.comparisonTitle}>
                 {stretchSelected && selectedStretch
-                  ? `Stretch ${selectedStretch.index} · ${stretchKindLabel(selectedStretch.kind)} · ${formatDistance(selectedStretch.length_m)}`
+                  ? `Stretch ${stretchDisplayNumber(selectedStretch.index)} · ${stretchKindLabel(selectedStretch.kind)} · ${formatDistance(selectedStretch.length_m)}`
                   : fullSegmentBaseline
                     ? `Full segment · ${formatDistance(fullSegmentBaseline.distance_m)} · all included passes`
                     : "Full segment · all included passes"}

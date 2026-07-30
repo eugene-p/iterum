@@ -11,6 +11,10 @@ import {
   stretchPointsFromActivityPass,
   stretchPointsFromReference,
 } from "./stretchPoints.js";
+import {
+  normalizeManualStretches,
+  type ManualStretchInput,
+} from "./stretchManual.js";
 
 const THRESHOLD_KEYS = Object.keys(DEFAULT_STRETCH_THRESHOLDS) as Array<keyof StretchThresholds>;
 
@@ -137,6 +141,23 @@ export const saveStretchesForSegment = async (
     thresholds,
     useActivityPass,
   );
+  await saveSegmentStretches(segmentId, resolvedSource, result);
+  return { result, stretchSourceActivityId: resolvedSource };
+};
+
+export const saveManualStretchesForSegment = async (
+  segmentId: number,
+  segmentSourceActivityId: number,
+  thresholds: StretchThresholds,
+  stretches: ManualStretchInput[],
+  stretchSourceActivityId?: number | null,
+) => {
+  const resolvedSource = await resolveStretchSourceActivityId(
+    segmentId,
+    segmentSourceActivityId,
+    stretchSourceActivityId,
+  );
+  const result = normalizeManualStretches(stretches, thresholds);
   await saveSegmentStretches(segmentId, resolvedSource, result);
   return { result, stretchSourceActivityId: resolvedSource };
 };

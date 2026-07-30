@@ -60,6 +60,10 @@ export const segmentUiActions = {
     type: SEGMENT_UI_ACTION_TYPES.TOGGLE_STRETCH,
     stretchIndex,
   }),
+  selectStretch: (stretchIndex: number): SegmentUiAction => ({
+    type: SEGMENT_UI_ACTION_TYPES.SELECT_STRETCH,
+    stretchIndex,
+  }),
   clearStretchSelection: (): SegmentUiAction => ({
     type: SEGMENT_UI_ACTION_TYPES.CLEAR_STRETCH_SELECTION,
   }),

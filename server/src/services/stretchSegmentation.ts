@@ -21,6 +21,7 @@ export interface StoredStretch {
   start: GeoPoint;
   end: GeoPoint;
   length_m: number;
+  name?: string | null;
 }
 
 export interface Stretch extends StoredStretch {

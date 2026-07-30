@@ -13,6 +13,7 @@ type SegmentActionsBarProps = {
   editError: string | null;
   onSegmentSaved: (segmentId: number) => void;
   onComparePasses: () => void;
+  onEditStretches: () => void;
   onReverse: (segmentId: number, name: string) => Promise<boolean>;
   onRescan: () => void;
   onDelete: () => void;
@@ -28,6 +29,7 @@ export const SegmentActionsBar = ({
   editError,
   onSegmentSaved,
   onComparePasses,
+  onEditStretches,
   onReverse,
   onRescan,
   onDelete,
@@ -39,6 +41,8 @@ export const SegmentActionsBar = ({
   const [reverseOpen, setReverseOpen] = useState(false);
   const [sourceOpen, setSourceOpen] = useState(false);
   const compareDisabled = loading || !comparison?.reference_points?.length;
+  const stretchEditDisabled =
+    loading || !comparison?.stretches?.length || !comparison?.reference_points?.length;
 
   const matchedPasses = useMemo(
     () => (comparison?.passes ?? []).filter((pass): pass is SegmentPass => pass.matched),
@@ -82,6 +86,9 @@ export const SegmentActionsBar = ({
       <div className={appStyles.segmentActions}>
         <Button variant="primary" size="sm" onClick={onComparePasses} disabled={compareDisabled}>
           Compare passes
+        </Button>
+        <Button size="sm" onClick={onEditStretches} disabled={stretchEditDisabled}>
+          Edit stretches
         </Button>
         <DropdownMenu triggerLabel="Actions" groups={actionGroups} disabled={loading} />
       </div>

@@ -22,9 +22,16 @@ export type ActivityRoute = {
 };
 
 export type StretchOverlay = {
-  id: number;
+  id: number | string;
   points: TrackPoint[];
   color: string;
+};
+
+export type MapPointMarker = {
+  id: string;
+  lat: number;
+  lon: number;
+  color?: string;
 };
 
 type ActivityMapProps = {
@@ -34,6 +41,8 @@ type ActivityMapProps = {
   segmentHighlight?: TrackPoint[];
   draftHighlight?: TrackPoint[];
   stretchOverlays?: StretchOverlay[];
+  /** Extra point markers (e.g. live split cut). */
+  pointMarkers?: MapPointMarker[];
   segmentMode: "none" | "start" | "end";
   onMapClick?: (lat: number, lon: number) => void;
 };
@@ -44,6 +53,7 @@ const areActivityMapPropsEqual = (prev: ActivityMapProps, next: ActivityMapProps
   prev.segmentHighlight === next.segmentHighlight &&
   prev.draftHighlight === next.draftHighlight &&
   prev.stretchOverlays === next.stretchOverlays &&
+  prev.pointMarkers === next.pointMarkers &&
   prev.segmentMode === next.segmentMode &&
   prev.onMapClick === next.onMapClick;
 
@@ -54,6 +64,7 @@ export const ActivityMap = memo(function ActivityMap({
   segmentHighlight = [],
   draftHighlight = [],
   stretchOverlays = [],
+  pointMarkers = [],
   segmentMode,
   onMapClick,
 }: ActivityMapProps) {
@@ -157,6 +168,19 @@ export const ActivityMap = memo(function ActivityMap({
           dashed
         />
       )}
+      {pointMarkers.map((marker) => (
+        <CircleMarker
+          key={marker.id}
+          center={[marker.lat, marker.lon]}
+          radius={8}
+          pathOptions={{
+            color: marker.color ?? "#f8fafc",
+            fillColor: marker.color ?? "#f59e0b",
+            fillOpacity: 0.95,
+            weight: 2,
+          }}
+        />
+      ))}
       {segmentDraft?.start_lat != null && segmentDraft.start_lon != null && (
         <CircleMarker
           center={[segmentDraft.start_lat, segmentDraft.start_lon]}

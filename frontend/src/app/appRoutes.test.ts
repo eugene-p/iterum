@@ -218,7 +218,9 @@ describe("appRoutes", () => {
   it("validates modal view against the current route", () => {
     expect(isViewValidForLocation(parseAppLocation(ACTIVITY_PATH), APP_VIEW.ROUTE)).toBe(true);
     expect(isViewValidForLocation(parseAppLocation(SEGMENT_PATH), APP_VIEW.COMPARE)).toBe(true);
+    expect(isViewValidForLocation(parseAppLocation(SEGMENT_PATH), APP_VIEW.STRETCHES)).toBe(true);
     expect(isViewValidForLocation(parseAppLocation(ACTIVITY_PATH), APP_VIEW.COMPARE)).toBe(false);
+    expect(isViewValidForLocation(parseAppLocation(ACTIVITY_PATH), APP_VIEW.STRETCHES)).toBe(false);
     expect(isViewValidForLocation(parseAppLocation(SEGMENT_PATH), APP_VIEW.ROUTE)).toBe(false);
     expect(isViewValidForLocation(parseAppLocation(SEGMENTS_PATH), APP_VIEW.ROUTE)).toBe(false);
   });

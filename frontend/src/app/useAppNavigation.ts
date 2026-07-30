@@ -111,6 +111,14 @@ export const useAppNavigation = () => {
         }),
       [navigateWithSearch, pathname],
     ),
+    openStretchEditView: useCallback(
+      () =>
+        navigateWithSearch(pathname, {
+          view: APP_VIEW.STRETCHES,
+          compareMode: null,
+        }),
+      [navigateWithSearch, pathname],
+    ),
     setCompareMode: useCallback(
       (compareMode: CompareMode) =>
         navigateWithSearch(

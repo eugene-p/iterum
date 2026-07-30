@@ -45,7 +45,7 @@ export const SegmentDetailView = ({
                 {stretch.selectedStretch && stretch.selectedPassStretchMetrics ? (
                   <>
                     {" "}
-                    · stretch {stretch.selectedStretch.index} (
+                    · stretch {stretch.selectedStretch.index + 1} (
                     {stretchKindLabel(stretch.selectedStretch.kind)})
                     {" · "}
                     {formatDistance(stretch.selectedPassStretchMetrics.distance_m)}
@@ -81,6 +81,7 @@ export const SegmentDetailView = ({
           editError={headerActions.editError}
           onSegmentSaved={headerActions.onSegmentSaved}
           onComparePasses={headerActions.onComparePasses}
+          onEditStretches={headerActions.onEditStretches}
           onReverse={headerActions.onReverse}
           onRescan={headerActions.onRescan}
           onDelete={headerActions.onDelete}

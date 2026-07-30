@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@eugene-p/iterum-shared": "*",
-    "@qkitt/tinyq": "^0.1.0",
+    "@qkitt/tinyq": "^0.1.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

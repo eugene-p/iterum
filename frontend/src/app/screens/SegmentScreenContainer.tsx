@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { appStyles } from "../../App.styles";
 import { SegmentDetailBody } from "../../components/app/SegmentDetailBody";
@@ -9,6 +9,7 @@ import {
   useSegmentPassSelectionContext,
 } from "../../components/app/SegmentPassSelectionContext";
 import { RouteExplorer } from "../../components/route-explorer/RouteExplorer";
+import { StretchEditWorkspace } from "../../components/segments/StretchStripEditor";
 import {
   APP_VIEW,
   isViewValidForLocation,
@@ -61,6 +62,23 @@ export const SegmentScreenContainer = () => {
     isViewValidForLocation(location, APP_VIEW.COMPARE) &&
     screen.comparison != null;
 
+  const showStretchEdit =
+    searchParams.view === APP_VIEW.STRETCHES &&
+    isViewValidForLocation(location, APP_VIEW.STRETCHES) &&
+    screen.comparison != null;
+
+  useEffect(() => {
+    if (!showStretchEdit) return;
+    if (screen.selectedStretchIndex != null) return;
+    const first = screen.displayStretches[0];
+    if (first) screen.selectStretch(first);
+  }, [
+    showStretchEdit,
+    screen.selectedStretchIndex,
+    screen.displayStretches,
+    screen.selectStretch,
+  ]);
+
   const compareTarget = useMemo(
     () =>
       screen.comparison
@@ -89,6 +107,24 @@ export const SegmentScreenContainer = () => {
             onClose={navigation.closeView}
             target={compareTarget}
           />
+        ) : showStretchEdit ? (
+          <StretchEditWorkspace
+            segment={screen.segmentEntity}
+            session={screen.stretchEdit}
+            selectedIndex={screen.selectedStretchIndex}
+            stretches={screen.displayStretches}
+            mapRoutes={screen.mapRoutes}
+            segmentHighlightPoints={screen.segmentHighlightPoints}
+            stretchOverlays={screen.stretchOverlays}
+            convertOpen={screen.convertOpen}
+            convertName={screen.convertName}
+            convertBusy={screen.convertBusy}
+            onConvertNameChange={screen.setConvertName}
+            onOpenConvert={screen.openConvert}
+            onCloseConvert={screen.closeConvert}
+            onConfirmConvert={screen.confirmConvert}
+            onClose={navigation.closeView}
+          />
         ) : (
           <>
             <SegmentDetailHeader
@@ -105,6 +141,10 @@ export const SegmentScreenContainer = () => {
                   if (!screen.comparison) return;
                   navigation.openCompareView();
                 },
+                onEditStretches: () => {
+                  if (!screen.comparison) return;
+                  navigation.openStretchEditView();
+                },
                 onReverse: screen.handleReverseSegment,
                 onRescan: () => void screen.handleRescan(),
                 onDelete: () => void screen.handleDelete(),
@@ -116,6 +156,7 @@ export const SegmentScreenContainer = () => {
             <div className={appStyles.detailBody}>
               <SegmentDetailBody
                 comparison={screen.comparison}
+                displayStretches={screen.displayStretches}
                 stretch={{
                   selectedStretch: screen.selectedStretch,
                   selectedPassStretchMetrics: screen.selectedPassStretchMetrics,
