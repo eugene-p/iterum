@@ -6,7 +6,8 @@ import {
   stretchDisplayName,
   stretchDisplayNumber,
 } from "../../../lib/stretchEdit";
-import type { Segment, Stretch, TrackPoint } from "../../../types";
+import type { Segment, Stretch, StretchThresholds, TrackPoint } from "../../../types";
+import { StretchDerivationControls } from "../StretchPanel";
 import { StretchNameInput } from "./StretchNameInput";
 import { StretchStripEditor } from "./StretchStripEditor";
 import { stretchStripEditorStyles as styles } from "./StretchStripEditor.styles";
@@ -29,6 +30,13 @@ type StretchEditWorkspaceProps = {
   onOpenConvert: () => void;
   onCloseConvert: () => void;
   onConfirmConvert: () => void;
+  thresholds?: StretchThresholds;
+  defaultThresholds?: StretchThresholds;
+  stretchCanSave: boolean;
+  stretchLoading: boolean;
+  onPreviewThresholds: (thresholds: StretchThresholds) => void;
+  onResetThresholdPreview: () => void;
+  onSaveStretches: () => void;
   onClose: () => void;
 };
 
@@ -52,6 +60,13 @@ export const StretchEditWorkspace = ({
   onOpenConvert,
   onCloseConvert,
   onConfirmConvert,
+  thresholds,
+  defaultThresholds,
+  stretchCanSave,
+  stretchLoading,
+  onPreviewThresholds,
+  onResetThresholdPreview,
+  onSaveStretches,
   onClose,
 }: StretchEditWorkspaceProps) => {
   const [splitCutM, setSplitCutM] = useState<number | null>(null);
@@ -135,6 +150,16 @@ export const StretchEditWorkspace = ({
         </div>
       </div>
       <div className={styles.workspaceEditor}>
+        <StretchDerivationControls
+          thresholds={thresholds}
+          defaultThresholds={defaultThresholds}
+          canSave={stretchCanSave}
+          loading={stretchLoading}
+          locked={session.dirty}
+          onPreview={onPreviewThresholds}
+          onReset={onResetThresholdPreview}
+          onSave={onSaveStretches}
+        />
         <StretchStripEditor
           session={session}
           selectedIndex={selectedIndex}

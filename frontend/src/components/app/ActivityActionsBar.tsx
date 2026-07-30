@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { appStyles } from "../../App.styles";
 import type { ActivitySummary, Profile } from "../../types";
 import { Button, DropdownMenu } from "../ui";
 import { ActivityEditDrawer } from "./ActivityEditDrawer";
+import { DetailActions } from "./DetailActions";
 
 type ActivityActionsBarProps = {
   activity: ActivitySummary;
@@ -57,7 +57,7 @@ export const ActivityActionsBar = ({
 
   return (
     <>
-      <div className={appStyles.segmentActions}>
+      <DetailActions>
         <Button
           variant="primary"
           size="sm"
@@ -67,7 +67,7 @@ export const ActivityActionsBar = ({
           Create segment
         </Button>
         <DropdownMenu triggerLabel="Actions" groups={actionGroups} disabled={loading} />
-      </div>
+      </DetailActions>
       <ActivityEditDrawer
         open={editOpen}
         activity={activity}

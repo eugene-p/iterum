@@ -1,26 +1,46 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
-import { appStyles } from "../../App.styles";
+import type { Segment } from "../../types";
+import { Button } from "../ui";
+import { RouteWorkspace } from "../maps/RouteWorkspace";
 import { PassIncludeControl } from "../segments/PassIncludeControl";
 import { StretchPanel } from "../segments/StretchPanel";
+import { StretchSelectionList } from "../segments/StretchSelectionList";
 import { useSegmentPassSelectionContext } from "./SegmentPassSelectionContext";
-import type { SegmentDetailActions, SegmentDetailStretchState } from "./segmentDetailTypes";
+import { SegmentDetailMap } from "./SegmentDetailMap";
+import { SegmentOverview } from "./SegmentOverview";
+import { segmentDetailBodyStyles as styles } from "./SegmentDetailBody.styles";
+import type {
+  SegmentDetailActions,
+  SegmentDetailMapState,
+  SegmentDetailStretchState,
+} from "./segmentDetailTypes";
 import type { SegmentCompare, Stretch } from "../../types";
 
 type SegmentDetailBodyProps = {
+  segment: Segment;
   comparison: SegmentCompare | null;
-  stretch: Omit<
+  map: SegmentDetailMapState;
+  onComparePasses: () => void;
+  onEditStretches: () => void;
+  stretch: Pick<
     SegmentDetailStretchState,
-    "fullPassMetrics" | "stretchPassMetrics"
+    | "selectedStretch"
+    | "selectedPassStretchMetrics"
+    | "stretchState"
+    | "selectedStretchIndex"
+    | "stretchSourcePassId"
+    | "loading"
   >;
-  actions: Omit<
-    SegmentDetailActions,
-    "onSetPassIncluded" | "onApplyPassSelection" | "onExcludeIncludedPass"
-  >;
+  actions: Pick<SegmentDetailActions, "onSelectStretch" | "onClearStretchSelection">;
   displayStretches?: Stretch[];
 };
 
 export const SegmentDetailBody = ({
+  segment,
   comparison,
+  map,
+  onComparePasses,
+  onEditStretches,
   stretch,
   actions,
   displayStretches,
@@ -46,41 +66,85 @@ export const SegmentDetailBody = ({
     if (body) body.scrollTop = scrollTopRef.current;
   }, [includedPassKey]);
 
+  const stretches = displayStretches ?? comparison?.stretches ?? [];
+
   return (
     <div
       ref={bodyRef}
-      className={appStyles.detailPrimary}
+      className={styles.root}
       onScroll={() => {
         scrollTopRef.current = bodyRef.current?.scrollTop ?? 0;
       }}
     >
-      <PassIncludeControl
-        matchedPasses={matchedPasses}
-        includedPassIdSet={includedPassIdSet}
-        onSetPassIncluded={setPassIncluded}
-        onApplySelection={applyPassSelection}
-      />
-      <StretchPanel
-        stretches={displayStretches ?? comparison?.stretches ?? []}
-        fullPassMetrics={fullPassMetrics}
-        thresholds={stretch.thresholds}
-        reason={comparison?.stretch_reason}
-        stretchState={stretch.stretchState}
-        stretchCanSave={stretch.stretchCanSave}
-        selectedStretchIndex={stretch.selectedStretchIndex}
-        selectedStretch={stretch.selectedStretch}
-        stretchPassMetrics={stretchPassMetrics}
-        stretchSourcePassId={stretch.stretchSourcePassId}
-        onSelectStretch={actions.onSelectStretch}
-        onClearStretchSelection={actions.onClearStretchSelection}
-        onExcludeIncludedPass={excludePass}
-        includedPassCount={includedPassIdSet.size}
-        onPreviewThresholds={actions.onPreviewStretchThresholds}
-        onResetStretchPreview={actions.onResetStretchPreview}
-        onSaveStretches={actions.onSaveStretches}
-        defaultThresholds={stretch.defaultThresholds}
-        loading={stretch.loading}
-      />
+      <RouteWorkspace
+        title="Route workspace"
+        description="Select a stretch to compare that meaningful part of the segment across included passes."
+        action={
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onComparePasses}
+            disabled={!comparison?.reference_points.length}
+          >
+            Compare passes
+          </Button>
+        }
+        sidePanel={
+          <StretchSelectionList
+            stretches={stretches}
+            selectedStretchIndex={stretch.selectedStretchIndex}
+            onSelectStretch={actions.onSelectStretch}
+            onClearSelection={actions.onClearStretchSelection}
+            actions={
+              <Button
+                size="sm"
+                onClick={onEditStretches}
+                disabled={!comparison?.stretches?.length || !comparison?.reference_points.length}
+              >
+                Edit
+              </Button>
+            }
+          />
+        }
+      >
+        <SegmentDetailMap
+          routes={map.routes}
+          segment={segment}
+          segmentHighlightPoints={map.segmentHighlightPoints}
+          stretchOverlays={map.stretchOverlays}
+        />
+      </RouteWorkspace>
+      <main className={styles.content}>
+        <SegmentOverview
+          segment={segment}
+          matchedPasses={matchedPasses}
+          stretchCount={stretches.length}
+          selectedStretch={stretch.selectedStretch}
+          selectedStretchMetrics={stretchPassMetrics}
+        />
+        <StretchPanel
+          stretches={stretches}
+          fullPassMetrics={fullPassMetrics}
+          reason={comparison?.stretch_reason}
+          stretchState={stretch.stretchState}
+          selectedStretchIndex={stretch.selectedStretchIndex}
+          selectedStretch={stretch.selectedStretch}
+          stretchPassMetrics={stretchPassMetrics}
+          stretchSourcePassId={stretch.stretchSourcePassId}
+          onSelectStretch={actions.onSelectStretch}
+          onClearStretchSelection={actions.onClearStretchSelection}
+          onExcludeIncludedPass={excludePass}
+          includedPassCount={includedPassIdSet.size}
+          loading={stretch.loading}
+          selectionMode="map"
+        />
+        <PassIncludeControl
+          matchedPasses={matchedPasses}
+          includedPassIdSet={includedPassIdSet}
+          onSetPassIncluded={setPassIncluded}
+          onApplySelection={applyPassSelection}
+        />
+      </main>
     </div>
   );
 };

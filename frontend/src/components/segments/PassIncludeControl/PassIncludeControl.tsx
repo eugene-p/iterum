@@ -116,6 +116,10 @@ export const PassIncludeControl = ({
   className,
 }: PassIncludeControlProps) => {
   const matchedCount = matchedPasses.length;
+  const matchedActivityCount = useMemo(
+    () => new Set(matchedPasses.map((pass) => pass.activity_id)).size,
+    [matchedPasses],
+  );
   const includedPasses = useMemo(
     () => matchedPasses.filter((pass) => includedPassIdSet.has(pass.id)),
     [matchedPasses, includedPassIdSet],
@@ -225,11 +229,17 @@ export const PassIncludeControl = ({
     : isDefault
       ? `Default · ${includedPassIdSet.size} of ${matchedCount}`
       : `${includedPassIdSet.size} of ${matchedCount} included`;
+  const activitySummary = `${matchedActivityCount} matched ${
+    matchedActivityCount === 1 ? "activity" : "activities"
+  } · ${matchedCount} ${matchedCount === 1 ? "pass" : "passes"}`;
 
   if (!matchedCount) {
     return (
       <div className={cn(styles.root, className)}>
-        <p className={styles.empty}>No matched passes yet.</p>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Matched activities</h2>
+        </div>
+        <p className={styles.empty}>No matched activities yet.</p>
       </div>
     );
   }
@@ -238,11 +248,11 @@ export const PassIncludeControl = ({
     return (
       <CollapsibleSection
         variant="panel"
-        title="Matched passes"
+        title="Matched activities"
         headingLevel="h2"
         expanded={simpleListOpen}
         onToggle={() => setSimpleListOpen((open) => !open)}
-        meta={metaLabel}
+        meta={`${activitySummary} · ${metaLabel}`}
         className={className}
         bodyClassName={styles.simpleList}
       >
@@ -261,6 +271,10 @@ export const PassIncludeControl = ({
 
   return (
     <div className={cn(styles.root, className)}>
+      <div className={styles.sectionHeader}>
+        <h2 className={styles.sectionTitle}>Matched activities</h2>
+        <span className={styles.sectionCaption}>{activitySummary}</span>
+      </div>
       <div className={styles.bar}>
         <span className={styles.meta}>{metaLabel}</span>
         <div className={styles.chips}>

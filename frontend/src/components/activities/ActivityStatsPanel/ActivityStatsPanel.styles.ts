@@ -3,16 +3,9 @@ import { textStyles } from "../../ui/Text/Text.styles";
 
 export const activityStatsPanelStyles = {
   root: "mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-5 lg:px-6",
-  overview: "snap-start scroll-mt-3 rounded-xl border border-border bg-surface p-4",
-  overviewHeader: "flex flex-wrap items-start justify-between gap-3",
-  overviewTitle: "text-base font-semibold text-fg",
-  metricGrid:
-    "mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3 lg:grid-cols-6 [&>div]:flex [&>div]:min-h-20 [&>div]:flex-col [&>div]:justify-between [&>div]:bg-bg [&>div]:p-3 [&>div>span]:text-xs [&>div>span]:text-muted [&>div>strong]:text-sm [&>div>strong]:font-semibold [&>div>strong]:tabular-nums",
   analysisSection: "snap-start scroll-mt-3 flex flex-col gap-3 rounded-xl border border-border bg-surface p-4",
   sectionHeader: "flex flex-wrap items-baseline justify-between gap-3",
   sectionTitle: cn(textStyles.muted, "text-[0.72rem] font-medium uppercase tracking-wide"),
-  tagRow: "mt-2 flex flex-wrap gap-1.5",
-  tag: "px-2 py-0.5 text-sm font-medium text-fg",
   summaryLine: "text-[0.82rem] font-medium tabular-nums leading-snug",
   statList: "flex flex-col gap-0",
   statRow:

@@ -11,7 +11,7 @@ import {
   formatPaceFromSpeed,
   formatSpeed,
 } from "../../../utils";
-import { Badge, MutedSpan } from "../../ui";
+import { Badge, MetricSummary, MutedSpan } from "../../ui";
 import { ActivityTrackChart } from "../ActivityTrackChart";
 import { ActivitySplits } from "../ActivitySplits";
 import { HrZoneTimeSummary } from "../ActivityTrackChart/HrZoneTimeSummary";
@@ -70,29 +70,19 @@ export const ActivityStatsPanel = ({
 
   return (
     <aside className={activityStatsPanelStyles.root}>
-      <section className={activityStatsPanelStyles.overview} aria-labelledby="activity-overview-title">
-        <div className={activityStatsPanelStyles.overviewHeader}>
-          <div>
-            <h2 id="activity-overview-title" className={activityStatsPanelStyles.overviewTitle}>Overview</h2>
-            {activity.tags?.length ? (
-              <div className={activityStatsPanelStyles.tagRow}>
-                {activity.tags.map((tag) => (
-                  <Badge key={tag} className={activityStatsPanelStyles.tag}>{tag}</Badge>
-                ))}
-              </div>
-            ) : null}
-          </div>
-          {contextMeta ? <div className={activityStatsPanelStyles.metaLine}>{contextMeta}</div> : null}
-        </div>
-        <div className={activityStatsPanelStyles.metricGrid}>
-          <div><span>Distance</span><strong>{formatDistance(activity.distance_m)}</strong></div>
-          <div><span>Duration</span><strong>{formatDuration(activity.duration_sec)}</strong></div>
-          <div><span>Avg pace</span><strong>{formatPaceFromSpeed(avgSpeed)}</strong></div>
-          <div><span>Avg HR</span><strong>{formatHr(activity.avg_hr)}</strong></div>
-          <div><span>Max HR</span><strong>{formatHr(activity.max_hr)}</strong></div>
-          <div><span>Elevation gain</span><strong>{elevationGain ? `${Math.round(elevationGain)} m` : "—"}</strong></div>
-        </div>
-      </section>
+      <MetricSummary
+        label="Activity summary"
+        tags={activity.tags?.map((tag) => <Badge key={tag}>{tag}</Badge>)}
+        metadata={contextMeta}
+        metrics={[
+          { label: "Distance", value: formatDistance(activity.distance_m) },
+          { label: "Duration", value: formatDuration(activity.duration_sec) },
+          { label: "Avg pace", value: formatPaceFromSpeed(avgSpeed) },
+          { label: "Avg HR", value: formatHr(activity.avg_hr) },
+          { label: "Max HR", value: formatHr(activity.max_hr) },
+          { label: "Elevation", value: elevationGain ? `${Math.round(elevationGain)} m` : "—" },
+        ]}
+      />
 
       <section className={activityStatsPanelStyles.analysisSection} aria-labelledby="activity-effort-title">
         <div className={activityStatsPanelStyles.sectionHeader}>

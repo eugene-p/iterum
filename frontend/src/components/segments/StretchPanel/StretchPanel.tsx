@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Button, CollapsibleSection, MutedText } from "../../ui";
+import { useMemo, useState, type ReactNode } from "react";
+import { CollapsibleSection, MutedText } from "../../ui";
 import {
   comparisonBaselineFromStretches,
   comparisonBaselineFromStretch,
@@ -7,21 +7,17 @@ import {
   type StretchPassMetrics,
   formatStretchLabel,
 } from "../../../stretchUtils";
-import type { SegmentPass, Stretch, StretchState, StretchThresholds } from "../../../types";
-import { DEFAULT_STRETCH_THRESHOLDS } from "../../../stretchUtils";
+import type { SegmentPass, Stretch, StretchState } from "../../../types";
 import { stretchDisplayNumber } from "../../../lib/stretchEdit";
 import { formatDistance } from "../../../utils";
 import { stretchPanelStyles } from "./StretchPanel.styles";
-import { StretchThresholdSettings } from "./StretchThresholdSettings";
 import { StretchComparisonTable } from "./StretchComparisonTable";
 
 type StretchPanelProps = {
   stretches: Stretch[];
   fullPassMetrics?: StretchPassMetrics[];
-  thresholds?: StretchThresholds;
   reason?: string | null;
   stretchState?: StretchState;
-  stretchCanSave?: boolean;
   selectedStretchIndex?: number | null;
   selectedStretch?: Stretch | null;
   stretchPassMetrics?: StretchPassMetrics[];
@@ -30,21 +26,18 @@ type StretchPanelProps = {
   onClearStretchSelection?: () => void;
   onExcludeIncludedPass?: (pass: SegmentPass) => void;
   includedPassCount?: number;
-  onPreviewThresholds: (thresholds: StretchThresholds) => void;
-  onResetStretchPreview: () => void;
-  onSaveStretches: () => void;
-  defaultThresholds?: StretchThresholds;
   loading?: boolean;
   /** Movie-style boundary editor (merge / split / resize / convert). */
   stripEditor?: ReactNode;
   /** When true, threshold controls are locked (geometry edit dirty). */
   geometryDirty?: boolean;
+  /** Route workspace owns selection; this panel only presents the selected comparison. */
+  selectionMode?: "inline" | "map";
 };
 
 export const StretchPanel = ({
   stretches,
   fullPassMetrics = [],
-  thresholds,
   reason,
   selectedStretchIndex = null,
   selectedStretch,
@@ -55,24 +48,13 @@ export const StretchPanel = ({
   onExcludeIncludedPass,
   includedPassCount = 0,
   stretchState = "saved",
-  stretchCanSave = false,
-  onPreviewThresholds,
-  onResetStretchPreview,
-  onSaveStretches,
-  defaultThresholds = DEFAULT_STRETCH_THRESHOLDS,
   loading = false,
   stripEditor = null,
   geometryDirty = false,
+  selectionMode = "inline",
 }: StretchPanelProps) => {
-  const resolvedThresholds = thresholds ?? defaultThresholds;
-  const [draft, setDraft] = useState<StretchThresholds>(resolvedThresholds);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [expanded, setExpanded] = useState(true);
   const stretchSelected = selectedStretchIndex != null;
-
-  useEffect(() => {
-    setDraft(resolvedThresholds);
-  }, [resolvedThresholds]);
 
   const fullSegmentBaseline = useMemo(
     () => comparisonBaselineFromStretches(stretches),
@@ -94,67 +76,33 @@ export const StretchPanel = ({
   return (
     <CollapsibleSection
       variant="panel"
-      title="Stretches"
+      title={
+        stretchSelected && selectedStretch
+          ? formatStretchLabel(selectedStretch)
+          : "Full segment comparison"
+      }
       headingLevel="h2"
       expanded={expanded}
       onToggle={() => setExpanded((open) => !open)}
       meta={
         <>
-          {stretches.length
-            ? `${stretches.length} stretch${stretches.length === 1 ? "" : "es"}`
-            : "No stretches"}
-          {stretchState === "preview" ? " · preview" : ""}
           {stretchSelected && selectedStretch
-            ? ` · ${stretchKindLabel(selectedStretch.kind)} #${stretchDisplayNumber(selectedStretch.index)}`
-            : " · full segment"}
+            ? `Stretch ${stretchDisplayNumber(selectedStretch.index)} of ${stretches.length} · ${formatDistance(selectedStretch.length_m)} ↔ · ${formatDistance(selectedStretch.elevation_delta_m)} ↕`
+            : `${stretches.length ? `${stretches.length} stretches` : "No stretches"} · full segment`}
+          {stretchState === "preview" ? " · preview" : ""}
         </>
       }
     >
-      <div className={stretchPanelStyles.actions}>
-        <Button
-          size="sm"
-          onClick={() => setSettingsOpen((open) => !open)}
-          disabled={geometryDirty}
-        >
-          {settingsOpen ? "Hide thresholds" : "Adjust thresholds"}
-        </Button>
-        {stretchCanSave && !geometryDirty && (
-          <>
-            <Button size="sm" onClick={onResetStretchPreview} disabled={loading}>
-              Reset
-            </Button>
-            <Button variant="primary" size="sm" onClick={onSaveStretches} disabled={loading}>
-              Save stretches
-            </Button>
-          </>
-        )}
-      </div>
-
-      {stretchCanSave && !geometryDirty && (
-        <MutedText className={stretchPanelStyles.hint}>
-          Unsaved stretch changes. Save to keep, or reset to discard.
-        </MutedText>
-      )}
-
-      {settingsOpen && !geometryDirty && (
-        <StretchThresholdSettings
-          draft={draft}
-          onDraftChange={setDraft}
-          onPreview={onPreviewThresholds}
-          defaultThresholds={defaultThresholds}
-          loading={loading}
-        />
-      )}
-
       {stripEditor}
 
       {!stretches.length ? (
         <MutedText>
-          {reason ?? "No stretches yet. Elevation data is required to split this segment."}
+          {reason ?? "No stretches yet. Elevation data is required to suggest them from this route."}
         </MutedText>
       ) : (
-        <div className={stretchPanelStyles.splitLayout}>
-          <div className={stretchPanelStyles.stretchListPane}>
+        <div className={selectionMode === "inline" ? stretchPanelStyles.splitLayout : undefined}>
+          {selectionMode === "inline" ? (
+            <div className={stretchPanelStyles.stretchListPane}>
             <table className={stretchPanelStyles.stretchTable}>
               <thead>
                 <tr>
@@ -219,30 +167,10 @@ export const StretchPanel = ({
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          ) : null}
 
           <div className={stretchPanelStyles.comparisonPane}>
-            <div className={stretchPanelStyles.comparisonHeader}>
-              <h3 className={stretchPanelStyles.comparisonTitle}>
-                {stretchSelected && selectedStretch
-                  ? `${formatStretchLabel(selectedStretch)} · ${stretchKindLabel(selectedStretch.kind)} · ${formatDistance(selectedStretch.length_m)} \u2194 · ${formatDistance(selectedStretch.elevation_delta_m)} \u2195`
-                  : fullSegmentBaseline
-                    ? `Full segment · ${formatDistance(fullSegmentBaseline.distance_m)} · all included passes`
-                    : "Full segment · all included passes"}
-              </h3>
-              {stretchSelected && (
-                <Button
-                  size="sm"
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleClearSelection();
-                  }}
-                >
-                  Clear
-                </Button>
-              )}
-            </div>
             <StretchComparisonTable
               rows={comparisonRows}
               baseline={comparisonBaseline}

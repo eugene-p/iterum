@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { appStyles } from "../../App.styles";
 import type { Segment, SegmentCompare, SegmentPass } from "../../types";
-import { Button, DropdownMenu } from "../ui";
+import { DropdownMenu } from "../ui";
+import { DetailActions } from "./DetailActions";
 import { StretchSourceControl } from "../segments/StretchPanel/StretchSourceControl";
 import { SegmentEditorDrawer } from "./SegmentEditorDrawer";
 import { SegmentReverseDrawer } from "./SegmentReverseDrawer";
@@ -55,6 +55,22 @@ export const SegmentActionsBar = ({
     () => [
       {
         items: [
+          {
+            id: "compare-passes",
+            label: "Compare passes",
+            onSelect: onComparePasses,
+            disabled: compareDisabled,
+          },
+          {
+            id: "edit-stretches",
+            label: "Edit stretches",
+            onSelect: onEditStretches,
+            disabled: stretchEditDisabled,
+          },
+        ],
+      },
+      {
+        items: [
           { id: "edit", label: "Edit", onSelect: () => setEditOpen(true), disabled: loading },
           { id: "reverse", label: "Reverse", onSelect: () => setReverseOpen(true), disabled: loading },
           {
@@ -78,20 +94,23 @@ export const SegmentActionsBar = ({
         ],
       },
     ],
-    [canChangeSource, loading, onDelete, onRescan],
+    [
+      canChangeSource,
+      compareDisabled,
+      stretchEditDisabled,
+      loading,
+      onComparePasses,
+      onEditStretches,
+      onDelete,
+      onRescan,
+    ],
   );
 
   return (
     <>
-      <div className={appStyles.segmentActions}>
-        <Button variant="primary" size="sm" onClick={onComparePasses} disabled={compareDisabled}>
-          Compare passes
-        </Button>
-        <Button size="sm" onClick={onEditStretches} disabled={stretchEditDisabled}>
-          Edit stretches
-        </Button>
+      <DetailActions>
         <DropdownMenu triggerLabel="Actions" groups={actionGroups} disabled={loading} />
-      </div>
+      </DetailActions>
       <SegmentEditorDrawer
         open={editOpen}
         target={{ kind: "edit", segment }}

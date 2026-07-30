@@ -7,6 +7,9 @@ const POPOVER_Z = "z-[2100]";
 
 export const passIncludeControlStyles = {
   root: "flex flex-col gap-2",
+  sectionHeader: "flex flex-wrap items-baseline justify-between gap-2",
+  sectionTitle: "m-0 text-[0.9rem] font-semibold text-subtle",
+  sectionCaption: cn(textStyles.muted, "text-[0.78rem]"),
   /** Single horizontal strip — never wrap chips to extra rows. */
   bar: "flex min-w-0 flex-nowrap items-center gap-2",
   meta: cn(textStyles.muted, "shrink-0 text-[0.78rem]"),

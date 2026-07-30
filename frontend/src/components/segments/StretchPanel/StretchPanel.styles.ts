@@ -5,6 +5,10 @@ import { textStyles } from "../../ui/Text/Text.styles";
 
 export const stretchPanelStyles = {
   hint: "m-0 text-[0.75rem]",
+  derivationControls: "flex flex-col gap-2 rounded-md border border-border bg-card p-3",
+  derivationHeader: "flex flex-wrap items-start justify-between gap-3",
+  derivationTitle: "m-0 text-[0.82rem] font-semibold text-subtle",
+  derivationHint: cn(textStyles.muted, "m-0 mt-0.5 text-[0.75rem] leading-snug"),
   splitLayout: "grid min-h-0 gap-3 lg:grid-cols-[minmax(11rem,14rem)_minmax(0,1fr)] lg:items-start",
   stretchListPane: "min-w-0",
   comparisonPane: cn(stackStyles.stack, "min-w-0 gap-1.5"),

@@ -3,7 +3,6 @@ import { useLocation, useParams } from "react-router-dom";
 import { appStyles } from "../../App.styles";
 import { SegmentDetailBody } from "../../components/app/SegmentDetailBody";
 import { SegmentDetailHeader } from "../../components/app/SegmentDetailHeader";
-import { SegmentDetailMap } from "../../components/app/SegmentDetailMap";
 import {
   SegmentPassSelectionProvider,
   useSegmentPassSelectionContext,
@@ -123,6 +122,13 @@ export const SegmentScreenContainer = () => {
             onOpenConvert={screen.openConvert}
             onCloseConvert={screen.closeConvert}
             onConfirmConvert={screen.confirmConvert}
+            thresholds={screen.stretchThresholds}
+            defaultThresholds={screen.defaultStretchThresholds}
+            stretchCanSave={screen.stretchCanSave}
+            stretchLoading={screen.stretchLoading}
+            onPreviewThresholds={screen.previewStretchThresholds}
+            onResetThresholdPreview={screen.resetStretchPreview}
+            onSaveStretches={() => void screen.saveStretches()}
             onClose={navigation.closeView}
           />
         ) : (
@@ -153,40 +159,30 @@ export const SegmentScreenContainer = () => {
                 onSetStretchSource: screen.setStretchSourceActivity,
               }}
             />
-            <div className={appStyles.detailBody}>
-              <SegmentDetailBody
-                comparison={screen.comparison}
-                displayStretches={screen.displayStretches}
-                stretch={{
-                  selectedStretch: screen.selectedStretch,
-                  selectedPassStretchMetrics: screen.selectedPassStretchMetrics,
-                  thresholds: screen.stretchThresholds,
-                  defaultThresholds: screen.defaultStretchThresholds,
-                  stretchSourceActivityId: screen.stretchSourceActivityId,
-                  stretchCanSave: screen.stretchCanSave,
-                  stretchState: screen.stretchState,
-                  selectedStretchIndex: screen.selectedStretchIndex,
-                  stretchSourcePassId: screen.stretchSourcePassId,
-                  loading: screen.stretchLoading,
-                }}
-                actions={{
-                  onSelectStretch: screen.selectStretch,
-                  onClearStretchSelection: screen.clearStretchSelection,
-                  onPreviewStretchThresholds: screen.previewStretchThresholds,
-                  onSetStretchSourceActivity: screen.setStretchSourceActivity,
-                  onResetStretchPreview: screen.resetStretchPreview,
-                  onSaveStretches: () => void screen.saveStretches(),
-                }}
-              />
-              <div className={appStyles.detailMapPane}>
-                <SegmentDetailMap
-                  routes={screen.mapRoutes}
-                  segment={screen.segmentEntity}
-                  segmentHighlightPoints={screen.segmentHighlightPoints}
-                  stretchOverlays={screen.stretchOverlays}
-                />
-              </div>
-            </div>
+            <SegmentDetailBody
+              segment={screen.segmentEntity}
+              comparison={screen.comparison}
+              map={{
+                routes: screen.mapRoutes,
+                segmentHighlightPoints: screen.segmentHighlightPoints,
+                stretchOverlays: screen.stretchOverlays,
+              }}
+              onComparePasses={navigation.openCompareView}
+              onEditStretches={navigation.openStretchEditView}
+              displayStretches={screen.displayStretches}
+              stretch={{
+                selectedStretch: screen.selectedStretch,
+                selectedPassStretchMetrics: screen.selectedPassStretchMetrics,
+                stretchState: screen.stretchState,
+                selectedStretchIndex: screen.selectedStretchIndex,
+                stretchSourcePassId: screen.stretchSourcePassId,
+                loading: screen.stretchLoading,
+              }}
+              actions={{
+                onSelectStretch: screen.selectStretch,
+                onClearStretchSelection: screen.clearStretchSelection,
+              }}
+            />
           </>
         )}
       </SegmentPassSelectionProvider>

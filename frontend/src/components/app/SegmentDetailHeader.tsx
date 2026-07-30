@@ -1,4 +1,3 @@
-import { appStyles } from "../../App.styles";
 import { stretchKindLabel } from "../../stretchUtils";
 import type { SegmentPass } from "../../types";
 import {
@@ -9,8 +8,8 @@ import {
   formatSpeed,
 } from "../../utils";
 import { PassDateProfileRow } from "../profiles/PassDateProfileRow";
-import { Badge, MutedSpan } from "../ui";
 import { SegmentActionsBar } from "./SegmentActionsBar";
+import { DetailHeader } from "./DetailHeader";
 import type { PassStretchMetrics, SegmentHeaderActions } from "./segmentDetailTypes";
 import type { Segment, SegmentCompare, Stretch } from "../../types";
 
@@ -31,13 +30,11 @@ export const SegmentDetailHeader = ({
   selectedPassStretchMetrics,
   headerActions,
 }: SegmentDetailHeaderProps) => (
-  <div className={appStyles.segmentMode}>
-    <div className={appStyles.segmentModeInfo}>
-      <Badge>Segment</Badge>
-      <MutedSpan>{segment.name}</MutedSpan>
-      {selectedPass && (
-        <span className={appStyles.segmentModeActivity}>
-          <MutedSpan>
+  <DetailHeader
+    typeLabel="Segment"
+    title={segment.name}
+    metadata={selectedPass ? (
+      <span className="inline-flex flex-wrap items-center gap-2 text-xs text-muted">
             {selectedPass.activity_name}
             {" · "}pass {selectedPass.pass_number}
             {selectedStretch && selectedPassStretchMetrics ? (
@@ -61,17 +58,15 @@ export const SegmentDetailHeader = ({
                 {formatDuration(selectedPass.duration_sec)} · {formatHr(selectedPass.avg_hr)}
               </>
             )}
-          </MutedSpan>
           <PassDateProfileRow
             pass={selectedPass}
             started_at={selectedPass.started_at}
             name={selectedPass.activity_name}
             source_filename={selectedPass.source_filename}
           />
-        </span>
-      )}
-    </div>
-    <SegmentActionsBar
+      </span>
+    ) : undefined}
+    actions={<SegmentActionsBar
       segment={segment}
       comparison={comparison}
       loading={headerActions.loading}
@@ -85,6 +80,6 @@ export const SegmentDetailHeader = ({
       stretchSourcePassId={headerActions.stretchSourcePassId}
       stretchSourceActivityId={headerActions.stretchSourceActivityId}
       onSetStretchSource={headerActions.onSetStretchSource}
-    />
-  </div>
+    />}
+  />
 );
