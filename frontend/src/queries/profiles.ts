@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createProfile, deleteProfile, listProfiles, updateProfile } from "../api";
-import type { Profile, StretchThresholds } from "../types";
+import type { DistanceUnit, Profile, StretchThresholds } from "../types";
 import { queryKeys } from "./queryKeys";
 
 export const useProfilesQuery = () =>
@@ -32,12 +32,23 @@ export const useUpdateProfileMutation = () => {
       name,
       year_of_birth,
       default_stretch_thresholds,
+      distance_unit,
+      split_distance_m,
     }: {
       id: number;
       name?: string;
       year_of_birth?: number | null;
       default_stretch_thresholds?: StretchThresholds;
-    }) => updateProfile(id, { name, year_of_birth, default_stretch_thresholds }),
+      distance_unit?: DistanceUnit;
+      split_distance_m?: number;
+    }) =>
+      updateProfile(id, {
+        name,
+        year_of_birth,
+        default_stretch_thresholds,
+        distance_unit,
+        split_distance_m,
+      }),
     onSuccess: (profile: Profile) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.profiles });
       queryClient.invalidateQueries({ queryKey: queryKeys.profile(profile.id) });

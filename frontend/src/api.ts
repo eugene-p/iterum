@@ -3,6 +3,7 @@ import type {
   ActivityDetail,
   ActivityMatchedSegment,
   ActivitySummary,
+  DistanceUnit,
   Profile,
   ProfileViewScope,
   Segment,
@@ -53,6 +54,8 @@ export function updateProfile(
     name?: string;
     year_of_birth?: number | null;
     default_stretch_thresholds?: StretchThresholds;
+    distance_unit?: DistanceUnit;
+    split_distance_m?: number;
   },
 ) {
   return request<Profile>(`/api/profiles/${id}`, {

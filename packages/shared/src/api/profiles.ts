@@ -3,6 +3,9 @@ import { stretchThresholdsSchema } from "../stretch.js";
 
 const currentYear = () => new Date().getFullYear();
 
+export const distanceUnitSchema = z.enum(["km", "mi"]);
+export const splitDistanceMSchema = z.coerce.number().finite().min(50).max(100_000);
+
 export const yearOfBirthSchema = z
   .union([
     z.null(),
@@ -15,6 +18,8 @@ export const createProfileBodySchema = z.object({
   name: z.string().trim().min(1, "Name is required"),
   year_of_birth: yearOfBirthSchema.optional(),
   default_stretch_thresholds: stretchThresholdsSchema.partial().optional(),
+  distance_unit: distanceUnitSchema.optional(),
+  split_distance_m: splitDistanceMSchema.optional(),
 });
 export type CreateProfileBody = z.infer<typeof createProfileBodySchema>;
 
@@ -23,12 +28,16 @@ export const updateProfileBodySchema = z
     name: z.string().trim().min(1).optional(),
     year_of_birth: yearOfBirthSchema.optional(),
     default_stretch_thresholds: stretchThresholdsSchema.partial().optional(),
+    distance_unit: distanceUnitSchema.optional(),
+    split_distance_m: splitDistanceMSchema.optional(),
   })
   .refine(
     (body) =>
       body.name !== undefined ||
       body.year_of_birth !== undefined ||
-      body.default_stretch_thresholds !== undefined,
+      body.default_stretch_thresholds !== undefined ||
+      body.distance_unit !== undefined ||
+      body.split_distance_m !== undefined,
     { message: "At least one field is required" },
   );
 export type UpdateProfileBody = z.infer<typeof updateProfileBodySchema>;

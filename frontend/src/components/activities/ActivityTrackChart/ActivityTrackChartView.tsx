@@ -32,6 +32,7 @@ export type ActivityTrackChartViewProps = {
   positionFraction?: number;
   onPositionFractionChange?: (fraction: number) => void;
   showExpandHint?: boolean;
+  showZoneSummary?: boolean;
   /** Rendered inside the chart plot (e.g. separate Expand control). */
   chartOverlay?: ReactNode;
 };
@@ -44,6 +45,7 @@ export const ActivityTrackChartView = ({
   positionFraction,
   onPositionFractionChange,
   showExpandHint = false,
+  showZoneSummary = true,
   chartOverlay,
 }: ActivityTrackChartViewProps) => {
   const isLarge = size === "large";
@@ -307,7 +309,7 @@ export const ActivityTrackChartView = ({
         ) : null}
       </div>
 
-      {maxHr != null ? (
+      {showZoneSummary && maxHr != null ? (
         <HrZoneTimeSummary series={zoneTimeSeries} maxHr={maxHr} size={size} />
       ) : null}
     </div>

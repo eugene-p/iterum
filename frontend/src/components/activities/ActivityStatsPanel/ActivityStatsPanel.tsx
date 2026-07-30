@@ -1,4 +1,5 @@
 import { useProfileContext } from "../../../app/ProfileContext";
+import { useAppWorkspace } from "../../../app/useAppWorkspaceContext";
 import { formatTags } from "../../../lib/formatTags";
 import { profileMaxHr } from "../../../lib/hrZones";
 import { useActivityMatchedSegmentsQuery } from "../../../queries/activities";
@@ -12,6 +13,8 @@ import {
 } from "../../../utils";
 import { Badge, MutedSpan } from "../../ui";
 import { ActivityTrackChart } from "../ActivityTrackChart";
+import { ActivitySplits } from "../ActivitySplits";
+import { HrZoneTimeSummary } from "../ActivityTrackChart/HrZoneTimeSummary";
 import { activityAvgSpeedKmh } from "../ActivitiesPanel/activitiesPanelUtils";
 import { activityStatsPanelStyles } from "./ActivityStatsPanel.styles";
 
@@ -39,11 +42,18 @@ export const ActivityStatsPanel = ({
   onSelectSegment,
 }: ActivityStatsPanelProps) => {
   const { profiles } = useProfileContext();
+  const { expandSidebar, setSidebarTab } = useAppWorkspace();
   const avgSpeed = activityAvgSpeedKmh(activity);
-  const zoneMaxHr = profileMaxHr(profiles.find((profile) => profile.id === activity.profile_id));
+  const activityProfile = profiles.find((profile) => profile.id === activity.profile_id);
+  const zoneMaxHr = profileMaxHr(activityProfile);
   const matchedSegmentsQuery = useActivityMatchedSegmentsQuery(activity.id);
   const matchedSegments = matchedSegmentsQuery.data ?? [];
   const hasHrTrack = (trackPoints ?? []).some((point) => point.heart_rate != null);
+  const elevationGain = (trackPoints ?? []).reduce((gain, point, index, points) => {
+    const previousElevation = index > 0 ? points[index - 1]?.elevation_m : null;
+    if (point.elevation_m == null || previousElevation == null) return gain;
+    return gain + Math.max(0, point.elevation_m - previousElevation);
+  }, 0);
 
   const summaryLine = joinMeta([
     formatDistance(activity.distance_m),
@@ -60,50 +70,80 @@ export const ActivityStatsPanel = ({
 
   return (
     <aside className={activityStatsPanelStyles.root}>
-      {activity.tags?.length ? (
-        <div className={activityStatsPanelStyles.section}>
-          <div className={activityStatsPanelStyles.sectionTitle}>Tags</div>
-          <div className={activityStatsPanelStyles.tagRow}>
-            {activity.tags.map((tag) => (
-              <Badge key={tag}>{tag}</Badge>
-            ))}
+      <section className={activityStatsPanelStyles.overview} aria-labelledby="activity-overview-title">
+        <div className={activityStatsPanelStyles.overviewHeader}>
+          <div>
+            <h2 id="activity-overview-title" className={activityStatsPanelStyles.overviewTitle}>Overview</h2>
+            {activity.tags?.length ? (
+              <div className={activityStatsPanelStyles.tagRow}>
+                {activity.tags.map((tag) => (
+                  <Badge key={tag} className={activityStatsPanelStyles.tag}>{tag}</Badge>
+                ))}
+              </div>
+            ) : null}
           </div>
+          {contextMeta ? <div className={activityStatsPanelStyles.metaLine}>{contextMeta}</div> : null}
         </div>
-      ) : null}
+        <div className={activityStatsPanelStyles.metricGrid}>
+          <div><span>Distance</span><strong>{formatDistance(activity.distance_m)}</strong></div>
+          <div><span>Duration</span><strong>{formatDuration(activity.duration_sec)}</strong></div>
+          <div><span>Avg pace</span><strong>{formatPaceFromSpeed(avgSpeed)}</strong></div>
+          <div><span>Avg HR</span><strong>{formatHr(activity.avg_hr)}</strong></div>
+          <div><span>Max HR</span><strong>{formatHr(activity.max_hr)}</strong></div>
+          <div><span>Elevation gain</span><strong>{elevationGain ? `${Math.round(elevationGain)} m` : "—"}</strong></div>
+        </div>
+      </section>
 
-      {summaryLine ? (
-        <div className={activityStatsPanelStyles.summaryLine}>{summaryLine}</div>
-      ) : null}
-
-      <div className={activityStatsPanelStyles.section}>
+      <section className={activityStatsPanelStyles.analysisSection} aria-labelledby="activity-effort-title">
+        <div className={activityStatsPanelStyles.sectionHeader}>
+          <h2 id="activity-effort-title" className={activityStatsPanelStyles.sectionTitle}>Effort & elevation</h2>
+          {summaryLine ? <span className={activityStatsPanelStyles.summaryLine}>{summaryLine}</span> : null}
+        </div>
         <div className={activityStatsPanelStyles.statList}>
           <Stat label="Avg speed" value={formatSpeed(avgSpeed)} />
           <Stat label="Avg pace" value={formatPaceFromSpeed(avgSpeed)} />
           <Stat label="Max HR" value={formatHr(activity.max_hr)} />
         </div>
-      </div>
 
-      {hasHrTrack && trackPoints ? (
-        <ActivityTrackChart
-          points={trackPoints}
-          maxHr={zoneMaxHr}
-          durationSec={activity.duration_sec}
-          expandable
-          expandTitle={`${activity.name} — heart rate & elevation`}
-        />
-      ) : null}
+        {hasHrTrack && trackPoints ? (
+          <ActivityTrackChart
+            points={trackPoints}
+            maxHr={zoneMaxHr}
+            durationSec={activity.duration_sec}
+            expandable
+            showZoneSummary={false}
+            expandTitle={`${activity.name} — heart rate & elevation`}
+          />
+        ) : null}
+        {hasHrTrack && trackPoints && zoneMaxHr != null ? (
+          <div className={activityStatsPanelStyles.zoneSummary}>
+            <span className={activityStatsPanelStyles.zoneSummaryLabel}>Time in HR zones</span>
+            <HrZoneTimeSummary
+              series={[{ points: trackPoints, durationSec: activity.duration_sec }]}
+              maxHr={zoneMaxHr}
+            />
+          </div>
+        ) : null}
+      </section>
 
-      {contextMeta ? <div className={activityStatsPanelStyles.metaLine}>{contextMeta}</div> : null}
-      <div className={activityStatsPanelStyles.metaLine} title={activity.source_filename}>
-        {activity.source_filename} · {activity.point_count.toLocaleString()} pts
-      </div>
+      <ActivitySplits
+        points={trackPoints}
+        profile={activityProfile}
+        onOpenProfileSettings={() => {
+          setSidebarTab("profile");
+          expandSidebar();
+        }}
+      />
 
-      <div className={activityStatsPanelStyles.section}>
-        <div className={activityStatsPanelStyles.sectionTitle}>
-          Matched segments
+      <section className={activityStatsPanelStyles.analysisSection}>
+        <div className={activityStatsPanelStyles.segmentHeading}>
+          <div className={activityStatsPanelStyles.sectionTitle}>
+            Matched segments
           {matchedSegments.length ? (
             <MutedSpan> ({matchedSegments.length})</MutedSpan>
           ) : null}
+          </div>
+          {matchedSegments.length ? <span className={activityStatsPanelStyles.segmentHint}>Open comparison</span> : null}
         </div>
         {matchedSegmentsQuery.isLoading ? (
           <div className={activityStatsPanelStyles.emptyHint}>Loading…</div>
@@ -132,12 +172,17 @@ export const ActivityStatsPanel = ({
                     {meta ? (
                       <div className={activityStatsPanelStyles.segmentMeta}>{meta}</div>
                     ) : null}
+                    <span className={activityStatsPanelStyles.segmentAction}>View segment <span aria-hidden>→</span></span>
                   </button>
                 </li>
               );
             })}
           </ul>
         )}
+      </section>
+
+      <div className={activityStatsPanelStyles.metaLine} title={activity.source_filename}>
+        {activity.source_filename} · {activity.point_count.toLocaleString()} pts
       </div>
     </aside>
   );

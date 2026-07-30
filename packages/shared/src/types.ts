@@ -8,14 +8,22 @@ export interface TrackPoint {
   elevation_m?: number | null;
   heart_rate?: number | null;
   speed_mps?: number | null;
+  /** Cumulative distance from the source device, when the import supplied it. */
+  distance_m?: number | null;
   timestamp?: string | null;
 }
+
+/** Preferred distance display for a profile. */
+export type DistanceUnit = "km" | "mi";
 
 export interface Profile {
   id: number;
   name: string;
   year_of_birth: number | null;
   default_stretch_thresholds: StretchThresholds;
+  distance_unit: DistanceUnit;
+  /** Automatically-derived split interval, stored in metres. */
+  split_distance_m: number;
   created_at: string;
 }
 

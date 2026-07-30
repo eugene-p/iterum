@@ -25,6 +25,12 @@ export const appStyles = {
   /** Fixed demoted map rail — always visible, expand via pane control. */
   detailMapPane:
     "relative flex w-[360px] min-h-0 shrink-0 flex-col overflow-hidden border-l border-border bg-map",
+  /** Activity pages tell a route story vertically instead of reserving a narrow map rail. */
+  activityDetailBody:
+    "min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain snap-y snap-proximity [overflow-anchor:none]",
+  activityRouteSection: "snap-start scroll-mt-2 border-b border-border bg-map p-3 lg:p-5",
+  activityRouteWorkspace:
+    "relative mx-auto flex h-[min(48vh,460px)] min-h-[320px] w-full max-w-6xl overflow-hidden rounded-xl border border-border bg-map shadow-sm",
   screenOutlet: flexColFill,
   detailScreen: flexColFill,
 

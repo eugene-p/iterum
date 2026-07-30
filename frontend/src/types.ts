@@ -3,6 +3,7 @@ export type {
   ActivityDetail,
   ActivityMatchedSegment,
   ActivitySummary,
+  DistanceUnit,
   GeoPoint,
   Profile,
   ProfileViewScope,

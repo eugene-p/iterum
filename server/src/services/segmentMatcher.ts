@@ -8,6 +8,7 @@ export interface TrackPointRow {
   elevation_m: number | null;
   heart_rate: number | null;
   speed_mps: number | null;
+  distance_m?: number | null;
   timestamp: string | null;
 }
 

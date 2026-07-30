@@ -72,9 +72,10 @@ export const loadActivityPoints = async (activityId: number): Promise<TrackPoint
     pt_elevation_m: number | null;
     heart_rate: number | null;
     speed_mps: number | null;
+    distance_m: number | null;
     timestamp: string | null;
   }>(
-    `SELECT ${geoPointSelect("point", "pt")}, heart_rate, speed_mps, timestamp
+    `SELECT ${geoPointSelect("point", "pt")}, heart_rate, speed_mps, distance_m, timestamp
      FROM track_points WHERE activity_id = $1 ORDER BY sequence`,
     [activityId],
   );
@@ -85,6 +86,7 @@ export const loadActivityPoints = async (activityId: number): Promise<TrackPoint
       elevation_m: row.pt_elevation_m,
       heart_rate: row.heart_rate,
       speed_mps: row.speed_mps,
+      distance_m: row.distance_m,
       timestamp: row.timestamp,
     }),
   );

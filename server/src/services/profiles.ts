@@ -8,12 +8,18 @@ import {
   parseStretchThresholds,
   type StretchThresholds,
 } from "./stretchSegmentation.js";
+import type { DistanceUnit } from "@eugene-p/iterum-shared";
+
+const DEFAULT_DISTANCE_UNIT: DistanceUnit = "km";
+const DEFAULT_SPLIT_DISTANCE_M = 1_000;
 
 export type ProfileRow = {
   id: number;
   name: string;
   year_of_birth: number | null;
   default_stretch_thresholds: StretchThresholds;
+  distance_unit: DistanceUnit;
+  split_distance_m: number;
   created_at: string;
 };
 
@@ -22,6 +28,8 @@ const mapProfileRow = (row: {
   name: string;
   year_of_birth: number | null;
   default_stretch_thresholds: StretchThresholds | string;
+  distance_unit: DistanceUnit;
+  split_distance_m: number | string;
   created_at: string;
 }): ProfileRow => ({
   id: row.id,
@@ -35,8 +43,23 @@ const mapProfileRow = (row: {
       : parseStretchThresholds(
           row.default_stretch_thresholds as unknown as Record<string, unknown>,
         ),
+  distance_unit: row.distance_unit,
+  split_distance_m: Number(row.split_distance_m),
   created_at: row.created_at,
 });
+
+const parseDistanceUnit = (value: unknown): DistanceUnit => {
+  if (value === "km" || value === "mi") return value;
+  throw new BadRequestError("Distance unit must be km or mi");
+};
+
+const parseSplitDistanceM = (value: unknown): number => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 50 || parsed > 100_000) {
+    throw new BadRequestError("Custom split distance must be between 50 m and 100 km");
+  }
+  return parsed;
+};
 
 const parseYearOfBirth = (value: unknown): number | null | undefined => {
   if (value === undefined) return undefined;
@@ -58,8 +81,10 @@ export const listProfiles = async (): Promise<ProfileRow[]> => {
     name: string;
     year_of_birth: number | null;
     default_stretch_thresholds: StretchThresholds;
+    distance_unit: DistanceUnit;
+    split_distance_m: number;
     created_at: string;
-  }>(`SELECT id, name, year_of_birth, default_stretch_thresholds, created_at FROM profiles ORDER BY name`);
+  }>(`SELECT id, name, year_of_birth, default_stretch_thresholds, distance_unit, split_distance_m, created_at FROM profiles ORDER BY name`);
   return result.rows.map(mapProfileRow);
 };
 
@@ -69,32 +94,43 @@ export const getProfile = async (id: number): Promise<ProfileRow | null> => {
     name: string;
     year_of_birth: number | null;
     default_stretch_thresholds: StretchThresholds;
+    distance_unit: DistanceUnit;
+    split_distance_m: number;
     created_at: string;
-  }>(`SELECT id, name, year_of_birth, default_stretch_thresholds, created_at FROM profiles WHERE id = $1`, [id]);
+  }>(`SELECT id, name, year_of_birth, default_stretch_thresholds, distance_unit, split_distance_m, created_at FROM profiles WHERE id = $1`, [id]);
   if (!result.rowCount) return null;
   return mapProfileRow(result.rows[0]);
 };
 
 export const createProfile = async (
   name: string,
-  options?: { defaultStretchThresholds?: StretchThresholds; yearOfBirth?: number | null },
+  options?: {
+    defaultStretchThresholds?: StretchThresholds;
+    yearOfBirth?: number | null;
+    distanceUnit?: DistanceUnit;
+    splitDistanceM?: number;
+  },
 ): Promise<ProfileRow> => {
   const trimmed = name.trim();
   if (!trimmed) throw new BadRequestError("Profile name is required");
 
   const thresholds = options?.defaultStretchThresholds ?? DEFAULT_STRETCH_THRESHOLDS;
   const yearOfBirth = parseYearOfBirth(options?.yearOfBirth ?? null);
+  const distanceUnit = parseDistanceUnit(options?.distanceUnit ?? DEFAULT_DISTANCE_UNIT);
+  const splitDistanceM = parseSplitDistanceM(options?.splitDistanceM ?? DEFAULT_SPLIT_DISTANCE_M);
   const result = await query<{
     id: number;
     name: string;
     year_of_birth: number | null;
     default_stretch_thresholds: StretchThresholds;
+    distance_unit: DistanceUnit;
+    split_distance_m: number;
     created_at: string;
   }>(
-    `INSERT INTO profiles (name, year_of_birth, default_stretch_thresholds)
-     VALUES ($1, $2, $3::jsonb)
-     RETURNING id, name, year_of_birth, default_stretch_thresholds, created_at`,
-    [trimmed, yearOfBirth ?? null, JSON.stringify(thresholds)],
+    `INSERT INTO profiles (name, year_of_birth, default_stretch_thresholds, distance_unit, split_distance_m)
+     VALUES ($1, $2, $3::jsonb, $4, $5)
+     RETURNING id, name, year_of_birth, default_stretch_thresholds, distance_unit, split_distance_m, created_at`,
+    [trimmed, yearOfBirth ?? null, JSON.stringify(thresholds), distanceUnit, splitDistanceM],
   );
   return mapProfileRow(result.rows[0]);
 };
@@ -105,6 +141,8 @@ export const updateProfile = async (
     name?: string;
     year_of_birth?: number | null;
     default_stretch_thresholds?: StretchThresholds;
+    distance_unit?: DistanceUnit;
+    split_distance_m?: number;
   },
 ): Promise<ProfileRow | null> => {
   const existing = await getProfile(id);
@@ -118,18 +156,29 @@ export const updateProfile = async (
     updates.year_of_birth !== undefined
       ? parseYearOfBirth(updates.year_of_birth)
       : existing.year_of_birth;
+  const distanceUnit =
+    updates.distance_unit !== undefined
+      ? parseDistanceUnit(updates.distance_unit)
+      : existing.distance_unit;
+  const splitDistanceM =
+    updates.split_distance_m !== undefined
+      ? parseSplitDistanceM(updates.split_distance_m)
+      : existing.split_distance_m;
   const result = await query<{
     id: number;
     name: string;
     year_of_birth: number | null;
     default_stretch_thresholds: StretchThresholds;
+    distance_unit: DistanceUnit;
+    split_distance_m: number;
     created_at: string;
   }>(
     `UPDATE profiles
-     SET name = $1, year_of_birth = $2, default_stretch_thresholds = $3::jsonb
-     WHERE id = $4
-     RETURNING id, name, year_of_birth, default_stretch_thresholds, created_at`,
-    [name, yearOfBirth ?? null, JSON.stringify(thresholds), id],
+     SET name = $1, year_of_birth = $2, default_stretch_thresholds = $3::jsonb,
+         distance_unit = $4, split_distance_m = $5
+     WHERE id = $6
+     RETURNING id, name, year_of_birth, default_stretch_thresholds, distance_unit, split_distance_m, created_at`,
+    [name, yearOfBirth ?? null, JSON.stringify(thresholds), distanceUnit, splitDistanceM, id],
   );
   return mapProfileRow(result.rows[0]);
 };

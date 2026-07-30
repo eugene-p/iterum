@@ -108,6 +108,9 @@ export const ActivityMap = memo(function ActivityMap({
   );
 
   const center: LatLngExpression = allPositions[0] ?? [48.2, 16.37];
+  const selectedRoute = sortedRoutes.find((route) => route.selected) ?? sortedRoutes[0];
+  const routeStart = selectedRoute?.points[0];
+  const routeEnd = selectedRoute?.points[selectedRoute.points.length - 1];
 
   return (
     <MapContainer
@@ -120,7 +123,7 @@ export const ActivityMap = memo(function ActivityMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <FitBounds positions={fitPositions} />
+      <FitBounds positions={fitPositions} padding={[8, 8]} />
       <MapResizeHandler />
       <LatLonClickHandler enabled={picking} onClick={onMapClick} />
       {sortedRoutes.map((route) => {
@@ -137,6 +140,22 @@ export const ActivityMap = memo(function ActivityMap({
           />
         );
       })}
+      {routeStart ? (
+        <CircleMarker
+          center={[routeStart.lat, routeStart.lon]}
+          radius={7}
+          pathOptions={{ color: "#f8fafc", fillColor: "#22c55e", fillOpacity: 1, weight: 2 }}
+          interactive={false}
+        />
+      ) : null}
+      {routeEnd ? (
+        <CircleMarker
+          center={[routeEnd.lat, routeEnd.lon]}
+          radius={7}
+          pathOptions={{ color: "#f8fafc", fillColor: "#ef4444", fillOpacity: 1, weight: 2 }}
+          interactive={false}
+        />
+      ) : null}
       {stretchOverlays.map((overlay) =>
         overlay.points.length > 1 ? (
           <PathHighlight

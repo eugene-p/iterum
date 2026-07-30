@@ -43,6 +43,8 @@ profilesRouter.post(
         body.default_stretch_thresholds != null
           ? parseStretchThresholds(body.default_stretch_thresholds)
           : undefined,
+      distanceUnit: body.distance_unit,
+      splitDistanceM: body.split_distance_m,
     });
     res.status(201).json(profile);
   }),
@@ -75,6 +77,8 @@ profilesRouter.patch(
         body.default_stretch_thresholds != null
           ? parseStretchThresholds(body.default_stretch_thresholds)
           : undefined,
+      distance_unit: body.distance_unit,
+      split_distance_m: body.split_distance_m,
     });
     if (!profile) {
       throw new NotFoundError("Profile not found");

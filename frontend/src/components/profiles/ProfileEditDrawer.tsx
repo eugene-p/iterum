@@ -3,13 +3,20 @@ import { useProfileContext } from "../../app/ProfileContext";
 import { estimateMaxHrFromYearOfBirth } from "../../lib/hrZones";
 import { DEFAULT_STRETCH_THRESHOLDS } from "../../lib/stretchThresholds";
 import { useDeleteProfileMutation, useUpdateProfileMutation } from "../../queries/profiles";
-import type { Profile, StretchThresholds } from "../../types";
+import type { DistanceUnit, Profile, StretchThresholds } from "../../types";
 import { STRETCH_THRESHOLDS_SECTION_HINT } from "../segments/StretchPanel/stretchThresholdHints";
 import { StretchThresholdSettings } from "../segments/StretchPanel/StretchThresholdSettings";
 import { Button, CollapsibleSection, Drawer, ErrorText, HintButton, Input } from "../ui";
 import { entityEditDrawerStyles } from "../app/entityEditDrawerStyles";
 
 const PROFILE_EDIT_FORM_ID = "profile-edit-form";
+const METRES_PER_MILE = 1609.344;
+
+const splitDistanceInUnit = (distanceM: number, unit: DistanceUnit): number =>
+  unit === "mi" ? distanceM / METRES_PER_MILE : distanceM / 1_000;
+
+const splitDistanceToMetres = (distance: number, unit: DistanceUnit): number =>
+  distance * (unit === "mi" ? METRES_PER_MILE : 1_000);
 
 type ProfileEditDrawerProps = {
   open: boolean;
@@ -28,7 +35,12 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
   const [thresholdDraft, setThresholdDraft] = useState<StretchThresholds>(
     profile.default_stretch_thresholds,
   );
+  const [distanceUnitDraft, setDistanceUnitDraft] = useState<DistanceUnit>(profile.distance_unit);
+  const [splitDistanceDraft, setSplitDistanceDraft] = useState(
+    String(splitDistanceInUnit(profile.split_distance_m, profile.distance_unit)),
+  );
   const [thresholdsExpanded, setThresholdsExpanded] = useState(false);
+  const [splitDefaultsExpanded, setSplitDefaultsExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -37,7 +49,10 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
     setNameDraft(profile.name);
     setYearOfBirthDraft(profile.year_of_birth != null ? String(profile.year_of_birth) : "");
     setThresholdDraft(profile.default_stretch_thresholds);
+    setDistanceUnitDraft(profile.distance_unit);
+    setSplitDistanceDraft(String(splitDistanceInUnit(profile.split_distance_m, profile.distance_unit)));
     setThresholdsExpanded(false);
+    setSplitDefaultsExpanded(false);
     setError(null);
     setConfirmDelete(false);
   }, [open, profile]);
@@ -55,11 +70,19 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
   );
 
   const yearOfBirthInvalid = yearOfBirthDraft.trim() !== "" && parsedYearOfBirth === null;
+  const parsedSplitDistance = useMemo(
+    () => splitDistanceToMetres(Number(splitDistanceDraft), distanceUnitDraft),
+    [distanceUnitDraft, splitDistanceDraft],
+  );
+  const splitDistanceInvalid =
+    !Number.isFinite(parsedSplitDistance) || parsedSplitDistance < 50 || parsedSplitDistance > 100_000;
 
   const unchanged =
     nameDraft.trim() === profile.name &&
     parsedYearOfBirth === profile.year_of_birth &&
-    JSON.stringify(thresholdDraft) === JSON.stringify(profile.default_stretch_thresholds);
+    JSON.stringify(thresholdDraft) === JSON.stringify(profile.default_stretch_thresholds) &&
+    distanceUnitDraft === profile.distance_unit &&
+    parsedSplitDistance === profile.split_distance_m;
 
   const handleSave = async () => {
     setError(null);
@@ -69,6 +92,8 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
         name: nameDraft.trim(),
         year_of_birth: parsedYearOfBirth,
         default_stretch_thresholds: thresholdDraft,
+        distance_unit: distanceUnitDraft,
+        split_distance_m: parsedSplitDistance,
       });
       onClose();
     } catch (err) {
@@ -110,7 +135,13 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
             type="submit"
             form={PROFILE_EDIT_FORM_ID}
             variant="primary"
-            disabled={updateMutation.isPending || !nameDraft.trim() || unchanged || yearOfBirthInvalid}
+            disabled={
+              updateMutation.isPending ||
+              !nameDraft.trim() ||
+              unchanged ||
+              yearOfBirthInvalid ||
+              splitDistanceInvalid
+            }
           >
             Save
           </Button>
@@ -122,7 +153,7 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
         className={entityEditDrawerStyles.scrollForm}
         onSubmit={(e) => {
           e.preventDefault();
-          if (!nameDraft.trim() || unchanged) return;
+          if (!nameDraft.trim() || unchanged || splitDistanceInvalid) return;
           void handleSave();
         }}
       >
@@ -149,6 +180,44 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
               : "Set your birth year to show heart-rate zones on activity charts."}
           </span>
         </label>
+
+        <CollapsibleSection
+          variant="card"
+          headingLevel="h3"
+          title="Activity split defaults"
+          expanded={splitDefaultsExpanded}
+          onToggle={() => setSplitDefaultsExpanded((value) => !value)}
+        >
+          <div className="flex flex-col gap-2">
+            <select
+              className="min-h-9 w-full rounded-lg border border-border-strong bg-bg px-[0.6rem] py-[0.45rem] text-fg"
+              value={distanceUnitDraft}
+              onChange={(event) => {
+                const nextUnit = event.target.value as DistanceUnit;
+                setSplitDistanceDraft(String(splitDistanceInUnit(parsedSplitDistance, nextUnit)));
+                setDistanceUnitDraft(nextUnit);
+              }}
+            >
+              <option value="km">Kilometres</option>
+              <option value="mi">Miles</option>
+            </select>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-muted">Split every ({distanceUnitDraft})</span>
+              <Input
+                type="number"
+                inputMode="decimal"
+                min={0.1}
+                max={distanceUnitDraft === "mi" ? 62 : 100}
+                step={0.05}
+                value={splitDistanceDraft}
+                onChange={(event) => setSplitDistanceDraft(event.target.value)}
+              />
+            </label>
+            <span className="text-xs text-muted">
+              Choose any distance—for example 0.5 km or 1.7 mi. Splits are derived from the GPS track when an import has no laps.
+            </span>
+          </div>
+        </CollapsibleSection>
 
         <CollapsibleSection
           variant="card"
