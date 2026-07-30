@@ -4,6 +4,7 @@ import type { AppLocation } from "./appRoutes";
 import type { AppShellAction } from "./appShellActionTypes";
 import type { AppShellState, SidebarLayout } from "./appShellTypes";
 import type { useAppNavigation } from "./useAppNavigation";
+import type { PageLayout } from "./pageLayout";
 
 export type AppNavigation = ReturnType<typeof useAppNavigation>;
 
@@ -12,6 +13,7 @@ export type AppWorkspaceValue = {
   dispatch: React.Dispatch<AppShellAction>;
   navigation: AppNavigation;
   location: AppLocation;
+  pageLayout: PageLayout;
   activities: ActivitySummary[];
   segments: Segment[];
   sidebar: {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cn } from "../../../lib/cn";
 import { useActivityUpload } from "../../../hooks/useActivityUpload";
 import type { ActivitySummary } from "../../../types";
 import {
@@ -18,6 +19,8 @@ type ActivityUploadControlProps = {
   profileId: number;
   onRefresh: () => Promise<void>;
   onComplete?: (uploaded: ActivitySummary[]) => void;
+  className?: string;
+  dropzoneClassName?: string;
 };
 
 export const ActivityUploadControl = ({
@@ -25,6 +28,8 @@ export const ActivityUploadControl = ({
   profileId,
   onRefresh,
   onComplete,
+  className,
+  dropzoneClassName,
 }: ActivityUploadControlProps) => {
   const [error, setError] = useState<string | null>(null);
   const isFooter = variant === "footer";
@@ -40,7 +45,7 @@ export const ActivityUploadControl = ({
   });
 
   return (
-    <div className={isFooter ? undefined : activityUploadControlStyles.mainWrap}>
+    <div className={isFooter ? className : cn(activityUploadControlStyles.mainWrap, className)}>
       {error && (
         <ErrorText className={isFooter ? undefined : activityUploadControlStyles.mainError}>
           {error}
@@ -52,7 +57,11 @@ export const ActivityUploadControl = ({
         state={upload.dropzoneState}
         onDragActiveChange={upload.setDragOver}
         onFiles={(files) => void upload.handleUpload(files)}
-        className={isFooter ? undefined : activityUploadControlStyles.mainDropzone}
+        className={
+          isFooter
+            ? dropzoneClassName
+            : cn(activityUploadControlStyles.mainDropzone, dropzoneClassName)
+        }
       >
         {upload.uploading ? (
           <UploadStatus footer={isFooter}>

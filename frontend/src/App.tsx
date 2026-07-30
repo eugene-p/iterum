@@ -1,23 +1,21 @@
 import { appStyles } from "./App.styles";
 import { usePinViewportScroll } from "./hooks/usePinViewportScroll";
-import { isListLocation } from "./app/appRoutes";
 import { AppWorkspaceProvider } from "./app/AppWorkspaceContext";
-import { ProfileProvider, useProfileContext } from "./app/ProfileContext";
+import { ProfileProvider } from "./app/ProfileContext";
 import { useAppWorkspace } from "./app/useAppWorkspaceContext";
 import { ScreenRouter } from "./app/screens/ScreenRouter";
 import { AppSidebar } from "./components/AppSidebar";
 import { AppSidebarRail } from "./components/AppSidebar/AppSidebarRail";
-import { ProfileSelectScreen } from "./components/profiles/ProfileSelectScreen";
 
 const AppLayout = () => {
   const {
-    location,
     sidebar,
     sidebarError,
     activities,
     segments,
     refreshLists,
     navigation,
+    pageLayout,
     setSidebarTab,
     expandSidebar,
     collapseSidebar,
@@ -41,7 +39,7 @@ const AppLayout = () => {
           activeTab={sidebar.activeTab}
           selectedSegmentId={sidebar.selectedSegmentId}
           selectedActivityId={sidebar.selectedActivityId}
-          showCollapse={!isListLocation(location)}
+          showCollapse={pageLayout !== "empty"}
           onTabChange={setSidebarTab}
           onSelectSegment={(id) => {
             navigation.goSegment(id);
@@ -57,19 +55,9 @@ const AppLayout = () => {
       )}
 
       <main className={appStyles.main}>
-        <ScreenRouter />
+        <ScreenRouter pageLayout={pageLayout} />
       </main>
     </div>
-  );
-};
-
-const AppGate = () => {
-  const { activeProfileId } = useProfileContext();
-  if (activeProfileId == null) return <ProfileSelectScreen />;
-  return (
-    <AppWorkspaceProvider>
-      <AppLayout />
-    </AppWorkspaceProvider>
   );
 };
 
@@ -77,7 +65,9 @@ export const App = () => {
   usePinViewportScroll();
   return (
     <ProfileProvider>
-      <AppGate />
+      <AppWorkspaceProvider>
+        <AppLayout />
+      </AppWorkspaceProvider>
     </ProfileProvider>
   );
 };

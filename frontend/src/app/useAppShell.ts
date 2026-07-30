@@ -21,7 +21,7 @@ import {
 } from "./appRoutes";
 import { shellActions } from "./appActions";
 import { useAppNavigation } from "./useAppNavigation";
-import type { SidebarLayout } from "./appShellTypes";
+import { resolvePageLayout, resolveSidebarLayout } from "./pageLayout";
 
 const queryErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
@@ -30,10 +30,10 @@ const queryErrorMessage = (error: unknown): string | null => {
 
 export const useAppShell = () => {
   const [shell, dispatch] = useReducer(appShellReducer, initialAppShellState);
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigation = useAppNavigation();
   const previousLocationRef = useRef(parseAppLocation(pathname));
-  const { viewScope } = useProfileContext();
+  const { viewScope, activeProfileId } = useProfileContext();
 
   const activitiesQuery = useActivitiesQuery(viewScope ?? undefined);
   const segmentsQuery = useSegmentsQuery(viewScope ?? undefined);
@@ -45,6 +45,9 @@ export const useAppShell = () => {
   const location = useMemo(() => parseAppLocation(pathname), [pathname]);
 
   useEffect(() => {
+    // Keep the entered URL intact while the landing canvas asks for a profile.
+    // This mirrors the former profile gate and lets selection resume the target.
+    if (activeProfileId == null) return;
     if (
       shouldRedirectUnknownEntity(location, {
         activitiesLoaded: activitiesQuery.isSuccess,
@@ -58,6 +61,7 @@ export const useAppShell = () => {
   }, [
     activities,
     activitiesQuery.isSuccess,
+    activeProfileId,
     location,
     navigation,
     segments,
@@ -73,10 +77,20 @@ export const useAppShell = () => {
     previousLocationRef.current = location;
   }, [location]);
 
-  const sidebarLayout: SidebarLayout = useMemo(() => {
-    if (isListLocation(location)) return "full";
-    return shell.sidebarExpanded ? "full" : "rail";
-  }, [location, shell.sidebarExpanded]);
+  const pageLayout = useMemo(
+    () =>
+      resolvePageLayout({
+        pathname,
+        search,
+        hasActiveProfile: activeProfileId != null,
+      }),
+    [activeProfileId, pathname, search],
+  );
+
+  const sidebarLayout = useMemo(
+    () => resolveSidebarLayout(pageLayout, shell.sidebarExpanded),
+    [pageLayout, shell.sidebarExpanded],
+  );
 
   const sidebar = useMemo(
     () => ({
@@ -131,6 +145,7 @@ export const useAppShell = () => {
     dispatch,
     navigation,
     location,
+    pageLayout,
     activities,
     segments,
     sidebar,

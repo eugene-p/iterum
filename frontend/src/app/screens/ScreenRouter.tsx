@@ -1,8 +1,9 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { appStyles } from "../../App.styles";
 import { AppEmptyMain } from "../../components/app";
 import { LoadingState } from "../../components/ui/LoadingState/LoadingState";
+import type { PageLayout } from "../pageLayout";
 
 const ActivityScreenContainer = lazy(() =>
   import("./ActivityScreenContainer").then((module) => ({
@@ -29,22 +30,39 @@ const RedirectEditSegment = () => {
   return <Navigate to={`/segments/${segmentId}`} replace />;
 };
 
-export const ScreenRouter = () => (
-  <div className={appStyles.screenOutlet}>
-    <Suspense fallback={<ScreenFallback />}>
-      <Routes>
-        <Route path="/" element={<Navigate to="/segments" replace />} />
-        <Route path="/segments" element={<AppEmptyMain />} />
-        <Route path="/activities" element={<AppEmptyMain />} />
-        <Route path="/activities/:activityId" element={<ActivityScreenContainer />} />
-        <Route
-          path="/activities/:activityId/segments/new"
-          element={<CreateSegmentScreenContainer />}
-        />
-        <Route path="/segments/:segmentId" element={<SegmentScreenContainer />} />
-        <Route path="/segments/:segmentId/edit" element={<RedirectEditSegment />} />
-        <Route path="/segments/:segmentId/subset" element={<RedirectEditSegment />} />
-      </Routes>
-    </Suspense>
-  </div>
-);
+export const ScreenRouter = ({ pageLayout }: { pageLayout: PageLayout }) => {
+  const routeContent = (content: ReactNode) =>
+    pageLayout === "empty" ? <AppEmptyMain /> : content;
+
+  return (
+    <div className={appStyles.screenOutlet}>
+      <Suspense fallback={<ScreenFallback />}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/segments" replace />} />
+          <Route path="/segments" element={<AppEmptyMain />} />
+          <Route path="/activities" element={<AppEmptyMain />} />
+          <Route
+            path="/activities/:activityId"
+            element={routeContent(<ActivityScreenContainer />)}
+          />
+          <Route
+            path="/activities/:activityId/segments/new"
+            element={routeContent(<CreateSegmentScreenContainer />)}
+          />
+          <Route
+            path="/segments/:segmentId"
+            element={routeContent(<SegmentScreenContainer />)}
+          />
+          <Route
+            path="/segments/:segmentId/edit"
+            element={routeContent(<RedirectEditSegment />)}
+          />
+          <Route
+            path="/segments/:segmentId/subset"
+            element={routeContent(<RedirectEditSegment />)}
+          />
+        </Routes>
+      </Suspense>
+    </div>
+  );
+};

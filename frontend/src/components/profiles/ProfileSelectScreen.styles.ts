@@ -1,6 +1,12 @@
+import { cn } from "../../lib/cn";
+
 export const profileSelectStyles = {
   root: "flex h-full min-h-0 items-center justify-center bg-surface p-6",
-  card: "w-full max-w-md rounded-lg border border-border bg-drop-surface p-6 shadow-sm",
+  card: (embedded = false) =>
+    cn(
+      "w-full rounded-lg border border-border bg-drop-surface p-5 shadow-sm",
+      !embedded && "max-w-md p-6",
+    ),
   brand: "mb-6",
   title: "text-lg font-semibold text-foreground",
   subtitle: "mt-2 text-sm text-muted",
