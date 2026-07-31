@@ -3,6 +3,7 @@ import type { SegmentPickMode } from "../hooks/segmentEditorTypes";
 import type { StretchThresholds } from "../types";
 import { APP_SHELL_ACTION_TYPES } from "./appShellActionTypes";
 import type { AppShellAction } from "./appShellActionTypes";
+import type { PendingSelection } from "./appShellTypes";
 import { EDITOR_ACTION_TYPES } from "./editorActionTypes";
 import type { EditorAction } from "./editorReducer";
 import type { EditorScreen } from "./editorTypes";
@@ -22,6 +23,13 @@ export const shellActions = {
   setActionError: (message: string): AppShellAction => ({
     type: APP_SHELL_ACTION_TYPES.SET_ACTION_ERROR,
     message,
+  }),
+  setPendingSelection: (pending: PendingSelection): AppShellAction => ({
+    type: APP_SHELL_ACTION_TYPES.SET_PENDING_SELECTION,
+    pending,
+  }),
+  clearPendingSelection: (): AppShellAction => ({
+    type: APP_SHELL_ACTION_TYPES.CLEAR_PENDING_SELECTION,
   }),
 };
 

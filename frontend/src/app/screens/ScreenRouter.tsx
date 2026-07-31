@@ -2,7 +2,7 @@ import { lazy, Suspense, type ReactNode } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { appStyles } from "../../App.styles";
 import { AppEmptyMain } from "../../components/app";
-import { LoadingState } from "../../components/ui/LoadingState/LoadingState";
+import { ScreenPlaceholder } from "../../components/ui/ScreenPlaceholder";
 import type { PageLayout } from "../pageLayout";
 
 const ActivityScreenContainer = lazy(() =>
@@ -23,7 +23,7 @@ const SegmentScreenContainer = lazy(() =>
   })),
 );
 
-const ScreenFallback = () => <LoadingState message="Loading…" className="h-full" />;
+const ScreenFallback = () => <ScreenPlaceholder />;
 
 const RedirectEditSegment = () => {
   const { segmentId } = useParams();

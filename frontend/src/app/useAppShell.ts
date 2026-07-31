@@ -21,8 +21,13 @@ import {
   shouldRedirectUnknownEntity,
 } from "./appRoutes";
 import { shellActions } from "./appActions";
+import {
+  planBeginPendingSelection,
+  shouldClearPendingSelection,
+} from "./pendingSelection";
 import { useAppNavigation } from "./useAppNavigation";
 import { resolvePageLayout, resolveSidebarLayout } from "./pageLayout";
+import type { PendingSelection } from "./appShellTypes";
 
 const queryErrorMessage = (error: unknown): string | null => {
   if (!error) return null;
@@ -79,6 +84,11 @@ export const useAppShell = () => {
     dispatch(shellActions.setSidebarTab(deriveSidebarTab(location)));
     previousLocationRef.current = location;
   }, [location]);
+
+  useEffect(() => {
+    if (!shouldClearPendingSelection(shell.pendingSelection, location, pathname)) return;
+    dispatch(shellActions.clearPendingSelection());
+  }, [location, pathname, shell.pendingSelection]);
 
   const pageLayout = useMemo(
     () =>
@@ -143,6 +153,25 @@ export const useAppShell = () => {
     dispatch(shellActions.setSidebarExpanded(!shell.sidebarExpanded));
   }, [dispatch, shell.sidebarExpanded]);
 
+  const beginPendingSelection = useCallback(
+    (target: Pick<PendingSelection, "kind" | "id">) => {
+      const plan = planBeginPendingSelection(
+        target,
+        location,
+        pathname,
+        shell.pendingSelection,
+      );
+      if (plan.action === "set") {
+        dispatch(shellActions.setPendingSelection(plan.pending));
+        return;
+      }
+      if (plan.action === "clear") {
+        dispatch(shellActions.clearPendingSelection());
+      }
+    },
+    [dispatch, location, pathname, shell.pendingSelection],
+  );
+
   return {
     shell,
     dispatch,
@@ -160,5 +189,6 @@ export const useAppShell = () => {
     expandSidebar,
     collapseSidebar,
     toggleSidebarExpanded,
+    beginPendingSelection,
   };
 };

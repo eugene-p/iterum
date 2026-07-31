@@ -5,6 +5,7 @@ export const initialAppShellState: AppShellState = {
   sidebarTab: "segments",
   sidebarExpanded: false,
   actionError: null,
+  pendingSelection: null,
 };
 
 export const appShellReducer = (state: AppShellState, action: AppShellAction): AppShellState => {
@@ -20,6 +21,12 @@ export const appShellReducer = (state: AppShellState, action: AppShellAction): A
 
     case APP_SHELL_ACTION_TYPES.SET_ACTION_ERROR:
       return { ...state, actionError: action.message };
+
+    case APP_SHELL_ACTION_TYPES.SET_PENDING_SELECTION:
+      return { ...state, pendingSelection: action.pending };
+
+    case APP_SHELL_ACTION_TYPES.CLEAR_PENDING_SELECTION:
+      return { ...state, pendingSelection: null };
 
     default:
       return state;

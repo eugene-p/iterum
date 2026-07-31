@@ -2,7 +2,7 @@ import type { SidebarTab } from "../components/AppSidebar";
 import type { ActivitySummary, Segment } from "../types";
 import type { AppLocation } from "./appRoutes";
 import type { AppShellAction } from "./appShellActionTypes";
-import type { AppShellState, SidebarLayout } from "./appShellTypes";
+import type { AppShellState, PendingSelection, SidebarLayout } from "./appShellTypes";
 import type { useAppNavigation } from "./useAppNavigation";
 import type { PageLayout } from "./pageLayout";
 
@@ -30,4 +30,5 @@ export type AppWorkspaceValue = {
   expandSidebar: () => void;
   collapseSidebar: () => void;
   toggleSidebarExpanded: () => void;
+  beginPendingSelection: (pending: Pick<PendingSelection, "kind" | "id">) => void;
 };

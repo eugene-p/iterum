@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useLocation, useParams } from "react-router-dom";
+import { appStyles } from "../../App.styles";
 import { ActivityDetailView } from "../../components/app";
+import { ScreenPlaceholder } from "../../components/ui/ScreenPlaceholder";
 import { RouteExplorer } from "../../components/route-explorer/RouteExplorer";
 import { APP_VIEW, isViewValidForLocation, parseAppLocation, parseAppSearchParams } from "../appRoutes";
 import { useActivityScreen } from "../useActivityScreen";
@@ -19,7 +21,9 @@ export const ActivityScreenContainer = () => {
   const showRouteExplorer =
     searchParams.view === APP_VIEW.ROUTE && isViewValidForLocation(location, APP_VIEW.ROUTE);
 
-  if (!screen.activityEntity) return null;
+  if (!screen.activityEntity) {
+    return <ScreenPlaceholder className={appStyles.screenOutlet} />;
+  }
 
   return (
     <>

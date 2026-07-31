@@ -7,6 +7,7 @@ import {
   SegmentPassSelectionProvider,
   useSegmentPassSelectionContext,
 } from "../../components/app/SegmentPassSelectionContext";
+import { ScreenPlaceholder } from "../../components/ui/ScreenPlaceholder";
 import { RouteExplorer } from "../../components/route-explorer/RouteExplorer";
 import { StretchEditWorkspace } from "../../components/segments/StretchStripEditor";
 import {
@@ -86,7 +87,9 @@ export const SegmentScreenContainer = () => {
     [screen.comparison],
   );
 
-  if (!screen.segmentEntity) return null;
+  if (!screen.segmentEntity) {
+    return <ScreenPlaceholder className={appStyles.screenOutlet} />;
+  }
 
   return (
     <div className={appStyles.segmentDetail}>

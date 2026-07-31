@@ -16,6 +16,7 @@ export { HintButton } from "./HintButton";
 export { IconButton } from "./IconButton";
 export { Input } from "./Input";
 export { LoadingState } from "./LoadingState";
+export { ScreenPlaceholder } from "./ScreenPlaceholder";
 export { MetricSummary } from "./MetricSummary";
 export { Modal, ModalHeader } from "./Modal";
 export { Panel } from "./Panel";
