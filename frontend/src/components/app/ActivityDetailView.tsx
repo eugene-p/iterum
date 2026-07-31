@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { appStyles } from "../../App.styles";
 import type { ActivitySummary, Profile, TrackPoint } from "../../types";
 import { ActivityDateTime } from "../activities/ActivityDateTime";
+import { ActivityHeaderMetrics } from "../activities/ActivityHeaderMetrics";
 import { ActivityStatsPanel } from "../activities/ActivityStatsPanel";
 import { ActivityMap } from "../maps/ActivityMap";
 import { ExpandableDetailMap } from "../maps/ExpandableDetailMap";
@@ -9,6 +10,7 @@ import { RouteWorkspace } from "../maps/RouteWorkspace";
 import { Button } from "../ui";
 import { ActivityActionsBar } from "./ActivityActionsBar";
 import { DetailHeader } from "./DetailHeader";
+import { detailHeaderStyles } from "./DetailHeader.styles";
 
 type MapRoute = { id: number; points: TrackPoint[]; selected: boolean };
 
@@ -62,13 +64,14 @@ export const ActivityDetailView = ({
         typeLabel="Activity"
         title={activity.name}
         metadata={
-          <span>
+          <span className={detailHeaderStyles.metadata}>
             <ActivityDateTime
               started_at={activity.started_at}
               created_at={activity.created_at}
               name={activity.name}
               source_filename={activity.source_filename}
             />
+            <ActivityHeaderMetrics activity={activity} />
           </span>
         }
         actions={<ActivityActionsBar

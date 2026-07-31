@@ -2,16 +2,20 @@ import { cn } from "../../../lib/cn";
 import { textStyles } from "../../ui/Text/Text.styles";
 
 export const activityStatsPanelStyles = {
-  root: "mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-5 lg:px-6",
-  analysisSection: "snap-start scroll-mt-3 flex flex-col gap-3 rounded-xl border border-border bg-surface p-4",
-  sectionHeader: "flex flex-wrap items-baseline justify-between gap-3",
-  sectionTitle: cn(textStyles.muted, "text-[0.72rem] font-medium uppercase tracking-wide"),
-  summaryLine: "text-[0.82rem] font-medium tabular-nums leading-snug",
-  statList: "flex flex-col gap-0",
-  statRow:
-    "flex items-baseline justify-between gap-3 border-b border-border/70 py-1 last:border-b-0",
-  statLabel: cn(textStyles.muted, "shrink-0 text-[0.78rem]"),
-  statValue: "text-right text-[0.82rem] font-medium tabular-nums",
+  root: "mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-3 lg:px-6",
+  analysisSection:
+    "snap-start scroll-mt-3 flex flex-col gap-2 rounded-xl border border-border bg-surface p-4",
+  sectionHeader: "flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1",
+  sectionTitle: cn(
+    textStyles.muted,
+    "m-0 text-[0.72rem] font-medium uppercase tracking-wide",
+  ),
+  sectionMeta: cn(textStyles.muted, "text-xs leading-snug"),
+  sectionTags: "flex flex-wrap items-center gap-1.5",
+  statLine: "flex flex-wrap items-baseline gap-x-4 gap-y-1",
+  statInline: "inline-flex items-baseline gap-1.5 whitespace-nowrap",
+  statLabel: cn(textStyles.muted, "text-[0.78rem]"),
+  statValue: "text-[0.82rem] font-medium tabular-nums text-fg",
   zoneSummary: "flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-md bg-card px-3 py-2",
   zoneSummaryLabel: "text-xs font-medium text-muted",
   metaLine: cn(textStyles.muted, "text-[0.75rem] leading-snug"),

@@ -5,13 +5,11 @@ import { profileMaxHr } from "../../../lib/hrZones";
 import { useActivityMatchedSegmentsQuery } from "../../../queries/activities";
 import type { ActivitySummary, TrackPoint } from "../../../types";
 import {
-  formatDistance,
-  formatDuration,
   formatHr,
   formatPaceFromSpeed,
   formatSpeed,
 } from "../../../utils";
-import { Badge, MetricSummary, MutedSpan } from "../../ui";
+import { Badge, MutedSpan } from "../../ui";
 import { ActivityTrackChart } from "../ActivityTrackChart";
 import { ActivitySplits } from "../ActivitySplits";
 import { HrZoneTimeSummary } from "../ActivityTrackChart/HrZoneTimeSummary";
@@ -24,11 +22,19 @@ type ActivityStatsPanelProps = {
   onSelectSegment: (segmentId: number) => void;
 };
 
-const Stat = ({ label, value }: { label: string; value: string }) => (
-  <div className={activityStatsPanelStyles.statRow}>
+const InlineStat = ({
+  label,
+  value,
+  title,
+}: {
+  label: string;
+  value: string;
+  title: string;
+}) => (
+  <span className={activityStatsPanelStyles.statInline} title={title}>
     <span className={activityStatsPanelStyles.statLabel}>{label}</span>
     <span className={activityStatsPanelStyles.statValue}>{value}</span>
-  </div>
+  </span>
 );
 
 const joinMeta = (parts: Array<string | null | undefined>): string | null => {
@@ -55,12 +61,7 @@ export const ActivityStatsPanel = ({
     return gain + Math.max(0, point.elevation_m - previousElevation);
   }, 0);
 
-  const summaryLine = joinMeta([
-    formatDistance(activity.distance_m),
-    formatDuration(activity.duration_sec),
-    activity.avg_hr != null ? formatHr(activity.avg_hr) : null,
-  ]);
-
+  const elevationLabel = elevationGain ? `${Math.round(elevationGain)} m` : "—";
   const contextMeta = joinMeta([
     activity.location,
     activity.sport,
@@ -68,31 +69,32 @@ export const ActivityStatsPanel = ({
     activity.profile_name,
   ]);
 
+  const tags = activity.tags ?? [];
+
   return (
     <aside className={activityStatsPanelStyles.root}>
-      <MetricSummary
-        label="Activity summary"
-        tags={activity.tags?.map((tag) => <Badge key={tag}>{tag}</Badge>)}
-        metadata={contextMeta}
-        metrics={[
-          { label: "Distance", value: formatDistance(activity.distance_m) },
-          { label: "Duration", value: formatDuration(activity.duration_sec) },
-          { label: "Avg pace", value: formatPaceFromSpeed(avgSpeed) },
-          { label: "Avg HR", value: formatHr(activity.avg_hr) },
-          { label: "Max HR", value: formatHr(activity.max_hr) },
-          { label: "Elevation", value: elevationGain ? `${Math.round(elevationGain)} m` : "—" },
-        ]}
-      />
-
       <section className={activityStatsPanelStyles.analysisSection} aria-labelledby="activity-effort-title">
         <div className={activityStatsPanelStyles.sectionHeader}>
-          <h2 id="activity-effort-title" className={activityStatsPanelStyles.sectionTitle}>Effort & elevation</h2>
-          {summaryLine ? <span className={activityStatsPanelStyles.summaryLine}>{summaryLine}</span> : null}
+          <h2 id="activity-effort-title" className={activityStatsPanelStyles.sectionTitle}>
+            Effort & elevation
+          </h2>
+          {contextMeta ? (
+            <span className={activityStatsPanelStyles.sectionMeta}>{contextMeta}</span>
+          ) : null}
         </div>
-        <div className={activityStatsPanelStyles.statList}>
-          <Stat label="Avg speed" value={formatSpeed(avgSpeed)} />
-          <Stat label="Avg pace" value={formatPaceFromSpeed(avgSpeed)} />
-          <Stat label="Max HR" value={formatHr(activity.max_hr)} />
+        {tags.length > 0 ? (
+          <div className={activityStatsPanelStyles.sectionTags}>
+            {tags.map((tag) => (
+              <Badge key={tag}>{tag}</Badge>
+            ))}
+          </div>
+        ) : null}
+        <div className={activityStatsPanelStyles.statLine}>
+          <InlineStat label="Speed" value={formatSpeed(avgSpeed)} title="Average speed" />
+          <InlineStat label="Pace" value={formatPaceFromSpeed(avgSpeed)} title="Average pace" />
+          <InlineStat label="Avg HR" value={formatHr(activity.avg_hr)} title="Average heart rate" />
+          <InlineStat label="Max HR" value={formatHr(activity.max_hr)} title="Maximum heart rate" />
+          <InlineStat label="Elev" value={elevationLabel} title="Elevation gain" />
         </div>
 
         {hasHrTrack && trackPoints ? (
