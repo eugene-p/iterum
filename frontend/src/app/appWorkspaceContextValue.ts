@@ -24,6 +24,8 @@ export type AppWorkspaceValue = {
   };
   sidebarError: string | null;
   refreshLists: () => Promise<void>;
+  activityJobFailedCount: number;
+  watchActivityJobs: () => void;
   setSidebarTab: (tab: SidebarTab) => void;
   expandSidebar: () => void;
   collapseSidebar: () => void;

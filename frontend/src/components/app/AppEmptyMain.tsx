@@ -13,7 +13,8 @@ import { appEmptyMainStyles } from "./AppEmptyMain.styles";
 import { ProfileSelectScreen } from "../profiles/ProfileSelectScreen";
 
 export const AppEmptyMain = () => {
-  const { activities, segments, refreshLists, navigation } = useAppWorkspace();
+  const { activities, segments, refreshLists, navigation, watchActivityJobs } =
+    useAppWorkspace();
   const { activeProfileId } = useProfileContext();
 
   const resume = useMemo(
@@ -53,6 +54,7 @@ export const AppEmptyMain = () => {
                 className={appEmptyMainStyles.uploadControl}
                 dropzoneClassName={appEmptyMainStyles.uploadDropzone}
                 onRefresh={refreshLists}
+                onActivityJobsEnqueued={watchActivityJobs}
                 onComplete={(uploaded) => {
                   const last = uploaded[uploaded.length - 1];
                   if (last) navigation.goActivity(last.id);

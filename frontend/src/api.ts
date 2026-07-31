@@ -13,6 +13,7 @@ import type {
   StretchThresholds,
   TrackPoint,
 } from "./types";
+import type { ActivityJobQueueStatus } from "./lib/activityJobStatus";
 import { sortActivitiesByTime, sortSegmentPassesByTime } from "./lib/activitySearch";
 import { stretchPreviewQuery } from "./stretchUtils";
 
@@ -108,6 +109,10 @@ export async function uploadActivity(file: File, profileId: number) {
     method: "POST",
     body: form,
   });
+}
+
+export function getActivityJobStatus() {
+  return request<ActivityJobQueueStatus>("/api/jobs/status");
 }
 
 export function deleteActivity(id: number) {

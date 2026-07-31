@@ -14,6 +14,8 @@ const AppLayout = () => {
     activities,
     segments,
     refreshLists,
+    activityJobFailedCount,
+    watchActivityJobs,
     navigation,
     pageLayout,
     setSidebarTab,
@@ -39,6 +41,7 @@ const AppLayout = () => {
           activeTab={sidebar.activeTab}
           selectedSegmentId={sidebar.selectedSegmentId}
           selectedActivityId={sidebar.selectedActivityId}
+          activityJobFailedCount={activityJobFailedCount}
           showCollapse={pageLayout !== "empty"}
           onTabChange={setSidebarTab}
           onSelectSegment={(id) => {
@@ -50,6 +53,7 @@ const AppLayout = () => {
             collapseSidebar();
           }}
           onRefresh={refreshLists}
+          onActivityJobsEnqueued={watchActivityJobs}
           onCollapse={collapseSidebar}
         />
       )}

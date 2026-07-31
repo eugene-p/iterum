@@ -19,4 +19,5 @@ export const appSidebarStyles = {
   tabContent: "flex min-h-0 flex-1 flex-col overflow-hidden",
   profileTab: "px-2",
   profileTabIcon: "size-4",
+  brandBlock: "flex shrink-0 flex-col items-stretch gap-1.5",
 } as const;

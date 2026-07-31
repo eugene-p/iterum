@@ -15,10 +15,10 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "@qkitt/queue": "^0.9.0"
+    "@qkitt/queue": "^0.13.0"
   },
   "devDependencies": {
-    "@qkitt/queue": "^0.9.0",
+    "@qkitt/queue": "^0.13.0",
     "@types/node": "^22.20.0",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"

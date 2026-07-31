@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@eugene-p/iterum-shared": "*",
-    "@qkitt/queue": "^0.9.0",
+    "@qkitt/queue": "^0.13.0",
     "@qkitt/queue-adapter-node-sqlite": "*",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

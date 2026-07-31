@@ -21,7 +21,11 @@ type SqliteRow = {
   available_at: number;
   lease_generation: number | null;
   lease_expires_at: number | null;
+  attempt: number | null;
+  dlq_handoff_attempt: number | null;
 };
+
+const DELIVERY_COLUMNS = ["attempt", "dlq_handoff_attempt"] as const;
 
 const tableNameFrom = (value: string): string => {
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(value)) {
@@ -30,12 +34,27 @@ const tableNameFrom = (value: string): string => {
   return value;
 };
 
+const ensureDeliveryColumns = (db: DatabaseSync, tableName: string): void => {
+  const existing = new Set(
+    (db.prepare(`PRAGMA table_info(${tableName})`).all() as Array<{ name: string }>).map(
+      (column) => column.name,
+    ),
+  );
+  for (const column of DELIVERY_COLUMNS) {
+    if (!existing.has(column)) {
+      db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${column} INTEGER`);
+    }
+  }
+};
+
 const rowFrom = <T>(row: SqliteRow): RowRecord<T> => ({
   id: row.id,
   item: JSON.parse(row.item_json) as T,
   availableAt: row.available_at,
   leaseGeneration: row.lease_generation,
   leaseExpiresAt: row.lease_expires_at,
+  ...(row.attempt != null ? { attempt: row.attempt } : {}),
+  ...(row.dlq_handoff_attempt != null ? { dlqHandoffAttempt: row.dlq_handoff_attempt } : {}),
 });
 
 /**
@@ -55,22 +74,31 @@ export const createNodeSqliteRowStore = <T>(
       item_json TEXT NOT NULL,
       available_at INTEGER NOT NULL,
       lease_generation INTEGER,
-      lease_expires_at INTEGER
+      lease_expires_at INTEGER,
+      attempt INTEGER,
+      dlq_handoff_attempt INTEGER
     )
   `);
+  ensureDeliveryColumns(db, tableName);
 
   const loadAll = db.prepare(`
-    SELECT id, item_json, available_at, lease_generation, lease_expires_at
+    SELECT id, item_json, available_at, lease_generation, lease_expires_at,
+           attempt, dlq_handoff_attempt
     FROM ${tableName}
   `);
   const put = db.prepare(`
-    INSERT INTO ${tableName} (id, item_json, available_at, lease_generation, lease_expires_at)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO ${tableName} (
+      id, item_json, available_at, lease_generation, lease_expires_at,
+      attempt, dlq_handoff_attempt
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       item_json = excluded.item_json,
       available_at = excluded.available_at,
       lease_generation = excluded.lease_generation,
-      lease_expires_at = excluded.lease_expires_at
+      lease_expires_at = excluded.lease_expires_at,
+      attempt = excluded.attempt,
+      dlq_handoff_attempt = excluded.dlq_handoff_attempt
   `);
   const remove = db.prepare(`DELETE FROM ${tableName} WHERE id = ?`);
   const clear = db.prepare(`DELETE FROM ${tableName}`);
@@ -82,6 +110,8 @@ export const createNodeSqliteRowStore = <T>(
       record.availableAt,
       record.leaseGeneration,
       record.leaseExpiresAt,
+      record.attempt ?? null,
+      record.dlqHandoffAttempt ?? null,
     );
   };
 

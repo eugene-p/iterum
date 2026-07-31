@@ -11,9 +11,21 @@ import {
 import {
   createActivityJobSystem,
   type ActivityJobPersistence,
+  type ActivityJobQueueStatus,
   type ActivityJobSystem,
 } from "./createActivityJobSystem.js";
 import type { ActivityImportedPayload } from "./activityImportTopics.js";
+
+export type { ActivityJobQueueStatus };
+
+const emptyJobQueueStatus = (): ActivityJobQueueStatus => ({
+  work: {
+    geocode: { pending: 0, active: 0 },
+    match: { pending: 0, active: 0 },
+    preview: { pending: 0, active: 0 },
+  },
+  dlq: { geocode: 0, match: 0, preview: 0 },
+});
 
 let system: ActivityJobSystem | null = null;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -114,6 +126,9 @@ export const scheduleActivityImported = async (activityId: number): Promise<void
   );
   void warmActivityPreviewImage(activityId).catch((error) => logPreviewFailure(activityId, error));
 };
+
+export const getActivityJobQueueStatus = (): ActivityJobQueueStatus =>
+  system?.jobQueueStatus() ?? emptyJobQueueStatus();
 
 /** Test helper: replace or clear the process-wide system. */
 export const setActivityJobSystemForTests = (

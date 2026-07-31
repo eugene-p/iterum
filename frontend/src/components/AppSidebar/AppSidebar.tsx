@@ -4,6 +4,7 @@ import { ActivitiesPanel } from "../activities/ActivitiesPanel";
 import { SegmentsPanel } from "../segments/SegmentsPanel";
 import { appSidebarStyles } from "./AppSidebar.styles";
 import { ProfileSidebarPanel } from "../profiles/ProfileSidebarPanel";
+import { ActivityJobFailureNotice } from "../app/ActivityJobFailureNotice";
 import { AppBrand } from "../app/AppBrand";
 import { PanelLeftCloseIcon, UserIcon } from "./sidebarIcons";
 
@@ -16,11 +17,13 @@ type AppSidebarProps = {
   activeTab: SidebarTab;
   selectedSegmentId: number | null;
   selectedActivityId: number | null;
+  activityJobFailedCount?: number;
   showCollapse?: boolean;
   onTabChange: (tab: SidebarTab) => void;
   onSelectSegment: (id: number) => void;
   onSelectActivity: (id: number) => void;
   onRefresh: () => Promise<void>;
+  onActivityJobsEnqueued?: () => void;
   onCollapse?: () => void;
 };
 
@@ -31,11 +34,13 @@ export const AppSidebar = ({
   activeTab,
   selectedSegmentId,
   selectedActivityId,
+  activityJobFailedCount = 0,
   showCollapse = false,
   onTabChange,
   onSelectSegment,
   onSelectActivity,
   onRefresh,
+  onActivityJobsEnqueued,
   onCollapse,
 }: AppSidebarProps) => (
   <aside className={appSidebarStyles.root}>
@@ -83,6 +88,7 @@ export const AppSidebar = ({
             selectedActivityId={selectedActivityId}
             onSelectActivity={onSelectActivity}
             onRefresh={onRefresh}
+            onActivityJobsEnqueued={onActivityJobsEnqueued}
           />
         </Tabs.Panel>
         <Tabs.Panel value="profile" className="flex min-h-0 flex-1 flex-col py-0">
@@ -90,7 +96,10 @@ export const AppSidebar = ({
         </Tabs.Panel>
       </div>
     </Tabs>
-    <AppBrand compact />
+    <div className={appSidebarStyles.brandBlock}>
+      <ActivityJobFailureNotice failedCount={activityJobFailedCount} compact />
+      <AppBrand compact />
+    </div>
   </aside>
 );
 

@@ -45,6 +45,7 @@ type ActivitiesPanelProps = {
   selectedActivityId: number | null;
   onSelectActivity: (id: number) => void;
   onRefresh: () => Promise<void>;
+  onActivityJobsEnqueued?: () => void;
 };
 
 type PreviewState = {
@@ -58,6 +59,7 @@ export const ActivitiesPanel = ({
   selectedActivityId,
   onSelectActivity,
   onRefresh,
+  onActivityJobsEnqueued,
 }: ActivitiesPanelProps) => {
   const { activeProfileId, viewScope } = useProfileContext();
   const viewingAll = viewScope === "all";
@@ -483,6 +485,7 @@ export const ActivitiesPanel = ({
               variant="footer"
               profileId={activeProfileId}
               onRefresh={onRefresh}
+              onActivityJobsEnqueued={onActivityJobsEnqueued}
             />
           </div>
         )}

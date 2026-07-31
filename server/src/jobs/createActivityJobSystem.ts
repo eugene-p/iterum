@@ -2,17 +2,21 @@ import {
   buildQueue,
   buildRouter,
   gracefulStop,
-  retryWorker,
   whenIdle,
   withDlq,
+  withRetry,
   withWorker,
   type Queue,
   type RouteMessage,
   type RowStore,
+  type WorkerContext,
 } from "@qkitt/queue";
 import {
   ACTIVITY_IMPORTED_TOPIC,
   ACTIVITY_JOB_QUEUES,
+  ACTIVITY_JOB_TIMEOUT_MS,
+  GEOCODE_RETRY_INITIAL_DELAY_MS,
+  GEOCODE_RETRY_MAX_DELAY_MS,
   GEOCODE_WORKER_RETRIES,
   type ActivityImportedPayload,
 } from "./activityImportTopics.js";
@@ -20,6 +24,7 @@ import {
 export {
   ACTIVITY_IMPORTED_TOPIC,
   ACTIVITY_JOB_QUEUES,
+  ACTIVITY_JOB_TIMEOUT_MS,
   GEOCODE_WORKER_RETRIES,
 };
 export type { ActivityImportedPayload };
@@ -39,6 +44,9 @@ export type CreateActivityJobSystemOptions = {
   matchConcurrency?: number;
   previewConcurrency?: number;
   geocodeRetries?: number;
+  geocodeTimeoutMs?: number;
+  matchTimeoutMs?: number;
+  previewTimeoutMs?: number;
   persistence?: ActivityJobPersistence;
 };
 
@@ -54,9 +62,50 @@ export type ActivityJobPersistence = {
 type WorkerQueue = Queue<RoutedActivityJob> & {
   stop: () => void;
   isProcessing: () => boolean;
+  activeCount: () => number;
+};
+
+export type ActivityJobQueueCounts = {
+  pending: number;
+  active: number;
+};
+
+export type ActivityJobQueueStatus = {
+  work: {
+    geocode: ActivityJobQueueCounts;
+    match: ActivityJobQueueCounts;
+    preview: ActivityJobQueueCounts;
+  };
+  dlq: {
+    geocode: number;
+    match: number;
+    preview: number;
+  };
 };
 
 const activityIdFromJob = (job: ActivityJob): number => job.activityId;
+
+const raceAbort = async <T>(work: Promise<T>, signal: AbortSignal): Promise<T> => {
+  if (signal.aborted) {
+    throw signal.reason ?? new Error("aborted");
+  }
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => {
+      reject(signal.reason ?? new Error("aborted"));
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    work.then(
+      (value) => {
+        signal.removeEventListener("abort", onAbort);
+        resolve(value);
+      },
+      (error) => {
+        signal.removeEventListener("abort", onAbort);
+        reject(error);
+      },
+    );
+  });
+};
 
 const attachFailureLogging = (
   queue: {
@@ -73,23 +122,36 @@ const attachFailureLogging = (
   });
 };
 
+const workCountsFrom = (queue: WorkerQueue): ActivityJobQueueCounts => {
+  const stats = queue.stats();
+  return {
+    pending: stats.available + stats.delayed,
+    active: Math.max(queue.activeCount(), stats.leased),
+  };
+};
+
 const buildWorkerQueue = (
   name: string,
   run: (job: ActivityJob) => Promise<unknown>,
   concurrency: number,
+  timeoutMs: number,
   store?: RowStore<RoutedActivityJob>,
   leaseTtlMs?: number,
 ): WorkerQueue =>
   withWorker(
     buildQueue<RoutedActivityJob>({ name, store, leaseTtlMs }),
-    async ({ data }: RoutedActivityJob) => run(data),
-    { concurrency, autoStart: false },
+    async ({ data }: RoutedActivityJob, context?: WorkerContext) => {
+      const work = run(data);
+      return context ? raceAbort(work, context.signal) : work;
+    },
+    { concurrency, autoStart: false, timeoutMs },
   );
 
 export type ActivityJobSystem = {
   publishActivityImported: (activityId: number) => Promise<number>;
   flushAll: () => Promise<void>;
   stop: () => Promise<void>;
+  jobQueueStatus: () => ActivityJobQueueStatus;
   queues: {
     geocode: WorkerQueue;
     match: WorkerQueue;
@@ -108,32 +170,34 @@ export const createActivityJobSystem = async (
   const matchConcurrency = options.matchConcurrency ?? 1;
   const previewConcurrency = options.previewConcurrency ?? 1;
   const geocodeRetries = options.geocodeRetries ?? GEOCODE_WORKER_RETRIES;
+  const geocodeTimeoutMs = options.geocodeTimeoutMs ?? ACTIVITY_JOB_TIMEOUT_MS.geocode;
+  const matchTimeoutMs = options.matchTimeoutMs ?? ACTIVITY_JOB_TIMEOUT_MS.match;
+  const previewTimeoutMs = options.previewTimeoutMs ?? ACTIVITY_JOB_TIMEOUT_MS.preview;
   const { handlers } = options;
   const { persistence } = options;
 
-  const geocodeRun = retryWorker(
-    async (job: ActivityJob) => {
+  const geocodeBase = buildWorkerQueue(
+    ACTIVITY_JOB_QUEUES.geocode,
+    async (job) => {
       await handlers.geocodeActivity(activityIdFromJob(job));
     },
-    {
-      retries: geocodeRetries,
-      delay: (attempt: number) => 200 * 2 ** (attempt - 1),
-    },
-  );
-
-  const geocode = buildWorkerQueue(
-    ACTIVITY_JOB_QUEUES.geocode,
-    geocodeRun,
     geocodeConcurrency,
+    geocodeTimeoutMs,
     persistence?.createStore(ACTIVITY_JOB_QUEUES.geocode),
     persistence?.leaseTtlMs,
   );
+  const geocode = withRetry(geocodeBase, {
+    maxAttempts: geocodeRetries + 1,
+    initialDelayMs: GEOCODE_RETRY_INITIAL_DELAY_MS,
+    maxDelayMs: GEOCODE_RETRY_MAX_DELAY_MS,
+  });
   const match = buildWorkerQueue(
     ACTIVITY_JOB_QUEUES.match,
     async (job) => {
       await handlers.matchActivity(activityIdFromJob(job));
     },
     matchConcurrency,
+    matchTimeoutMs,
     persistence?.createStore(ACTIVITY_JOB_QUEUES.match),
     persistence?.leaseTtlMs,
   );
@@ -143,6 +207,7 @@ export const createActivityJobSystem = async (
       await handlers.warmPreview(activityIdFromJob(job));
     },
     previewConcurrency,
+    previewTimeoutMs,
     persistence?.createStore(ACTIVITY_JOB_QUEUES.preview),
     persistence?.leaseTtlMs,
   );
@@ -195,12 +260,20 @@ export const createActivityJobSystem = async (
       return matched;
     },
     flushAll: async () => {
-      await Promise.all([
-        whenIdle(geocode),
-        whenIdle(match),
-        whenIdle(preview),
-      ]);
+      await Promise.all([whenIdle(geocode), whenIdle(match), whenIdle(preview)]);
     },
+    jobQueueStatus: (): ActivityJobQueueStatus => ({
+      work: {
+        geocode: workCountsFrom(durableGeocode),
+        match: workCountsFrom(durableMatch),
+        preview: workCountsFrom(durablePreview),
+      },
+      dlq: {
+        geocode: deadLetters.geocode.size(),
+        match: deadLetters.match.size(),
+        preview: deadLetters.preview.size(),
+      },
+    }),
     stop: async () => {
       unsubGeocode?.();
       unsubMatch?.();

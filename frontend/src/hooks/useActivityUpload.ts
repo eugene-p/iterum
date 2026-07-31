@@ -10,6 +10,7 @@ type UseActivityUploadOptions = {
   onRefresh: () => Promise<void>;
   onError?: (message: string) => void;
   onComplete?: (uploaded: ActivitySummary[]) => void;
+  onActivityJobsEnqueued?: () => void;
 };
 
 export const useActivityUpload = ({
@@ -17,6 +18,7 @@ export const useActivityUpload = ({
   onRefresh,
   onError,
   onComplete,
+  onActivityJobsEnqueued,
 }: UseActivityUploadOptions) => {
   const uploadMutation = useUploadActivityMutation();
   const [uploadPhase, setUploadPhase] = useState<UploadPhase>("idle");
@@ -58,6 +60,7 @@ export const useActivityUpload = ({
         setUploadFileName(file.name);
         const activity = await uploadMutation.mutateAsync({ file, profileId });
         uploaded.push(activity);
+        onActivityJobsEnqueued?.();
         setUploadDoneCount(i + 1);
       }
       setUploadPhase("refreshing");

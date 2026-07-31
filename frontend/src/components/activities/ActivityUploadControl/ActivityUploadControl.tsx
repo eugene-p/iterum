@@ -19,6 +19,7 @@ type ActivityUploadControlProps = {
   profileId: number;
   onRefresh: () => Promise<void>;
   onComplete?: (uploaded: ActivitySummary[]) => void;
+  onActivityJobsEnqueued?: () => void;
   className?: string;
   dropzoneClassName?: string;
 };
@@ -28,6 +29,7 @@ export const ActivityUploadControl = ({
   profileId,
   onRefresh,
   onComplete,
+  onActivityJobsEnqueued,
   className,
   dropzoneClassName,
 }: ActivityUploadControlProps) => {
@@ -42,6 +44,7 @@ export const ActivityUploadControl = ({
       setError(null);
       onComplete?.(uploaded);
     },
+    onActivityJobsEnqueued,
   });
 
   return (

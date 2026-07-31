@@ -10,6 +10,7 @@ import { pool } from "./db/pool.js";
 import { startActivityJobs, stopActivityJobs } from "./jobs/activityJobs.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { activitiesRouter } from "./routes/activities.js";
+import { jobsRouter } from "./routes/jobs.js";
 import { profilesRouter } from "./routes/profiles.js";
 import { segmentsRouter } from "./routes/segments.js";
 
@@ -40,6 +41,7 @@ app.get(
 app.use("/api/profiles", profilesRouter);
 app.use("/api/activities", activitiesRouter);
 app.use("/api/segments", segmentsRouter);
+app.use("/api/jobs", jobsRouter);
 
 const frontendDist = path.resolve(__dirname, "../../frontend/dist");
 app.use(express.static(frontendDist));

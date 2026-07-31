@@ -10,6 +10,7 @@ import {
   useSegmentsQuery,
 } from "../queries/segments";
 import type { SidebarTab } from "../components/AppSidebar";
+import { useActivityJobStatusWatch } from "../hooks/useActivityJobStatusWatch";
 import { appShellReducer, initialAppShellState } from "./appShellReducer";
 import {
   deriveSidebarTab,
@@ -34,6 +35,8 @@ export const useAppShell = () => {
   const navigation = useAppNavigation();
   const previousLocationRef = useRef(parseAppLocation(pathname));
   const { viewScope, activeProfileId } = useProfileContext();
+  const { failedCount: activityJobFailedCount, watchAfterEnqueue: watchActivityJobs } =
+    useActivityJobStatusWatch();
 
   const activitiesQuery = useActivitiesQuery(viewScope ?? undefined);
   const segmentsQuery = useSegmentsQuery(viewScope ?? undefined);
@@ -151,6 +154,8 @@ export const useAppShell = () => {
     sidebar,
     sidebarError,
     refreshLists,
+    activityJobFailedCount,
+    watchActivityJobs,
     setSidebarTab,
     expandSidebar,
     collapseSidebar,
