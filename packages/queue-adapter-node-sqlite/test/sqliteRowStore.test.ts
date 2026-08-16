@@ -34,6 +34,23 @@ describe("createNodeSqliteRowStore", () => {
     secondStore.close();
   });
 
+  it("round-trips undefined payloads across reopen", async () => {
+    directory = await mkdtemp(path.join(tmpdir(), "qkitt-queue-store-"));
+    const filename = path.join(directory, "jobs.sqlite");
+
+    const firstStore = createNodeSqliteRowStore<undefined>({ filename });
+    const first = buildQueue<undefined>({ store: firstStore });
+    await first.enqueue(undefined);
+    firstStore.close();
+
+    const secondStore = createNodeSqliteRowStore<undefined>({ filename });
+    const restored = buildQueue<undefined>({ store: secondStore });
+    await restored.hydrate();
+
+    expect(restored.toArray()).toEqual([undefined]);
+    secondStore.close();
+  });
+
   it("round-trips attempt and dlqHandoffAttempt across reopen", async () => {
     directory = await mkdtemp(path.join(tmpdir(), "qkitt-queue-store-"));
     const filename = path.join(directory, "jobs.sqlite");
@@ -62,6 +79,74 @@ describe("createNodeSqliteRowStore", () => {
       dlqHandoffAttempt: 2,
     });
     secondStore.close();
+  });
+
+  it("preserves 0.15 durable lease and delivery state across recovery", async () => {
+    directory = await mkdtemp(path.join(tmpdir(), "qkitt-queue-store-"));
+    const filename = path.join(directory, "jobs.sqlite");
+
+    const firstStore = createNodeSqliteRowStore<{ id: number }>({ filename });
+    const first = buildQueue<{ id: number }>({ store: firstStore });
+    await first.enqueue({ id: 1 });
+    const lease = await first.claim();
+
+    expect(lease).toMatchObject({ id: 1, item: { id: 1 }, attempt: 1 });
+    expect(firstStore.loadAll()[0]).toMatchObject({
+      id: 1,
+      leaseGeneration: lease?.generation,
+      leaseExpiresAt: null,
+    });
+
+    await first.reschedule(lease!, {
+      item: { id: 2 },
+      attempt: 3,
+      dlqHandoffAttempt: 2,
+    });
+    expect(firstStore.loadAll()[0]).toMatchObject({
+      item: { id: 2 },
+      availableAt: 0,
+      leaseGeneration: null,
+      leaseExpiresAt: null,
+      attempt: 3,
+      dlqHandoffAttempt: 2,
+    });
+    firstStore.close();
+
+    const secondStore = createNodeSqliteRowStore<{ id: number }>({ filename });
+    const restored = buildQueue<{ id: number }>({ store: secondStore });
+    await restored.hydrate();
+
+    expect(restored.toArray()).toEqual([{ id: 2 }]);
+    expect(restored.stats()).toEqual({ available: 1, delayed: 0, leased: 0 });
+    secondStore.close();
+  });
+
+  it("supports atomic batch mutations and rolls back failed replacements", () => {
+    const store = createNodeSqliteRowStore<{ id: number }>({ filename: ":memory:" });
+    const first: RowRecord<{ id: number }> = {
+      id: 1,
+      item: { id: 1 },
+      availableAt: 0,
+      leaseGeneration: null,
+      leaseExpiresAt: null,
+    };
+    const second: RowRecord<{ id: number }> = { ...first, id: 2, item: { id: 2 } };
+
+    store.putBatch([first, second]);
+    expect(store.loadAll().map((row) => row.id)).toEqual([1, 2]);
+    store.removeBatch([2, 2]);
+    expect(store.loadAll().map((row) => row.id)).toEqual([1]);
+
+    const replacement: RowRecord<{ id: number }> = { ...first, item: { id: 3 } };
+    store.replaceAll([replacement]);
+    expect(store.loadAll()[0]?.item).toEqual({ id: 3 });
+
+    const cyclic = {} as { id: number } & { self?: unknown };
+    cyclic.id = 4;
+    cyclic.self = cyclic;
+    expect(() => store.replaceAll([{ ...first, item: cyclic }])).toThrow();
+    expect(store.loadAll()[0]?.item).toEqual({ id: 3 });
+    store.close();
   });
 
   it("adds delivery columns when opening a legacy table", async () => {
@@ -104,5 +189,29 @@ describe("createNodeSqliteRowStore", () => {
     const after = store.loadAll();
     expect(after[0]).toMatchObject({ attempt: 2, dlqHandoffAttempt: 1 });
     store.close();
+  });
+
+  it("quotes valid table names that are SQLite keywords", () => {
+    const store = createNodeSqliteRowStore<{ id: number }>({
+      filename: ":memory:",
+      tableName: "order",
+    });
+
+    store.put({
+      id: 1,
+      item: { id: 11 },
+      availableAt: 0,
+      leaseGeneration: null,
+      leaseExpiresAt: null,
+    });
+
+    expect(store.loadAll()[0]?.item).toEqual({ id: 11 });
+    store.close();
+  });
+
+  it("rejects SQLite's reserved internal table namespace", () => {
+    expect(() =>
+      createNodeSqliteRowStore({ filename: ":memory:", tableName: "sqlite_queue" }),
+    ).toThrow("may not start with sqlite_");
   });
 });

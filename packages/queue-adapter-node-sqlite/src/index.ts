@@ -18,6 +18,7 @@ export type NodeSqliteRowStore<T> = RowStore<T> & {
 type SqliteRow = {
   id: number;
   item_json: string;
+  item_is_undefined: number | null;
   available_at: number;
   lease_generation: number | null;
   lease_expires_at: number | null;
@@ -25,31 +26,37 @@ type SqliteRow = {
   dlq_handoff_attempt: number | null;
 };
 
-const DELIVERY_COLUMNS = ["attempt", "dlq_handoff_attempt"] as const;
+const MIGRATED_COLUMNS = ["item_is_undefined", "attempt", "dlq_handoff_attempt"] as const;
 
 const tableNameFrom = (value: string): string => {
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(value)) {
     throw new Error("SQLite queue table names may contain only letters, numbers, and underscores");
   }
+  if (/^sqlite_/i.test(value)) {
+    throw new Error("SQLite queue table names may not start with sqlite_");
+  }
   return value;
 };
 
-const ensureDeliveryColumns = (db: DatabaseSync, tableName: string): void => {
+const quoteIdentifier = (value: string): string => `"${value.replaceAll('"', '""')}"`;
+
+const ensureMigratedColumns = (db: DatabaseSync, tableName: string): void => {
+  const quotedTableName = quoteIdentifier(tableName);
   const existing = new Set(
-    (db.prepare(`PRAGMA table_info(${tableName})`).all() as Array<{ name: string }>).map(
-      (column) => column.name,
+    (db.prepare(`PRAGMA table_info(${quotedTableName})`).all() as Array<{ name: string }>).map(
+      (column) => column.name.toLowerCase(),
     ),
   );
-  for (const column of DELIVERY_COLUMNS) {
+  for (const column of MIGRATED_COLUMNS) {
     if (!existing.has(column)) {
-      db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${column} INTEGER`);
+      db.exec(`ALTER TABLE ${quotedTableName} ADD COLUMN ${quoteIdentifier(column)} INTEGER`);
     }
   }
 };
 
 const rowFrom = <T>(row: SqliteRow): RowRecord<T> => ({
   id: row.id,
-  item: JSON.parse(row.item_json) as T,
+  item: (row.item_is_undefined === 1 ? undefined : JSON.parse(row.item_json)) as T,
   availableAt: row.available_at,
   leaseGeneration: row.lease_generation,
   leaseExpiresAt: row.lease_expires_at,
@@ -66,12 +73,14 @@ export const createNodeSqliteRowStore = <T>(
   options: CreateNodeSqliteRowStoreOptions,
 ): NodeSqliteRowStore<T> => {
   const tableName = tableNameFrom(options.tableName ?? "queue_rows");
+  const quotedTableName = quoteIdentifier(tableName);
   const db = new DatabaseSync(options.filename);
   db.exec("PRAGMA journal_mode = WAL; PRAGMA synchronous = FULL;");
   db.exec(`
-    CREATE TABLE IF NOT EXISTS ${tableName} (
+    CREATE TABLE IF NOT EXISTS ${quotedTableName} (
       id INTEGER PRIMARY KEY CHECK (id >= 1),
       item_json TEXT NOT NULL,
+      item_is_undefined INTEGER NOT NULL DEFAULT 0,
       available_at INTEGER NOT NULL,
       lease_generation INTEGER,
       lease_expires_at INTEGER,
@@ -79,34 +88,40 @@ export const createNodeSqliteRowStore = <T>(
       dlq_handoff_attempt INTEGER
     )
   `);
-  ensureDeliveryColumns(db, tableName);
+  ensureMigratedColumns(db, tableName);
 
   const loadAll = db.prepare(`
-    SELECT id, item_json, available_at, lease_generation, lease_expires_at,
+    SELECT id, item_json, item_is_undefined, available_at, lease_generation, lease_expires_at,
            attempt, dlq_handoff_attempt
-    FROM ${tableName}
+    FROM ${quotedTableName}
   `);
   const put = db.prepare(`
-    INSERT INTO ${tableName} (
-      id, item_json, available_at, lease_generation, lease_expires_at,
+    INSERT INTO ${quotedTableName} (
+      id, item_json, item_is_undefined, available_at, lease_generation, lease_expires_at,
       attempt, dlq_handoff_attempt
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       item_json = excluded.item_json,
+      item_is_undefined = excluded.item_is_undefined,
       available_at = excluded.available_at,
       lease_generation = excluded.lease_generation,
       lease_expires_at = excluded.lease_expires_at,
       attempt = excluded.attempt,
       dlq_handoff_attempt = excluded.dlq_handoff_attempt
   `);
-  const remove = db.prepare(`DELETE FROM ${tableName} WHERE id = ?`);
-  const clear = db.prepare(`DELETE FROM ${tableName}`);
+  const remove = db.prepare(`DELETE FROM ${quotedTableName} WHERE id = ?`);
+  const clear = db.prepare(`DELETE FROM ${quotedTableName}`);
 
   const write = (record: RowRecord<T>): void => {
+    const itemJson = JSON.stringify(record.item);
+    if (itemJson === undefined && record.item !== undefined) {
+      throw new TypeError("SQLite queue items must be JSON-serializable");
+    }
     put.run(
       record.id,
-      JSON.stringify(record.item),
+      itemJson ?? "null",
+      itemJson === undefined ? 1 : 0,
       record.availableAt,
       record.leaseGeneration,
       record.leaseExpiresAt,
