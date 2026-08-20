@@ -1,5 +1,4 @@
 import { cn } from "../../../lib/cn";
-import { inputStyles } from "../../ui/Input/Input.styles";
 import { textStyles } from "../../ui/Text/Text.styles";
 
 /** Above modal backdrop (z-2000) so the picker works inside Route Explorer. */
@@ -34,8 +33,8 @@ export const passIncludeControlStyles = {
   ),
   popoverHead: "flex flex-col gap-2 border-b border-border px-2.5 py-2",
   popoverTools: "flex flex-wrap items-center gap-1.5",
-  search: cn(inputStyles.root, "min-w-0 flex-1 px-2 py-[0.35rem] text-[0.82rem]"),
-  sort: cn(inputStyles.root, "w-auto shrink-0 px-2 py-[0.35rem] text-[0.78rem]"),
+  search: "min-w-0 flex-1 px-2 py-[0.35rem] text-[0.82rem]",
+  sort: "w-auto shrink-0 px-2 py-[0.35rem] text-[0.78rem]",
   modes: "flex flex-wrap gap-1",
   modeBtn: "text-[0.72rem]",
   popoverList: "min-h-0 flex-1 space-y-1 overflow-y-auto p-1.5",

@@ -5,7 +5,4 @@ export const modalStyles = {
   header: "flex items-center gap-2 border-b border-border pb-2",
   headerLead: "flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden",
   title: "m-0 shrink-0 text-[0.9rem] font-semibold text-fg",
-  closeBtn:
-    "grid h-7 w-7 shrink-0 place-items-center rounded-md border border-border-strong bg-elevated p-0 text-muted hover:bg-elevated-hover hover:text-fg",
-  closeIcon: "size-3.5",
 } as const;

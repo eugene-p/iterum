@@ -4,7 +4,7 @@ import { formatSidebarListCount } from "../../AppSidebar/sidebarListUtils";
 import { sidebarListStyles } from "../../AppSidebar/sidebarList.styles";
 import { SidebarFilterSection, SidebarListButton } from "../../AppSidebar";
 import { ProfileScopeHint } from "../../profiles/ProfileScopeHint";
-import { Input, Stack } from "../../ui";
+import { Input, Select, Stack } from "../../ui";
 import { SegmentPreviewPopover } from "../SegmentPreviewPopover";
 import { segmentsPanelStyles } from "./SegmentsPanel.styles";
 import {
@@ -96,7 +96,7 @@ export const SegmentsPanel = ({
               <label className={segmentsPanelStyles.sortLabel} htmlFor="segment-list-sort">
                 Sort
               </label>
-              <select
+              <Select
                 id="segment-list-sort"
                 className={segmentsPanelStyles.sortSelect}
                 value={sort}
@@ -107,7 +107,7 @@ export const SegmentsPanel = ({
                     {option.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </SidebarFilterSection>
 

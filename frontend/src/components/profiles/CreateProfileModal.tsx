@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCreateProfileMutation } from "../../queries/profiles";
-import { Button, ErrorText, Input, Modal, ModalHeader, Stack } from "../ui";
+import { Button, ErrorText, Field, Input, Modal, ModalHeader, Stack } from "../ui";
 import { profileModalStyles } from "./profileModalStyles";
 
 type CreateProfileModalProps = {
@@ -42,8 +42,7 @@ export const CreateProfileModal = ({ open, onClose, onCreated }: CreateProfileMo
             Activities belong to a profile. Segments are shared across profiles.
           </p>
           {error && <ErrorText>{error}</ErrorText>}
-          <label className="flex flex-col gap-1 text-sm">
-            Profile name
+          <Field label="Profile name" className="gap-1 text-sm">
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -53,7 +52,7 @@ export const CreateProfileModal = ({ open, onClose, onCreated }: CreateProfileMo
                 if (e.key === "Enter") void handleCreate();
               }}
             />
-          </label>
+          </Field>
           <div className={profileModalStyles.footer}>
             <Button onClick={onClose}>Cancel</Button>
             <Button

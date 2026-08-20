@@ -6,7 +6,16 @@ import { useDeleteProfileMutation, useUpdateProfileMutation } from "../../querie
 import type { DistanceUnit, Profile, StretchThresholds } from "../../types";
 import { STRETCH_THRESHOLDS_SECTION_HINT } from "../segments/StretchPanel/stretchThresholdHints";
 import { StretchThresholdSettings } from "../segments/StretchPanel/StretchThresholdSettings";
-import { Button, CollapsibleSection, Drawer, ErrorText, HintButton, Input } from "../ui";
+import {
+  Button,
+  CollapsibleSection,
+  Drawer,
+  ErrorText,
+  Field,
+  HintButton,
+  Input,
+  Select,
+} from "../ui";
 import { entityEditDrawerStyles } from "../app/entityEditDrawerStyles";
 
 const PROFILE_EDIT_FORM_ID = "profile-edit-form";
@@ -158,13 +167,18 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
         }}
       >
         {error && <ErrorText>{error}</ErrorText>}
-        <label className={entityEditDrawerStyles.field}>
-          <span className={entityEditDrawerStyles.label}>Name</span>
+        <Field label="Name">
           <Input value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} autoFocus />
-        </label>
+        </Field>
 
-        <label className={entityEditDrawerStyles.field}>
-          <span className={entityEditDrawerStyles.label}>Year of birth</span>
+        <Field
+          label="Year of birth"
+          description={
+            estimatedMaxHr != null
+              ? `Estimated max HR: ${estimatedMaxHr} bpm (220 − age). Used for heart-rate zone lines on charts.`
+              : "Set your birth year to show heart-rate zones on activity charts."
+          }
+        >
           <Input
             type="number"
             inputMode="numeric"
@@ -174,12 +188,7 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
             value={yearOfBirthDraft}
             onChange={(e) => setYearOfBirthDraft(e.target.value)}
           />
-          <span className="text-xs text-muted">
-            {estimatedMaxHr != null
-              ? `Estimated max HR: ${estimatedMaxHr} bpm (220 − age). Used for heart-rate zone lines on charts.`
-              : "Set your birth year to show heart-rate zones on activity charts."}
-          </span>
-        </label>
+        </Field>
 
         <CollapsibleSection
           variant="card"
@@ -189,8 +198,7 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
           onToggle={() => setSplitDefaultsExpanded((value) => !value)}
         >
           <div className="flex flex-col gap-2">
-            <select
-              className="min-h-9 w-full rounded-lg border border-border-strong bg-bg px-[0.6rem] py-[0.45rem] text-fg"
+            <Select
               value={distanceUnitDraft}
               onChange={(event) => {
                 const nextUnit = event.target.value as DistanceUnit;
@@ -200,9 +208,12 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
             >
               <option value="km">Kilometres</option>
               <option value="mi">Miles</option>
-            </select>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-muted">Split every ({distanceUnitDraft})</span>
+            </Select>
+            <Field
+              label={`Split every (${distanceUnitDraft})`}
+              className="gap-1"
+              labelClassName="text-xs"
+            >
               <Input
                 type="number"
                 inputMode="decimal"
@@ -212,7 +223,7 @@ export const ProfileEditDrawer = ({ open, profile, onClose }: ProfileEditDrawerP
                 value={splitDistanceDraft}
                 onChange={(event) => setSplitDistanceDraft(event.target.value)}
               />
-            </label>
+            </Field>
             <span className="text-xs text-muted">
               Choose any distance—for example 0.5 km or 1.7 mi. Splits are derived from the GPS track when an import has no laps.
             </span>

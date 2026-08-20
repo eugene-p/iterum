@@ -1,6 +1,7 @@
 import type { MouseEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../../../lib/cn";
+import { CloseButton } from "../CloseButton";
 import { drawerStyles } from "./Drawer.styles";
 
 type DrawerProps = {
@@ -9,8 +10,11 @@ type DrawerProps = {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  backdropClassName?: string;
   panelClassName?: string;
+  headerClassName?: string;
   bodyClassName?: string;
+  footerClassName?: string;
   size?: "default" | "wide" | "map";
   closeLabel?: string;
 };
@@ -21,15 +25,18 @@ export const Drawer = ({
   title,
   children,
   footer,
+  backdropClassName,
   panelClassName,
+  headerClassName,
   bodyClassName,
+  footerClassName,
   size = "default",
   closeLabel = "Close",
 }: DrawerProps) => {
   if (!open) return null;
 
   return createPortal(
-    <div className={drawerStyles.backdrop} onClick={onClose}>
+    <div className={cn(drawerStyles.backdrop, backdropClassName)} onClick={onClose}>
       <aside
         className={cn(
           size === "map"
@@ -41,29 +48,12 @@ export const Drawer = ({
         )}
         onClick={(e: MouseEvent) => e.stopPropagation()}
       >
-        <div className={drawerStyles.header}>
+        <div className={cn(drawerStyles.header, headerClassName)}>
           <h2 className={drawerStyles.title}>{title}</h2>
-          <button
-            type="button"
-            className={drawerStyles.closeBtn}
-            onClick={onClose}
-            aria-label={closeLabel}
-          >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 12 12"
-              className={drawerStyles.closeIcon}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-            >
-              <path d="M2 2l8 8M10 2 2 10" />
-            </svg>
-          </button>
+          <CloseButton onClick={onClose} aria-label={closeLabel} />
         </div>
         <div className={cn(drawerStyles.body, bodyClassName)}>{children}</div>
-        {footer != null && <div className={drawerStyles.footer}>{footer}</div>}
+        {footer != null && <div className={cn(drawerStyles.footer, footerClassName)}>{footer}</div>}
       </aside>
     </div>,
     document.body,

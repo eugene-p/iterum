@@ -1,5 +1,4 @@
 import { cn } from "../../../lib/cn";
-import { inputStyles } from "../../ui/Input/Input.styles";
 import { stackStyles } from "../../ui/Stack/Stack.styles";
 import { textStyles } from "../../ui/Text/Text.styles";
 
@@ -54,14 +53,14 @@ export const stretchPanelStyles = {
   settingsSectionGrid2: "grid grid-cols-2 gap-x-3 gap-y-2",
   settingLabel: cn(textStyles.muted, "flex flex-col gap-0.5 text-[0.78rem]"),
   settingLabelRow: "flex items-center gap-1",
-  settingInput: cn(inputStyles.root, "w-full text-[0.82rem]"),
+  settingInput: "w-full text-[0.82rem]",
   actions: "flex flex-wrap items-center gap-2",
   actionsFooter:
     "mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-border pt-3",
   sourceLabel: "m-0 text-[0.78rem]",
   sourceSelectLabel: "flex flex-col gap-1",
   sourceFieldCaption: cn(textStyles.muted, "text-[0.75rem]"),
-  sourceSelect: cn(inputStyles.root, "w-full px-2 py-[0.35rem] text-[0.82rem]"),
+  sourceSelect: "w-full px-2 py-[0.35rem] text-[0.82rem]",
   sourceModalPanel: "max-w-md gap-3 p-3",
   sourceWarning: "m-0 text-[0.82rem] leading-snug text-muted",
   sourcePending: "m-0 text-[0.85rem] text-fg",

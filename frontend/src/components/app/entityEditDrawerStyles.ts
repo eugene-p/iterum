@@ -3,10 +3,7 @@ export const entityEditDrawerStyles = {
   mapDrawerBody: "flex min-h-0 flex-1 flex-col overflow-hidden",
   mapDrawerForm: "flex min-h-0 flex-1 flex-col gap-3",
   scrollForm: "flex flex-col gap-3",
-  field: "flex flex-col gap-1.5",
-  label: "text-sm text-muted",
-  select:
-    "rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-fg",
+  select: "rounded-md bg-surface px-2 py-1.5 text-sm",
   footerActions: "flex items-center justify-end gap-2",
   mapWrap: "relative z-0 min-h-[240px] flex-1 overflow-hidden rounded-md border border-border bg-map",
 

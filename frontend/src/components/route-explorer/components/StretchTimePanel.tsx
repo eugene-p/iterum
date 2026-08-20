@@ -8,7 +8,7 @@ import {
 import { PassMetricsRow } from "./PassMetricsRow";
 import { SectionHint } from "./SectionHint";
 import { StretchProgressLegend } from "./StretchProgressLegend";
-import { MutedSpan, MutedText } from "../../ui";
+import { MutedSpan, MutedText, Slider } from "../../ui";
 import { HrChartCollapsibleSection } from "./HrChartCollapsibleSection";
 import { CompareMapStage } from "./CompareMapStage";
 import { CompareReferenceCard } from "./CompareReferenceCard";
@@ -65,9 +65,7 @@ export const StretchTimePanel = ({
           >
             ←
           </button>
-          <input
-            className={routeExplorerStyles.slider}
-            type="range"
+          <Slider
             min={0}
             max={Math.max(slider.virtualMaxSec, 5)}
             step={slider.step}

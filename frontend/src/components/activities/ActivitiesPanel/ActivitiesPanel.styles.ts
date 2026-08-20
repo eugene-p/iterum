@@ -1,5 +1,4 @@
 import { cn } from "../../../lib/cn";
-import { inputStyles } from "../../ui/Input/Input.styles";
 import { textStyles } from "../../ui/Text/Text.styles";
 
 export const activitiesPanelStyles = {
@@ -18,10 +17,7 @@ export const activitiesPanelStyles = {
 
   sortRow: "flex items-center gap-[0.45rem]",
   sortLabel: cn(textStyles.muted, "shrink-0 text-xs"),
-  sortSelect: cn(
-    inputStyles.root,
-    "w-auto min-w-0 flex-1 cursor-pointer px-2 py-[0.3rem] text-[0.75rem]",
-  ),
+  sortSelect: "w-auto min-w-0 flex-1 cursor-pointer px-2 py-[0.3rem] text-[0.75rem]",
 
   density: "flex flex-col gap-1 px-1",
   densityChrome: "flex items-center gap-1",

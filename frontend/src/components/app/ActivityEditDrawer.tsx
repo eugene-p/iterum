@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ActivitySummary, Profile } from "../../types";
-import { Button, Drawer, ErrorText, Input } from "../ui";
+import { Button, Drawer, ErrorText, Field, Input, Select } from "../ui";
 import { entityEditDrawerStyles } from "./entityEditDrawerStyles";
 
 const ACTIVITY_EDIT_FORM_ID = "activity-edit-form";
@@ -66,18 +66,16 @@ export const ActivityEditDrawer = ({
           onSave(activity.id, nameDraft.trim(), profileIdDraft);
         }}
       >
-        <label className={entityEditDrawerStyles.field}>
-          <span className={entityEditDrawerStyles.label}>Name</span>
+        <Field label="Name">
           <Input
             value={nameDraft}
             onChange={(e) => setNameDraft(e.target.value)}
             placeholder="Activity name"
             autoFocus
           />
-        </label>
-        <label className={entityEditDrawerStyles.field}>
-          <span className={entityEditDrawerStyles.label}>Profile</span>
-          <select
+        </Field>
+        <Field label="Profile">
+          <Select
             className={entityEditDrawerStyles.select}
             value={profileIdDraft}
             disabled={loading}
@@ -88,8 +86,8 @@ export const ActivityEditDrawer = ({
                 {profile.name}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </Field>
         {error && <ErrorText>{error}</ErrorText>}
       </form>
     </Drawer>

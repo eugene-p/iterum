@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "../../../lib/cn";
-import { Button, HintButton, Input, Row } from "../../ui";
+import { Button, Field, HintButton, Input, Row } from "../../ui";
 import { DEFAULT_STRETCH_THRESHOLDS } from "../../../stretchUtils";
 import type { StretchThresholds } from "../../../types";
 import {
@@ -31,13 +31,18 @@ type StretchThresholdFieldProps = {
 };
 
 const StretchThresholdField = ({ label, hint, children }: StretchThresholdFieldProps) => (
-  <label className={stretchPanelStyles.settingLabel}>
-    <span className={stretchPanelStyles.settingLabelRow}>
-      <span>{label}</span>
-      <HintButton text={hint} placement="top" />
-    </span>
+  <Field
+    label={
+      <>
+        <span>{label}</span>
+        <HintButton text={hint} placement="top" />
+      </>
+    }
+    className={stretchPanelStyles.settingLabel}
+    labelClassName={stretchPanelStyles.settingLabelRow}
+  >
     {children}
-  </label>
+  </Field>
 );
 
 type SettingsSectionProps = {

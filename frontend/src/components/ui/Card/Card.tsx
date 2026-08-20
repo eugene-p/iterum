@@ -1,5 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "../../../lib/cn";
+import { cardStyles } from "./Card.styles";
 
 type CardProps = HTMLAttributes<HTMLElement> & {
   header?: ReactNode;
@@ -21,7 +22,7 @@ export const Card = ({
   ...props
 }: CardProps) => (
   <section
-    className={cn("w-full rounded-md border border-border bg-drop-surface p-4", className)}
+    className={cn(cardStyles.root, className)}
     {...props}
   >
     {header && <header className={headerClassName}>{header}</header>}

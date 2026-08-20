@@ -9,7 +9,7 @@ import { MetricsGrid } from "./MetricsGrid";
 import { PassMetricsRow } from "./PassMetricsRow";
 import { SectionHint } from "./SectionHint";
 import { StretchProgressLegend } from "./StretchProgressLegend";
-import { MutedSpan, MutedText } from "../../ui";
+import { MutedSpan, MutedText, Slider } from "../../ui";
 import { HrChartCollapsibleSection } from "./HrChartCollapsibleSection";
 import { CompareMapStage } from "./CompareMapStage";
 import { CompareReferenceCard } from "./CompareReferenceCard";
@@ -53,9 +53,7 @@ export const PositionComparePanel = ({
               : "Start"}
           </MutedSpan>
         </div>
-        <input
-          className={routeExplorerStyles.slider}
-          type="range"
+        <Slider
           min={0}
           max={slider.max}
           value={slider.index}

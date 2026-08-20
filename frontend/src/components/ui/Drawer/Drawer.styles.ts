@@ -10,9 +10,6 @@ export const drawerStyles = {
   header:
     "flex shrink-0 items-center gap-2 border-b border-border px-4 pb-3 pt-4",
   title: "m-0 min-w-0 flex-1 text-[0.95rem] font-semibold text-fg",
-  closeBtn:
-    "grid h-7 w-7 shrink-0 place-items-center rounded-md border border-border-strong bg-elevated p-0 text-muted hover:bg-elevated-hover hover:text-fg",
-  closeIcon: "size-3.5",
   body: "min-h-0 flex-1 overflow-y-auto px-4 py-4",
   footer: "shrink-0 border-t border-border px-4 py-3",
 } as const;

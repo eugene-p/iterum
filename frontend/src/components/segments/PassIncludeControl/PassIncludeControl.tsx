@@ -13,7 +13,7 @@ import {
 } from "../../../lib/passSelectModes";
 import type { SegmentPass } from "../../../types";
 import { formatDuration } from "../../../utils";
-import { Button, CollapsibleSection, MutedSpan, Switch } from "../../ui";
+import { Button, CollapsibleSection, Input, MutedSpan, Select, Switch } from "../../ui";
 import { passIncludeControlStyles as styles } from "./PassIncludeControl.styles";
 
 type PassIncludeControlProps = {
@@ -356,7 +356,7 @@ export const PassIncludeControl = ({
           >
             <div className={styles.popoverHead}>
               <div className={styles.popoverTools}>
-                <input
+                <Input
                   ref={searchInputRef}
                   className={styles.search}
                   type="search"
@@ -365,7 +365,7 @@ export const PassIncludeControl = ({
                   onChange={(e) => setQuery(e.target.value)}
                   aria-label="Search activities"
                 />
-                <select
+                <Select
                   className={styles.sort}
                   value={sort}
                   onChange={(e) => setSort(e.target.value as PassListSort)}
@@ -374,7 +374,7 @@ export const PassIncludeControl = ({
                   <option value="latest">Latest</option>
                   <option value="fastest">Fastest</option>
                   <option value="name">Name</option>
-                </select>
+                </Select>
               </div>
               <div className={styles.modes}>
                 {MODE_BUTTONS.map(({ mode, label }) => (

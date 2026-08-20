@@ -5,7 +5,7 @@ import {
   formatActivityTime,
   resolveActivityDateTime,
 } from "../../../activityDisplay";
-import { CollapsibleSection, Input, Stack } from "../../ui";
+import { CollapsibleSection, Input, Select, Stack } from "../../ui";
 import type { ActivitySummary } from "../../../types";
 import { formatSidebarListCount } from "../../AppSidebar/sidebarListUtils";
 import { sidebarListStyles } from "../../AppSidebar/sidebarList.styles";
@@ -376,7 +376,7 @@ export const ActivitiesPanel = ({
                   <label className={activitiesPanelStyles.sortLabel} htmlFor="activity-list-sort">
                     Sort
                   </label>
-                  <select
+                  <Select
                     id="activity-list-sort"
                     className={activitiesPanelStyles.sortSelect}
                     value={sort}
@@ -387,7 +387,7 @@ export const ActivitiesPanel = ({
                         {option.label}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               )}
             </SidebarFilterSection>

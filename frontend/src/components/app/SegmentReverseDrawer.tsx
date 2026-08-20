@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Segment } from "../../types";
-import { Button, Drawer, ErrorText, Input } from "../ui";
+import { Button, Drawer, ErrorText, Field, Input } from "../ui";
 import { entityEditDrawerStyles } from "./entityEditDrawerStyles";
 
 const SEGMENT_REVERSE_FORM_ID = "segment-reverse-form";
@@ -59,15 +59,14 @@ export const SegmentReverseDrawer = ({
           onCreate(segment.id, nameDraft.trim());
         }}
       >
-        <label className={entityEditDrawerStyles.field}>
-          <span className={entityEditDrawerStyles.label}>Name</span>
+        <Field label="Name">
           <Input
             value={nameDraft}
             onChange={(e) => setNameDraft(e.target.value)}
             placeholder="Reversed segment name"
             autoFocus
           />
-        </label>
+        </Field>
         {error && <ErrorText>{error}</ErrorText>}
       </form>
     </Drawer>

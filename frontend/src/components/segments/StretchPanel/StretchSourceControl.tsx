@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { SegmentPass } from "../../../types";
-import { Button, Modal, ModalHeader, MutedText } from "../../ui";
+import { Button, Field, Modal, ModalHeader, MutedText, Select } from "../../ui";
 import { stretchPanelStyles } from "./StretchPanel.styles";
 import {
   stretchSourceLabel,
@@ -61,9 +61,12 @@ export const StretchSourceControl = ({
       <MutedText className={stretchPanelStyles.sourceLabel}>
         Current: <strong>{currentLabel}</strong>
       </MutedText>
-      <label className={stretchPanelStyles.sourceSelectLabel}>
-        <span className={stretchPanelStyles.sourceFieldCaption}>Source activity</span>
-        <select
+      <Field
+        label="Source activity"
+        className={stretchPanelStyles.sourceSelectLabel}
+        labelClassName={stretchPanelStyles.sourceFieldCaption}
+      >
+        <Select
           className={stretchPanelStyles.sourceSelect}
           value={selectedActivityId ?? ""}
           disabled={loading || options.length < 2}
@@ -78,8 +81,8 @@ export const StretchSourceControl = ({
               {option.label}
             </option>
           ))}
-        </select>
-      </label>
+        </Select>
+      </Field>
       <div className={stretchPanelStyles.sourceModalActions}>
         <Button size="sm" onClick={onClose}>
           Cancel

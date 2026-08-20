@@ -2,9 +2,11 @@ export { Badge, type BadgeVariant } from "./Badge";
 export { Button, type ButtonVariant, type ButtonSize } from "./Button";
 export { Card } from "./Card";
 export { CollapsibleSection } from "./CollapsibleSection";
+export { CloseButton, type CloseButtonProps } from "./CloseButton";
 export { Drawer } from "./Drawer";
 export { DropdownMenu, type DropdownMenuGroup, type DropdownMenuItem } from "./DropdownMenu";
 export { EmptySurface } from "./EmptySurface";
+export { Field, type FieldProps } from "./Field";
 export {
   Dropzone,
   DropzoneLabel,
@@ -17,6 +19,8 @@ export { IconButton } from "./IconButton";
 export { Input } from "./Input";
 export { LoadingState } from "./LoadingState";
 export { ScreenPlaceholder } from "./ScreenPlaceholder";
+export { Select, type SelectProps } from "./Select";
+export { Slider, type SliderProps } from "./Slider";
 export { MetricSummary } from "./MetricSummary";
 export { Modal, ModalHeader } from "./Modal";
 export { Panel } from "./Panel";

@@ -29,7 +29,6 @@ export const routeExplorerStyles = {
   sectionControls: "flex flex-col gap-1.5 px-[0.85rem] py-[0.5rem]",
   sectionHint: "m-0 text-[0.78rem]",
 
-  slider: "w-full accent-primary",
 
   mapStage:
     "grid min-h-[min(62vh,580px)] gap-3 [grid-template-columns:1fr_min(300px,32%)] max-[860px]:min-h-auto max-[860px]:[grid-template-columns:1fr]",

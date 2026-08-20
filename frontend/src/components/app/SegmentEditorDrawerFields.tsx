@@ -2,7 +2,7 @@ import type { SegmentEditorMode } from "../../hooks/segmentEditorTypes";
 import type { Segment } from "../../types";
 import { MIN_LOOP_PATH_DISTANCE_M } from "../../utils";
 import { ActivityMap } from "../maps/ActivityMap";
-import { Button, EmptySurface, ErrorText, HintButton, Input } from "../ui";
+import { Button, EmptySurface, ErrorText, Field, HintButton, Input } from "../ui";
 import { entityEditDrawerStyles } from "./entityEditDrawerStyles";
 import type { SegmentEditorFormState, SegmentEditorMapState } from "./segmentEditorTypes";
 
@@ -165,11 +165,16 @@ export const SegmentEditorDrawerFields = ({
           />
           {hasStart && hasEnd && (
             <div className={entityEditDrawerStyles.matchRow} aria-label="Match settings">
-              <label className={entityEditDrawerStyles.segmentAdjustField}>
-                <span className={entityEditDrawerStyles.segmentAdjustLabelRow}>
-                  <span className={entityEditDrawerStyles.label}>Radius (m)</span>
-                  <HintButton text={MATCH_RADIUS_HINT} placement="top" />
-                </span>
+              <Field
+                label={
+                  <>
+                    <span>Radius (m)</span>
+                    <HintButton text={MATCH_RADIUS_HINT} placement="top" />
+                  </>
+                }
+                className={entityEditDrawerStyles.segmentAdjustField}
+                labelClassName={entityEditDrawerStyles.segmentAdjustLabelRow}
+              >
                 <Input
                   type="number"
                   min={5}
@@ -178,12 +183,17 @@ export const SegmentEditorDrawerFields = ({
                   value={form.radius}
                   onChange={(e) => onRadiusChange(Number(e.target.value))}
                 />
-              </label>
-              <label className={entityEditDrawerStyles.segmentAdjustField}>
-                <span className={entityEditDrawerStyles.segmentAdjustLabelRow}>
-                  <span className={entityEditDrawerStyles.label}>Match</span>
-                  <HintButton text={MATCH_THRESHOLD_HINT} placement="top" />
-                </span>
+              </Field>
+              <Field
+                label={
+                  <>
+                    <span>Match</span>
+                    <HintButton text={MATCH_THRESHOLD_HINT} placement="top" />
+                  </>
+                }
+                className={entityEditDrawerStyles.segmentAdjustField}
+                labelClassName={entityEditDrawerStyles.segmentAdjustLabelRow}
+              >
                 <Input
                   type="number"
                   min={0.5}
@@ -193,7 +203,7 @@ export const SegmentEditorDrawerFields = ({
                   value={form.matchThreshold}
                   onChange={(e) => onMatchThresholdChange(Number(e.target.value))}
                 />
-              </label>
+              </Field>
             </div>
           )}
         </div>
