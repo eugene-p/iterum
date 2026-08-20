@@ -8,6 +8,8 @@ export type {
   Profile,
   ProfileViewScope,
   Segment,
+  SegmentBaselineStats,
+  SegmentBaselines,
   SegmentCompare,
   SegmentPass,
   SegmentStretchPreviewOptions,

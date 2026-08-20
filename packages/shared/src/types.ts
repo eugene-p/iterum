@@ -81,6 +81,7 @@ export interface SegmentPass {
   activity_id: number;
   activity_name: string;
   profile_name?: string | null;
+  profile_id?: number | null;
   source_filename?: string | null;
   started_at?: string | null;
   created_at?: string | null;
@@ -141,4 +142,19 @@ export interface ActivityMatchedSegment {
   location?: string | null;
   tags?: string[];
   pass_count: number;
+}
+
+export interface SegmentBaselineStats {
+  sample_count: number;
+  typical_duration_sec: number | null;
+  best_duration_sec: number | null;
+}
+
+export interface SegmentBaselines {
+  activity_id: number;
+  activity_segment_match_id: number;
+  pass_number: number;
+  effort_sec: number;
+  as_of_date: string;
+  aggregations: Record<string, SegmentBaselineStats>;
 }

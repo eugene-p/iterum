@@ -7,9 +7,10 @@ import {
 } from "@/jobs/activityJobs.js";
 import type { ActivityJobSystem } from "@/jobs/createActivityJobSystem.js";
 
-vi.mock("@/services/segmentMatching.js", () => ({
-  matchActivityAgainstAllSegments: vi.fn(async () => undefined),
-  logMatchFailure: vi.fn(),
+vi.mock("@/services/segmentMatching.js", () => ({ logMatchFailure: vi.fn() }));
+
+vi.mock("@/services/segmentBaselineAggregator.js", () => ({
+  matchActivityAndRefreshBaselines: vi.fn(async () => undefined),
 }));
 
 vi.mock("@/services/routePreview/routePreviewService.js", () => ({
@@ -21,7 +22,7 @@ vi.mock("@/services/geocodeActivity.js", () => ({
 }));
 
 import { geocodeActivity } from "@/services/geocodeActivity.js";
-import { matchActivityAgainstAllSegments } from "@/services/segmentMatching.js";
+import { matchActivityAndRefreshBaselines } from "@/services/segmentBaselineAggregator.js";
 import { warmActivityPreviewImage } from "@/services/routePreview/routePreviewService.js";
 
 afterEach(async () => {
@@ -47,7 +48,7 @@ describe("activityJobs", () => {
 
     expect(publishActivityImported).toHaveBeenCalledWith(11);
     expect(geocodeActivity).not.toHaveBeenCalled();
-    expect(matchActivityAgainstAllSegments).not.toHaveBeenCalled();
+    expect(matchActivityAndRefreshBaselines).not.toHaveBeenCalled();
     expect(warmActivityPreviewImage).not.toHaveBeenCalled();
   });
 
@@ -55,7 +56,7 @@ describe("activityJobs", () => {
     scheduleActivityImported(22);
 
     expect(geocodeActivity).toHaveBeenCalledWith(22);
-    expect(matchActivityAgainstAllSegments).toHaveBeenCalledWith(22);
+    expect(matchActivityAndRefreshBaselines).toHaveBeenCalledWith(22);
     expect(warmActivityPreviewImage).toHaveBeenCalledWith(22);
   });
 
@@ -67,6 +68,6 @@ describe("activityJobs", () => {
     await stopActivityJobs();
     scheduleActivityImported(33);
     expect(geocodeActivity).toHaveBeenCalledWith(33);
-    expect(matchActivityAgainstAllSegments).toHaveBeenCalledWith(33);
+    expect(matchActivityAndRefreshBaselines).toHaveBeenCalledWith(33);
   });
 });

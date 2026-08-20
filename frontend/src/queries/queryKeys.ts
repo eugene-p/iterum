@@ -20,4 +20,11 @@ export const queryKeys = {
   segmentCompare: (segmentId: number, preview: SegmentStretchPreviewOptions | null) =>
     ["segment-compare", segmentId, preview ? stretchPreviewQuery(preview) : "saved"] as const,
   segmentCompareRoot: (segmentId: number) => ["segment-compare", segmentId] as const,
+  segmentBaselinesAll: ["segment-baselines"] as const,
+  segmentBaselinesRoot: (segmentId: number) => ["segment-baselines", segmentId] as const,
+  segmentBaselines: (
+    segmentId: number,
+    activityId?: number | null,
+    passNumber?: number | null,
+  ) => ["segment-baselines", segmentId, activityId ?? null, passNumber ?? null] as const,
 } as const;

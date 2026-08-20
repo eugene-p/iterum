@@ -4,6 +4,7 @@ import {
   createReversedSegment,
   createSegment,
   deleteSegment,
+  getSegmentBaselines,
   getSegmentReference,
   listSegments,
   rescanSegment,
@@ -45,6 +46,18 @@ export const useSegmentCompareQuery = (
     enabled: enabled && segmentId != null,
   });
 
+export const useSegmentBaselinesQuery = (
+  segmentId: number,
+  activityId?: number | null,
+  passNumber?: number | null,
+) =>
+  useQuery({
+    queryKey: queryKeys.segmentBaselines(segmentId, activityId, passNumber),
+    queryFn: () => getSegmentBaselines(segmentId, { activityId, passNumber }),
+    retry: false,
+    enabled: segmentId > 0,
+  });
+
 export const useSaveSegmentStretchesMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -65,6 +78,7 @@ export const useSaveSegmentStretchesMutation = () => {
         result,
       );
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentCompareRoot(segmentId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentBaselinesRoot(segmentId) });
     },
   });
 };
@@ -76,8 +90,10 @@ export const useInvalidateSegments = () => {
 
 export const useInvalidateSegmentCompare = () => {
   const queryClient = useQueryClient();
-  return (segmentId: number) =>
-    queryClient.invalidateQueries({ queryKey: queryKeys.segmentCompareRoot(segmentId) });
+  return (segmentId: number) => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.segmentCompareRoot(segmentId) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.segmentBaselinesRoot(segmentId) });
+  };
 };
 
 type CreateSegmentPayload = Parameters<typeof createSegment>[0];
@@ -90,6 +106,7 @@ export const useCreateSegmentMutation = () => {
     onSuccess: (segment) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentCompareRoot(segment.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentBaselinesRoot(segment.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activityMatchedSegmentsRoot });
     },
   });
@@ -102,6 +119,7 @@ export const useUpdateSegmentMutation = () => {
     onSuccess: (segment) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentCompareRoot(segment.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentBaselinesRoot(segment.id) });
     },
   });
 };
@@ -110,8 +128,9 @@ export const useDeleteSegmentMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => deleteSegment(id),
-    onSuccess: () => {
+    onSuccess: (_result, segmentId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentBaselinesRoot(segmentId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activityMatchedSegmentsRoot });
     },
   });
@@ -123,6 +142,7 @@ export const useRescanSegmentMutation = () => {
     mutationFn: (id: number) => rescanSegment(id),
     onSuccess: (_result, segmentId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentCompareRoot(segmentId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentBaselinesRoot(segmentId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
       queryClient.invalidateQueries({ queryKey: queryKeys.activityMatchedSegmentsRoot });
     },
@@ -136,6 +156,7 @@ export const useCreateReversedSegmentMutation = () => {
     onSuccess: (segment) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentCompareRoot(segment.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentBaselinesRoot(segment.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activityMatchedSegmentsRoot });
     },
   });

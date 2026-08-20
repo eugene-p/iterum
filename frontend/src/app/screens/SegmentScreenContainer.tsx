@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { appStyles } from "../../App.styles";
 import { SegmentDetailBody } from "../../components/app/SegmentDetailBody";
@@ -18,6 +18,8 @@ import {
 } from "../appRoutes";
 import { useSegmentScreen } from "../useSegmentScreen";
 import { useAppNavigation } from "../useAppNavigation";
+import { useSegmentBaselinesQuery } from "../../queries/segments";
+import type { SegmentPass } from "../../types";
 
 const SegmentCompareExplorer = ({
   compareMode,
@@ -56,6 +58,46 @@ export const SegmentScreenContainer = () => {
   const searchParams = useMemo(() => parseAppSearchParams(search), [search]);
   const location = useMemo(() => parseAppLocation(pathname), [pathname]);
   const screen = useSegmentScreen(segmentId);
+  const baselinesQuery = useSegmentBaselinesQuery(
+    segmentId,
+    searchParams.activityId,
+    searchParams.passNumber,
+  );
+  const [baselineAggregationType, setBaselineAggregationType] = useState("rolling_90d");
+
+  useEffect(() => {
+    setBaselineAggregationType("rolling_90d");
+  }, [segmentId]);
+
+  const resolvedFocalActivityId =
+    baselinesQuery.data?.activity_id ?? searchParams.activityId ?? null;
+  const resolvedFocalPassNumber =
+    baselinesQuery.data?.pass_number ?? searchParams.passNumber ?? null;
+
+  const defaultFocalPass = useMemo(() => {
+    const valid = (screen.comparison?.passes ?? []).filter(
+      (pass) =>
+        pass.matched &&
+        pass.profile_id != null &&
+        pass.duration_sec != null &&
+        Number.isFinite(pass.duration_sec) &&
+        pass.duration_sec > 0,
+    );
+    return [...valid].sort((a, b) => {
+      const aTime = Date.parse(a.started_at ?? a.created_at ?? "") || 0;
+      const bTime = Date.parse(b.started_at ?? b.created_at ?? "") || 0;
+      return bTime - aTime || b.activity_id - a.activity_id || b.pass_number - a.pass_number;
+    })[0] ?? null;
+  }, [screen.comparison]);
+
+  const handleFocusPass = (pass: SegmentPass) => {
+    const isDefault =
+      (baselinesQuery.data?.activity_id ?? defaultFocalPass?.activity_id) === pass.activity_id &&
+      (baselinesQuery.data?.pass_number ?? defaultFocalPass?.pass_number) === pass.pass_number;
+    navigation.setFocalPass(
+      isDefault ? null : { activityId: pass.activity_id, passNumber: pass.pass_number },
+    );
+  };
 
   const showCompareExplorer =
     searchParams.view === APP_VIEW.COMPARE &&
@@ -173,6 +215,12 @@ export const SegmentScreenContainer = () => {
               onComparePasses={navigation.openCompareView}
               onEditStretches={navigation.openStretchEditView}
               displayStretches={screen.displayStretches}
+              baselines={baselinesQuery.data ?? null}
+              baselineAggregationType={baselineAggregationType}
+              onBaselineAggregationTypeChange={setBaselineAggregationType}
+              focalActivityId={resolvedFocalActivityId}
+              focalPassNumber={resolvedFocalPassNumber}
+              onFocusPass={handleFocusPass}
               stretch={{
                 selectedStretch: screen.selectedStretch,
                 selectedPassStretchMetrics: screen.selectedPassStretchMetrics,

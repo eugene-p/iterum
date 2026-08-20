@@ -7,6 +7,7 @@ import type {
   Profile,
   ProfileViewScope,
   Segment,
+  SegmentBaselines,
   SegmentCompare,
   SegmentStretchPreviewOptions,
   Stretch,
@@ -236,4 +237,15 @@ export async function saveSegmentStretches(
 
 export function getSegmentReference(segmentId: number) {
   return request<TrackPoint[]>(`/api/segments/${segmentId}/reference`);
+}
+
+export function getSegmentBaselines(
+  segmentId: number,
+  focal?: { activityId?: number | null; passNumber?: number | null },
+) {
+  const params = new URLSearchParams();
+  if (focal?.activityId != null) params.set("activity_id", String(focal.activityId));
+  if (focal?.passNumber != null) params.set("pass", String(focal.passNumber));
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return request<SegmentBaselines>(`/api/segments/${segmentId}/baselines${suffix}`);
 }

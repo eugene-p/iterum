@@ -36,7 +36,9 @@ export const ActivityScreenContainer = () => {
         editError={screen.editError}
         onSaveEdit={screen.handleSaveEdit}
         onCreateSegment={() => navigation.goCreateSegment(screen.activityEntity!.id)}
-        onSelectSegment={navigation.goSegment}
+        onSelectSegment={(segmentId) =>
+          navigation.goSegment(segmentId, { activityId: screen.activityEntity!.id })
+        }
         onViewRoute={navigation.openRouteView}
         onDelete={() => void screen.handleDelete(screen.activityEntity!)}
         profiles={screen.profiles}

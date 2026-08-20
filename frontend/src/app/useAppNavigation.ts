@@ -26,6 +26,8 @@ const emptySearchParams = (): AppSearchParams => ({
   view: null,
   compareMode: null,
   comparePasses: null,
+  activityId: null,
+  passNumber: null,
 });
 
 export const useAppNavigation = () => {
@@ -86,11 +88,22 @@ export const useAppNavigation = () => {
       [navigate],
     ),
     goSegment: useCallback(
-      (segmentId: number, options?: { replace?: boolean }) => {
+      (
+        segmentId: number,
+        options?: { replace?: boolean; activityId?: number; passNumber?: number },
+      ) => {
         writeLastOpenedSegment(segmentId);
-        navigate(appRoutes.segment(segmentId), options);
+        if (options?.activityId != null) {
+          navigateWithSearch(
+            appRoutes.segment(segmentId),
+            { activityId: options.activityId, passNumber: options.passNumber ?? null },
+            { replace: options.replace },
+          );
+        } else {
+          navigate(appRoutes.segment(segmentId), options);
+        }
       },
-      [navigate],
+      [navigate, navigateWithSearch],
     ),
     goCreateSegment: useCallback(
       (activityId: number) => {
@@ -141,6 +154,18 @@ export const useAppNavigation = () => {
           pathname,
           {
             comparePasses: serializeComparePassesParam(selected, matchedPassIds, defaultIds),
+          },
+          { replace: true },
+        ),
+      [navigateWithSearch, pathname],
+    ),
+    setFocalPass: useCallback(
+      (next: { activityId: number; passNumber: number } | null) =>
+        navigateWithSearch(
+          pathname,
+          {
+            activityId: next?.activityId ?? null,
+            passNumber: next?.passNumber ?? null,
           },
           { replace: true },
         ),

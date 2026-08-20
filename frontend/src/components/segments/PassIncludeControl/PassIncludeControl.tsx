@@ -21,6 +21,9 @@ type PassIncludeControlProps = {
   includedPassIdSet: ReadonlySet<number>;
   onSetPassIncluded: (pass: SegmentPass, included: boolean) => void;
   onApplySelection: (ids: ReadonlyArray<number>) => void;
+  focalActivityId?: number | null;
+  focalPassNumber?: number | null;
+  onFocusPass?: (pass: SegmentPass) => void;
   passColorForId?: (passId: number) => string | undefined;
   className?: string;
 };
@@ -77,11 +80,17 @@ const PassRow = ({
   pass,
   included,
   onSetPassIncluded,
+  focalActivityId,
+  focalPassNumber,
+  onFocusPass,
   color,
 }: {
   pass: SegmentPass;
   included: boolean;
   onSetPassIncluded: (pass: SegmentPass, included: boolean) => void;
+  focalActivityId?: number | null;
+  focalPassNumber?: number | null;
+  onFocusPass?: (pass: SegmentPass) => void;
   color?: string;
 }) => (
   <div className={styles.row}>
@@ -104,6 +113,20 @@ const PassRow = ({
         <span>{passWhenLabel(pass)}</span>
       </div>
     </div>
+    {onFocusPass ? (
+      <div className={styles.rowActions}>
+        <Button
+          size="sm"
+          className={styles.focusButton}
+          aria-label={`Focus ${pass.activity_name}`}
+          aria-pressed={focalActivityId === pass.activity_id && focalPassNumber === pass.pass_number}
+          disabled={focalActivityId === pass.activity_id && focalPassNumber === pass.pass_number}
+          onClick={() => onFocusPass(pass)}
+        >
+          Focus
+        </Button>
+      </div>
+    ) : null}
   </div>
 );
 
@@ -112,6 +135,9 @@ export const PassIncludeControl = ({
   includedPassIdSet,
   onSetPassIncluded,
   onApplySelection,
+  focalActivityId,
+  focalPassNumber,
+  onFocusPass,
   passColorForId,
   className,
 }: PassIncludeControlProps) => {
@@ -261,7 +287,10 @@ export const PassIncludeControl = ({
             key={pass.id}
             pass={pass}
             included={includedPassIdSet.has(pass.id)}
-            onSetPassIncluded={onSetPassIncluded}
+              onSetPassIncluded={onSetPassIncluded}
+              focalActivityId={focalActivityId}
+              focalPassNumber={focalPassNumber}
+              onFocusPass={onFocusPass}
             color={passColorForId?.(pass.id)}
           />
         ))}
@@ -399,6 +428,9 @@ export const PassIncludeControl = ({
                       pass={pass}
                       included
                       onSetPassIncluded={onSetPassIncluded}
+                      focalActivityId={focalActivityId}
+                      focalPassNumber={focalPassNumber}
+                      onFocusPass={onFocusPass}
                       color={passColorForId?.(pass.id)}
                     />
                   ))}
@@ -413,6 +445,9 @@ export const PassIncludeControl = ({
                       pass={pass}
                       included={false}
                       onSetPassIncluded={onSetPassIncluded}
+                      focalActivityId={focalActivityId}
+                      focalPassNumber={focalPassNumber}
+                      onFocusPass={onFocusPass}
                       color={passColorForId?.(pass.id)}
                     />
                   ))}

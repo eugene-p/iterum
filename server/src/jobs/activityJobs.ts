@@ -6,8 +6,8 @@ import { geocodeActivity } from "../services/geocodeActivity.js";
 import { warmActivityPreviewImage } from "../services/routePreview/routePreviewService.js";
 import {
   logMatchFailure,
-  matchActivityAgainstAllSegments,
 } from "../services/segmentMatching.js";
+import { matchActivityAndRefreshBaselines } from "../services/segmentBaselineAggregator.js";
 import {
   createActivityJobSystem,
   type ActivityJobPersistence,
@@ -85,7 +85,9 @@ export const startActivityJobs = async (
       options.persistence === undefined ? createActivityJobPersistence() : options.persistence ?? undefined,
     handlers: {
       geocodeActivity,
-      matchActivity: matchActivityAgainstAllSegments,
+      matchActivity: async (activityId) => {
+        await matchActivityAndRefreshBaselines(activityId);
+      },
       warmPreview: async (activityId) => {
         await warmActivityPreviewImage(activityId);
       },
@@ -121,7 +123,7 @@ export const scheduleActivityImported = async (activityId: number): Promise<void
   }
 
   void geocodeActivity(activityId).catch((error) => logGeocodeFailure(activityId, error));
-  void matchActivityAgainstAllSegments(activityId).catch((error) =>
+  void matchActivityAndRefreshBaselines(activityId).catch((error) =>
     logMatchFailure("activity", activityId, error),
   );
   void warmActivityPreviewImage(activityId).catch((error) => logPreviewFailure(activityId, error));

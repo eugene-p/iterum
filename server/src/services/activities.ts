@@ -12,8 +12,21 @@ import { enrichActivityMetadata } from "./metadataEnrichment.js";
 import { parsedActivityToMetadata } from "./metadataPoints.js";
 import { getProfile } from "./profiles.js";
 import { deletePreviewFile } from "./routePreview/routePreviewService.js";
-import { loadActivityPoints } from "./segmentRepository.js";
-import { matchActivityAgainstAllSegments } from "./segmentMatching.js";
+import {
+  deleteMatchesForActivity,
+  loadActivityPoints,
+} from "./segmentRepository.js";
+import {
+  applyActivityMatchWrites,
+  computeActivityMatchWrites,
+} from "./segmentMatching.js";
+import {
+  listPairsForActivity,
+  listSegmentIdsForActivity,
+  uniqueBaselinePairs,
+} from "./segmentBaselinePairs.js";
+import { rebuildSegmentBaselines } from "./segmentBaselineAggregator.js";
+import { lockActivityMatchMutation, lockSegmentIds } from "./segmentMatchLocks.js";
 
 const activitySummaryFrom = `
   FROM activities a
@@ -200,8 +213,42 @@ export async function getActivityPoints(id: number) {
 }
 
 export async function deleteActivity(id: number): Promise<boolean> {
-  const result = await query(`DELETE FROM activities WHERE id = $1 RETURNING id`, [id]);
-  if (!result.rowCount) return false;
+  const result = await withTransaction(async () => {
+    await lockActivityMatchMutation(id);
+    const matchedSegmentIds = await listSegmentIdsForActivity(id);
+    const sourceSegments = await query<{ id: number }>(
+      `SELECT id FROM segments WHERE source_activity_id = $1 ORDER BY id`,
+      [id],
+    );
+    await lockSegmentIds([
+      ...matchedSegmentIds,
+      ...sourceSegments.rows.map((row) => row.id),
+    ]);
+    const captured = await listPairsForActivity(id);
+    const deleted = await query<{ id: number }>(
+      `DELETE FROM activities WHERE id = $1 RETURNING id`,
+      [id],
+    );
+    if (!deleted.rowCount) return false;
+
+    const cascaded = new Set(sourceSegments.rows.map((row) => row.id));
+    if (captured?.profileId != null) {
+      const pairs = uniqueBaselinePairs(
+        captured.segmentIds
+          .filter((segmentId) => !cascaded.has(segmentId))
+          .map((segmentId) => ({ profileId: captured.profileId!, segmentId })),
+      );
+      for (const pair of pairs) {
+        await rebuildSegmentBaselines({
+          profileId: pair.profileId,
+          segmentId: pair.segmentId,
+          fromDate: captured.activityDate,
+        });
+      }
+    }
+    return true;
+  });
+  if (!result) return false;
   await deletePreviewFile("activities", id);
   return true;
 }
@@ -213,27 +260,58 @@ export async function updateActivity(
   const existing = await getActivitySummary(id);
   if (!existing) return null;
 
-  let rematchNeeded = false;
+  if (updates.profile_id === undefined) {
+    await withTransaction(async () => {
+      if (updates.name !== undefined) {
+        const name = updates.name.trim();
+        if (!name) throw new BadRequestError("Name is required");
+        await query(`UPDATE activities SET name = $1 WHERE id = $2`, [name, id]);
+      }
+    });
+    return getActivitySummary(id);
+  }
+
+  const profile = await getProfile(updates.profile_id);
+  if (!profile) throw new NotFoundError("Profile not found");
+  const prepared = await computeActivityMatchWrites(id);
 
   await withTransaction(async () => {
+    await lockActivityMatchMutation(id);
+    const oldSegmentIds = await listSegmentIdsForActivity(id);
+    await lockSegmentIds([
+      ...oldSegmentIds,
+      ...prepared.writes.map((write) => write.segmentId),
+    ]);
+    const captured = await listPairsForActivity(id);
+    if (!captured) throw new NotFoundError("Activity not found");
+
     if (updates.name !== undefined) {
       const name = updates.name.trim();
       if (!name) throw new BadRequestError("Name is required");
       await query(`UPDATE activities SET name = $1 WHERE id = $2`, [name, id]);
     }
 
-    if (updates.profile_id !== undefined) {
-      const profile = await getProfile(updates.profile_id);
-      if (!profile) throw new NotFoundError("Profile not found");
-      await query(`UPDATE activities SET profile_id = $1 WHERE id = $2`, [profile.id, id]);
-      await query(`DELETE FROM activity_segment_matches WHERE activity_id = $1`, [id]);
-      rematchNeeded = true;
+    await query(`UPDATE activities SET profile_id = $1 WHERE id = $2`, [profile.id, id]);
+    await deleteMatchesForActivity(id);
+    await applyActivityMatchWrites(id, prepared);
+
+    const pairs = uniqueBaselinePairs([
+      ...(captured.profileId == null
+        ? []
+        : captured.segmentIds.map((segmentId) => ({
+            profileId: captured.profileId!,
+            segmentId,
+          }))),
+      ...prepared.writes.map((write) => ({ profileId: profile.id, segmentId: write.segmentId })),
+    ]);
+    for (const pair of pairs) {
+      await rebuildSegmentBaselines({
+        profileId: pair.profileId,
+        segmentId: pair.segmentId,
+        fromDate: captured.activityDate,
+      });
     }
   });
-
-  if (rematchNeeded) {
-    await matchActivityAgainstAllSegments(id);
-  }
 
   return getActivitySummary(id);
 }

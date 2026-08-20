@@ -121,7 +121,13 @@ export const useRouteExplorerCompareState = ({
 
   const activeTab = isCompareModeControlled
     ? resolveCompareMode(
-        { view: APP_VIEW.COMPARE, compareMode, comparePasses: selectedPassIds },
+        {
+          view: APP_VIEW.COMPARE,
+          compareMode,
+          comparePasses: selectedPassIds,
+          activityId: null,
+          passNumber: null,
+        },
         { segmentTimeAvailable, stretchTimeAvailable },
       )
     : localCompareMode;

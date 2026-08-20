@@ -148,6 +148,8 @@ export const mapTrackPointRow = (row: {
   elevation_m: row.elevation_m == null ? null : Number(row.elevation_m),
   heart_rate: row.heart_rate,
   speed_mps: row.speed_mps,
-  distance_m: row.distance_m == null ? null : Number(row.distance_m),
+  ...(row.distance_m !== undefined
+    ? { distance_m: row.distance_m == null ? null : Number(row.distance_m) }
+    : {}),
   timestamp: row.timestamp,
 });

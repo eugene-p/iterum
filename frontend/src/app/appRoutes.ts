@@ -9,6 +9,8 @@ export const APP_QUERY = {
   VIEW: "view",
   MODE: "mode",
   PASSES: "passes",
+  ACTIVITY: "activity",
+  PASS: "pass",
 } as const;
 
 export const APP_TAB = {
@@ -37,6 +39,8 @@ export type AppSearchParams = {
   compareMode: CompareMode | null;
   /** Null means use the default pass-selection policy (omitted from the URL). */
   comparePasses: ReadonlyArray<number> | null;
+  activityId: number | null;
+  passNumber: number | null;
 };
 
 export const appRoutes = {
@@ -84,10 +88,13 @@ const parsePositiveIntList = (value: string | null): ReadonlyArray<number> | nul
 
 export const parseAppSearchParams = (search: string): AppSearchParams => {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  const activityId = parsePositiveInt(params.get(APP_QUERY.ACTIVITY) ?? undefined);
   return {
     view: parseAppView(params.get(APP_QUERY.VIEW)),
     compareMode: parseCompareMode(params.get(APP_QUERY.MODE)),
     comparePasses: parsePositiveIntList(params.get(APP_QUERY.PASSES)),
+    activityId,
+    passNumber: activityId == null ? null : parsePositiveInt(params.get(APP_QUERY.PASS) ?? undefined),
   };
 };
 
@@ -183,6 +190,10 @@ export const buildAppSearch = (params: AppSearchParams): string => {
   if (params.comparePasses?.length) {
     search.set(APP_QUERY.PASSES, params.comparePasses.join(","));
   }
+  if (params.activityId != null) search.set(APP_QUERY.ACTIVITY, String(params.activityId));
+  if (params.activityId != null && params.passNumber != null) {
+    search.set(APP_QUERY.PASS, String(params.passNumber));
+  }
   const serialized = search.toString();
   return serialized ? `?${serialized}` : "";
 };
@@ -219,6 +230,8 @@ export const mergeAppSearchParams = (
   view: patch.view !== undefined ? patch.view : current.view,
   compareMode: patch.compareMode !== undefined ? patch.compareMode : current.compareMode,
   comparePasses: patch.comparePasses !== undefined ? patch.comparePasses : current.comparePasses,
+  activityId: patch.activityId !== undefined ? patch.activityId : current.activityId,
+  passNumber: patch.passNumber !== undefined ? patch.passNumber : current.passNumber,
 });
 
 export type ResolveCompareModeOptions = {
@@ -259,20 +272,20 @@ export const cleanSearchForLocation = (
   params: AppSearchParams,
 ): AppSearchParams => {
   if (location.type !== "activity" && location.type !== "segment") {
-    return { view: null, compareMode: null, comparePasses: null };
+    return { view: null, compareMode: null, comparePasses: null, activityId: null, passNumber: null };
   }
   if (location.type === "activity") {
     if (params.view === APP_VIEW.ROUTE) {
-      return { view: params.view, compareMode: null, comparePasses: null };
+      return { view: params.view, compareMode: null, comparePasses: null, activityId: null, passNumber: null };
     }
-    return { view: null, compareMode: null, comparePasses: null };
+    return { view: null, compareMode: null, comparePasses: null, activityId: null, passNumber: null };
   }
   if (params.view === APP_VIEW.COMPARE || params.view === APP_VIEW.STRETCHES) {
     return params.view === APP_VIEW.STRETCHES
-      ? { view: APP_VIEW.STRETCHES, compareMode: null, comparePasses: null }
+      ? { ...params, view: APP_VIEW.STRETCHES, compareMode: null }
       : params;
   }
-  return { view: null, compareMode: null, comparePasses: params.comparePasses };
+  return { ...params, view: null, compareMode: null };
 };
 
 export const isViewValidForLocation = (

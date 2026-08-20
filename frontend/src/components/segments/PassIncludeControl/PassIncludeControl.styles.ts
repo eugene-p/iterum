@@ -27,6 +27,8 @@ export const passIncludeControlStyles = {
   rowBody: "min-w-0 flex-1",
   rowTitle: "text-[0.82rem] font-semibold leading-[1.25] text-fg",
   rowMeta: cn(textStyles.muted, "mt-[0.1rem] flex flex-wrap gap-x-2 gap-y-0.5 text-[0.72rem]"),
+  rowActions: "flex shrink-0 items-center gap-1",
+  focusButton: "text-[0.72rem]",
   popover: cn(
     "fixed flex max-h-[min(70vh,520px)] w-[min(420px,calc(100vw-24px))] flex-col overflow-hidden rounded-lg border border-border-strong bg-card shadow-[0_12px_32px_rgba(0,0,0,0.5)]",
     POPOVER_Z,

@@ -5,6 +5,7 @@ import { RouteWorkspace } from "../maps/RouteWorkspace";
 import { PassIncludeControl } from "../segments/PassIncludeControl";
 import { StretchPanel } from "../segments/StretchPanel";
 import { StretchSelectionList } from "../segments/StretchSelectionList";
+import { SegmentPerformanceBaseline } from "../segments/SegmentPerformanceBaseline/SegmentPerformanceBaseline";
 import { useSegmentPassSelectionContext } from "./SegmentPassSelectionContext";
 import { SegmentDetailMap } from "./SegmentDetailMap";
 import { SegmentOverview } from "./SegmentOverview";
@@ -14,7 +15,7 @@ import type {
   SegmentDetailMapState,
   SegmentDetailStretchState,
 } from "./segmentDetailTypes";
-import type { SegmentCompare, Stretch } from "../../types";
+import type { SegmentBaselines, SegmentCompare, SegmentPass, Stretch } from "../../types";
 
 type SegmentDetailBodyProps = {
   segment: Segment;
@@ -33,6 +34,12 @@ type SegmentDetailBodyProps = {
   >;
   actions: Pick<SegmentDetailActions, "onSelectStretch" | "onClearStretchSelection">;
   displayStretches?: Stretch[];
+  baselines?: SegmentBaselines | null;
+  baselineAggregationType?: string;
+  onBaselineAggregationTypeChange?: (type: string) => void;
+  focalActivityId?: number | null;
+  focalPassNumber?: number | null;
+  onFocusPass?: (pass: SegmentPass) => void;
 };
 
 export const SegmentDetailBody = ({
@@ -44,6 +51,12 @@ export const SegmentDetailBody = ({
   stretch,
   actions,
   displayStretches,
+  baselines = null,
+  baselineAggregationType = "rolling_90d",
+  onBaselineAggregationTypeChange,
+  focalActivityId,
+  focalPassNumber,
+  onFocusPass,
 }: SegmentDetailBodyProps) => {
   const {
     includedPassIdSet,
@@ -122,6 +135,13 @@ export const SegmentDetailBody = ({
           selectedStretch={stretch.selectedStretch}
           selectedStretchMetrics={stretchPassMetrics}
         />
+        {baselines && onBaselineAggregationTypeChange ? (
+          <SegmentPerformanceBaseline
+            data={baselines}
+            aggregationType={baselineAggregationType}
+            onAggregationTypeChange={onBaselineAggregationTypeChange}
+          />
+        ) : null}
         <StretchPanel
           stretches={stretches}
           fullPassMetrics={fullPassMetrics}
@@ -143,6 +163,9 @@ export const SegmentDetailBody = ({
           includedPassIdSet={includedPassIdSet}
           onSetPassIncluded={setPassIncluded}
           onApplySelection={applyPassSelection}
+          focalActivityId={focalActivityId}
+          focalPassNumber={focalPassNumber}
+          onFocusPass={onFocusPass}
         />
       </main>
     </div>

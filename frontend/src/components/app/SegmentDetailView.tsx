@@ -9,6 +9,7 @@ import { SegmentDetailHeader } from "./SegmentDetailHeader";
 import { SegmentDetailMap } from "./SegmentDetailMap";
 import { segmentDetailBodyStyles as styles } from "./SegmentDetailBody.styles";
 import { SegmentOverview } from "./SegmentOverview";
+import { SegmentPerformanceBaseline } from "../segments/SegmentPerformanceBaseline/SegmentPerformanceBaseline";
 import type { SegmentDetailViewProps } from "./segmentDetailTypes";
 
 /**
@@ -24,6 +25,12 @@ export const SegmentDetailView = ({
   stretch,
   headerActions,
   actions,
+  baselines = null,
+  baselineAggregationType = "rolling_90d",
+  onBaselineAggregationTypeChange,
+  focalActivityId,
+  focalPassNumber,
+  onFocusPass,
 }: SegmentDetailViewProps) => {
   const matchedPasses = useMemo(
     () => (comparison?.passes ?? []).filter((pass) => pass.matched),
@@ -90,6 +97,13 @@ export const SegmentDetailView = ({
               selectedStretch={stretch.selectedStretch}
               selectedStretchMetrics={stretch.stretchPassMetrics}
             />
+            {baselines && onBaselineAggregationTypeChange ? (
+              <SegmentPerformanceBaseline
+                data={baselines}
+                aggregationType={baselineAggregationType}
+                onAggregationTypeChange={onBaselineAggregationTypeChange}
+              />
+            ) : null}
             <StretchPanel
               stretches={stretches}
               fullPassMetrics={stretch.fullPassMetrics}
@@ -111,6 +125,9 @@ export const SegmentDetailView = ({
               includedPassIdSet={includedPassIdSet}
               onSetPassIncluded={actions.onSetPassIncluded}
               onApplySelection={actions.onApplyPassSelection}
+              focalActivityId={focalActivityId}
+              focalPassNumber={focalPassNumber}
+              onFocusPass={onFocusPass}
             />
           </main>
         </div>

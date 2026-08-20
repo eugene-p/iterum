@@ -16,7 +16,8 @@
     "backfill:metadata": "tsx src/scripts/backfillMetadata.ts",
     "backfill:stretches": "tsx src/scripts/backfillStretches.ts",
     "backfill:track-metrics": "tsx src/scripts/backfillTrackMetrics.ts",
-    "backfill:previews": "tsx src/scripts/backfillPreviews.ts"
+    "backfill:previews": "tsx src/scripts/backfillPreviews.ts",
+    "backfill:segment-baselines": "tsx src/scripts/backfillSegmentBaselines.ts"
   },
   "dependencies": {
     "@eugene-p/iterum-shared": "*",

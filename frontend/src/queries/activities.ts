@@ -52,6 +52,7 @@ export const useUpdateActivityMutation = () => {
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       queryClient.invalidateQueries({ queryKey: queryKeys.activity(activity.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activityMatchedSegments(activity.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentBaselinesAll });
     },
   });
 };
@@ -63,6 +64,7 @@ export const useDeleteActivityMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentBaselinesAll });
     },
   });
 };
@@ -77,6 +79,7 @@ export const useUploadActivityMutation = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.activity(activity.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.activityMatchedSegmentsRoot });
       queryClient.invalidateQueries({ queryKey: queryKeys.segmentsRoot });
+      queryClient.invalidateQueries({ queryKey: queryKeys.segmentBaselinesAll });
     },
   });
 };

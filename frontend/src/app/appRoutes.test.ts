@@ -74,41 +74,52 @@ describe("appRoutes", () => {
   });
 
   it("parses and builds search params for modal view", () => {
-    const emptyParams = { view: null, compareMode: null, comparePasses: null };
+    const emptyParams = {
+      view: null,
+      compareMode: null,
+      comparePasses: null,
+      activityId: null,
+      passNumber: null,
+    };
 
     expect(parseAppSearchParams("")).toEqual(emptyParams);
     expect(parseAppSearchParams("?view=route")).toEqual({ ...emptyParams, view: "route" });
     expect(parseAppSearchParams("?view=invalid")).toEqual(emptyParams);
     expect(parseAppSearchParams("?view=compare&mode=time")).toEqual({
+      ...emptyParams,
       view: "compare",
       compareMode: "segment",
-      comparePasses: null,
     });
     expect(parseAppSearchParams("?view=compare&mode=position")).toEqual({
+      ...emptyParams,
       view: "compare",
       compareMode: "segment",
-      comparePasses: null,
     });
     expect(parseAppSearchParams("?view=compare&mode=segment")).toEqual({
+      ...emptyParams,
       view: "compare",
       compareMode: "segment",
-      comparePasses: null,
     });
     expect(parseAppSearchParams("?view=compare&mode=stretch")).toEqual({
+      ...emptyParams,
       view: "compare",
       compareMode: "stretch",
-      comparePasses: null,
     });
     expect(parseAppSearchParams("?view=compare&passes=3,1,9")).toEqual({
+      ...emptyParams,
       view: "compare",
-      compareMode: null,
       comparePasses: [3, 1, 9],
     });
     expect(parseAppSearchParams("?view=compare&passes=bad,0")).toEqual({
+      ...emptyParams,
       view: "compare",
-      compareMode: null,
-      comparePasses: null,
     });
+    expect(parseAppSearchParams("?activity=84&pass=2")).toEqual({
+      ...emptyParams,
+      activityId: 84,
+      passNumber: 2,
+    });
+    expect(parseAppSearchParams("?pass=2")).toEqual(emptyParams);
 
     expect(buildAppSearch(emptyParams)).toBe("");
     expect(buildAppSearch({ view: "compare", compareMode: null, comparePasses: null })).toBe(
@@ -129,6 +140,13 @@ describe("appRoutes", () => {
     expect(buildAppSearch({ view: null, compareMode: null, comparePasses: [2, 3] })).toBe(
       "?passes=2%2C3",
     );
+    expect(
+      buildAppSearch({
+        ...emptyParams,
+        activityId: 84,
+        passNumber: 2,
+      }),
+    ).toBe("?activity=84&pass=2");
 
     expect(compareModeToSearchParam("segment")).toBeNull();
     expect(compareModeToSearchParam("stretch")).toBe("stretch");

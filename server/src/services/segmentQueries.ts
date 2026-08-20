@@ -75,6 +75,7 @@ export const getSegmentPasses = async (
 
   const matches = await query(
     `SELECT m.*, a.name AS activity_name, a.started_at, a.created_at, a.source_filename,
+            a.profile_id,
             p.name AS profile_name
      FROM activity_segment_matches m
      JOIN activities a ON a.id = m.activity_id
@@ -101,6 +102,7 @@ export const getSegmentPasses = async (
       activity_id: row.activity_id,
       activity_name: row.activity_name,
       profile_name: row.profile_name,
+      profile_id: row.profile_id,
       source_filename: row.source_filename,
       started_at: row.started_at,
       created_at: row.created_at,

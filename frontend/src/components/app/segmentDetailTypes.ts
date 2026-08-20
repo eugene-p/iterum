@@ -1,6 +1,7 @@
 import type { StretchPassMetrics } from "../../stretchUtils";
 import type {
   Segment,
+  SegmentBaselines,
   SegmentCompare,
   SegmentPass,
   Stretch,
@@ -75,4 +76,10 @@ export type SegmentDetailViewProps = {
   stretch: SegmentDetailStretchState;
   headerActions: SegmentHeaderActions;
   actions: SegmentDetailActions;
+  baselines?: SegmentBaselines | null;
+  baselineAggregationType?: string;
+  onBaselineAggregationTypeChange?: (type: string) => void;
+  focalActivityId?: number | null;
+  focalPassNumber?: number | null;
+  onFocusPass?: (pass: SegmentPass) => void;
 };

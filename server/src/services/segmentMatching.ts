@@ -2,7 +2,8 @@
 // Integration boundary (DB/HTTP/FS/CLI). Unit coverage ignored; cover via integration tests.
 
 import { BadRequestError, NotFoundError } from "../middleware/errors.js";
-import { withTransaction } from "../db/pool.js";
+import { query, withTransaction } from "../db/pool.js";
+import { utcDateFromPgDate, type UtcDate } from "../util/utcDate.js";
 import { MATCH_LOAD_CONCURRENCY, mapPool } from "../util/concurrency.js";
 import {
   buildPassResult,
@@ -21,6 +22,9 @@ import {
   loadReferencePoints,
   loadSegment,
 } from "./segmentRepository.js";
+import { rebuildSegmentBaselines } from "./segmentBaselineAggregator.js";
+import { listPairsForSegment, uniqueBaselinePairs } from "./segmentBaselinePairs.js";
+import { lockActivityMatchMutation, lockSegmentIds, lockSegmentMatchMutation } from "./segmentMatchLocks.js";
 
 export const toSegmentDefinition = (row: {
   start_lat: number;
@@ -41,6 +45,24 @@ export const toSegmentDefinition = (row: {
 type ComputedPasses = {
   activityId: number;
   passes: SegmentPassResult[];
+};
+
+export type ActivityMatchWriteResult = {
+  profileId: number | null;
+  activityDate: UtcDate;
+  insertedSegmentIds: ReadonlyArray<number>;
+  clearedSegmentIds: ReadonlyArray<number>;
+};
+
+type ActivitySegmentWrite = {
+  segmentId: number;
+  passes: SegmentPassResult[];
+};
+
+export type PreparedActivityMatchWrites = {
+  profileId: number | null;
+  activityDate: UtcDate;
+  writes: ReadonlyArray<ActivitySegmentWrite>;
 };
 
 const computePassesForActivity = async (
@@ -73,11 +95,17 @@ export const rematchSegment = async (
   );
 
   await withTransaction(async () => {
+    await lockSegmentMatchMutation(segmentId);
+    const before = await listPairsForSegment(segmentId);
     await deleteMatchesForSegment(segmentId);
     for (const result of computed) {
       if (result) {
         await insertMatches(segmentId, result.activityId, result.passes);
       }
+    }
+    const after = await listPairsForSegment(segmentId);
+    for (const pair of uniqueBaselinePairs([...before, ...after])) {
+      await rebuildSegmentBaselines(pair);
     }
   });
 
@@ -164,6 +192,7 @@ export const matchSegmentAcrossActivities = async ({
   );
 
   await withTransaction(async () => {
+    await lockSegmentMatchMutation(segmentId);
     if (sourceResult) {
       await insertMatches(segmentId, sourceResult.activityId, sourceResult.passes);
     }
@@ -172,36 +201,81 @@ export const matchSegmentAcrossActivities = async ({
         await insertMatches(segmentId, result.activityId, result.passes);
       }
     }
+    const pairs = await listPairsForSegment(segmentId);
+    for (const pair of pairs) await rebuildSegmentBaselines(pair);
   });
 };
 
-export const matchActivityAgainstAllSegments = async (activityId: number) => {
+export const computeActivityMatchWrites = async (
+  activityId: number,
+): Promise<PreparedActivityMatchWrites> => {
+  const activity = await query<{ profile_id: number | null; activity_date: UtcDate | Date }>(
+    `SELECT profile_id,
+            (COALESCE(started_at, created_at) AT TIME ZONE 'UTC')::date AS activity_date
+     FROM activities WHERE id = $1`,
+    [activityId],
+  );
+  if (!activity.rowCount) throw new NotFoundError("Activity not found");
+
   const points = await loadActivityPoints(activityId);
-  if (points.length < 2) return;
+  if (points.length < 2) {
+    return {
+      profileId: activity.rows[0].profile_id,
+      activityDate: utcDateFromPgDate(activity.rows[0].activity_date),
+      writes: [],
+    };
+  }
 
   const segments = await listSegmentsOverlappingActivity(activityId);
-
-  type SegmentMatchWrite = {
-    segmentId: number;
-    passes: SegmentPassResult[];
-  };
 
   const writes = await mapPool(segments, MATCH_LOAD_CONCURRENCY, async (segment) => {
     const reference = await loadReferencePoints(segment.id);
     if (reference.length < 2) return null;
     const definition = toSegmentDefinition(segment);
     const passes = findAllSegmentPasses(points, definition, reference);
-    return { segmentId: segment.id, passes } satisfies SegmentMatchWrite;
+    return { segmentId: segment.id, passes } satisfies ActivitySegmentWrite;
   });
 
-  await withTransaction(async () => {
-    for (const write of writes) {
-      if (!write) continue;
-      await deleteMatchesForSegmentActivity(write.segmentId, activityId);
-      if (write.passes.length) {
-        await insertMatches(write.segmentId, activityId, write.passes);
-      }
+  return {
+    profileId: activity.rows[0].profile_id,
+    activityDate: utcDateFromPgDate(activity.rows[0].activity_date),
+    writes: writes.filter((write): write is ActivitySegmentWrite => write != null),
+  };
+};
+
+export const applyActivityMatchWrites = async (
+  activityId: number,
+  prepared: PreparedActivityMatchWrites,
+): Promise<ActivityMatchWriteResult> => {
+  const insertedSegmentIds: number[] = [];
+  const clearedSegmentIds: number[] = [];
+
+  for (const write of prepared.writes) {
+    await deleteMatchesForSegmentActivity(write.segmentId, activityId);
+    if (write.passes.length) {
+      insertedSegmentIds.push(write.segmentId);
+      await insertMatches(write.segmentId, activityId, write.passes);
+    } else {
+      clearedSegmentIds.push(write.segmentId);
     }
+  }
+
+  return {
+    profileId: prepared.profileId,
+    activityDate: prepared.activityDate,
+    insertedSegmentIds,
+    clearedSegmentIds,
+  };
+};
+
+export const matchActivityAgainstAllSegments = async (
+  activityId: number,
+): Promise<ActivityMatchWriteResult> => {
+  const prepared = await computeActivityMatchWrites(activityId);
+  return withTransaction(async () => {
+    await lockActivityMatchMutation(activityId);
+    await lockSegmentIds(prepared.writes.map((write) => write.segmentId));
+    return applyActivityMatchWrites(activityId, prepared);
   });
 };
 

@@ -315,6 +315,10 @@ export const deleteMatchesForSegmentActivity = async (
   ]);
 };
 
+export const deleteMatchesForActivity = async (activityId: number) => {
+  await query(`DELETE FROM activity_segment_matches WHERE activity_id = $1`, [activityId]);
+};
+
 export const persistNewSegment = async (input: PersistSegmentInput) => {
   const segmentResult = await query<Record<string, unknown>>(
     `INSERT INTO segments

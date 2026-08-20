@@ -76,6 +76,17 @@ export const segmentCompareQuerySchema = z
   });
 export type SegmentCompareQuery = z.infer<typeof segmentCompareQuerySchema>;
 
+export const segmentBaselinesQuerySchema = z
+  .object({
+    activity_id: z.coerce.number().int().positive().optional(),
+    pass: z.coerce.number().int().positive().optional(),
+    activity_segment_match_id: z.coerce.number().int().positive().optional(),
+  })
+  .refine((query) => query.pass === undefined || query.activity_id !== undefined, {
+    message: "pass requires activity_id",
+  });
+export type SegmentBaselinesQuery = z.infer<typeof segmentBaselinesQuerySchema>;
+
 const stretchGeoPointSchema = z.object({
   lat: z.number().finite(),
   lon: z.number().finite(),

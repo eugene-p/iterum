@@ -15,6 +15,8 @@ import {
   type SaveSegmentStretchesBody,
   segmentCompareQuerySchema,
   type SegmentCompareQuery,
+  segmentBaselinesQuerySchema,
+  type SegmentBaselinesQuery,
   updateSegmentBodySchema,
   type UpdateSegmentBody,
 } from "@eugene-p/iterum-shared";
@@ -34,6 +36,7 @@ import {
   saveSegmentStretchesFromPreview,
   updateSegment,
 } from "../services/segments.js";
+import { getSegmentBaselines } from "../services/segmentBaselineAggregator.js";
 import { ensureSegmentPreviewImage } from "../services/routePreview/routePreviewService.js";
 import { sendRoutePreviewImage } from "./sendRoutePreviewImage.js";
 
@@ -150,6 +153,17 @@ segmentsRouter.get(
       throw new NotFoundError("Segment not found");
     }
     res.json(data);
+  }),
+);
+
+segmentsRouter.get(
+  "/:id/baselines",
+  validate(idParamSchema, "params"),
+  validate(segmentBaselinesQuerySchema, "query"),
+  asyncHandler(async (req, res) => {
+    const { id } = validated<IdParams>(req, "params");
+    const input = validated<SegmentBaselinesQuery>(req, "query");
+    res.json(await getSegmentBaselines(id, input));
   }),
 );
 
